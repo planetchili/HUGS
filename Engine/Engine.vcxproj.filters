@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Framework">
+      <UniqueIdentifier>{93e508de-cf6d-4d34-a110-f767c918b5c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Framework">
+      <UniqueIdentifier>{d83c0ef5-8392-49c7-80c4-d48900829440}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\dxflib">
+      <UniqueIdentifier>{355a0f5c-8233-42f7-a259-b63bf929727d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dxflib">
+      <UniqueIdentifier>{14f474ce-b89b-4a90-923a-dbc76bef756f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ChiliMath.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Colors.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DGraphics.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameTimer.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Keyboard.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Rect.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Sound.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Vec2.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="PolyClosed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_attributes.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_codes.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_creationadapter.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_creationinterface.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_dxf.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_entities.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_exception.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_extrusion.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_writer.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="dxflib\dl_writer_ascii.h">
+      <Filter>Header Files\dxflib</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawTarget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Viewport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ship.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CollidableCircle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleStrip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Surface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mat3.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D3DGraphics.cpp">
+      <Filter>Source Files\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Keyboard.cpp">
+      <Filter>Source Files\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse.cpp">
+      <Filter>Source Files\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Sound.cpp">
+      <Filter>Source Files\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Source Files\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Windows.cpp">
+      <Filter>Source Files\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="dxflib\dl_dxf.cpp">
+      <Filter>Source Files\dxflib</Filter>
+    </ClCompile>
+    <ClCompile Include="dxflib\dl_writer_ascii.cpp">
+      <Filter>Source Files\dxflib</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="ChiliDirectXFramework.res">
+      <Filter>Resource Files</Filter>
+    </Resource>
+  </ItemGroup>
+</Project>
