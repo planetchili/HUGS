@@ -32,11 +32,11 @@ public:
 		const TriangleStrip& parent;
 	};
 public:
-	////TriangleStrip( std::initializer_list< Vec2 > vList,Color color = WHITE )
-	//	:
-	//	vertices( vList ),
-	//	color( color )
-	//{}
+	TriangleStrip( std::initializer_list< Vec2 > vList,Color color = WHITE )
+		:
+		vertices( vList ),
+		color( color )
+	{}
 	TriangleStrip( std::vector< const Vec2 >&& movable,Color color = WHITE )
 		:
 		vertices( movable ),

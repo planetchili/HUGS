@@ -58,7 +58,7 @@ private:
 	Timer timer;
 	Viewport port;
 	Camera cam;
-	Ship ship;
 	Map map;
+	Ship ship;
 	/********************************/
 };

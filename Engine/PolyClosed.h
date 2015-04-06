@@ -70,6 +70,13 @@ public:
 	{
 		MakeClockwise();
 	}
+	PolyClosed( std::vector< const Vec2 >&& vList,Color color = WHITE )
+		:
+		vertices( vList ),
+		color( color )
+	{
+		MakeClockwise();
+	}
 	void HandleCollision( CollidableCircle& obj )
 	{
 		const RectF objAABB = obj.GetAABB();

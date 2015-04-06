@@ -40,10 +40,10 @@ public:
 		const Ship& parent;
 	};
 public:
-	Ship( std::string filename,Vec2 pos = { 0.0f,0.0f } )
+	Ship( const std::wstring& filename,Vec2 pos = { 0.0f,0.0f } )
 		:
 		pos( pos ),
-		shipTexture( Surface::FromFile( L"USS Turgidity.png" ) )
+		shipTexture( Surface::FromFile( filename ) )
 	{
 		quad[0].v = { -80,-135.0f };
 		quad[0].t = { 0.0f,0.0f };

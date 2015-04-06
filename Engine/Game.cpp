@@ -28,8 +28,8 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	audio( hWnd ),
 	kbd( kServer ),
 	mouse( mServer ),
-	ship( "shiptry.dxf",{ -2026.0f,226.0f } ),
-	map( "map.dxf" ),
+	map( "mappos.dxf" ),
+	ship( L"USS Turgidity.png",map.GetStartPosition() ),
 	port( gfx,{0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1} ),
 	cam( port,port.GetWidth(),port.GetHeight() )
 {
