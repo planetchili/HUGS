@@ -88,6 +88,28 @@ private:
 		Map& parent;
 		std::vector< const Vec2 > vertices;
 	};
+	// @#@ copied and pasted from ship
+	class Drawable : public ::Drawable
+	{
+	public:
+		Drawable( const Map& parent )
+			:
+			parent( parent )
+		{}
+		virtual void Rasterize( D3DGraphics& gfx ) const override
+		{
+			TriangleStrip::Drawable innerDrawable = parent.pInnerModel->GetDrawable();
+			TriangleStrip::Drawable outerDrawable = parent.pOuterModel->GetDrawable();
+			innerDrawable.Transform( trans );
+			outerDrawable.Transform( trans );
+			innerDrawable.Clip( clip );
+			outerDrawable.Clip( clip );
+			innerDrawable.Rasterize( gfx );
+			outerDrawable.Rasterize( gfx );
+		}
+	private:
+		const Map& parent;
+	};
 public:
 	Map( std::string filename )
 	{
