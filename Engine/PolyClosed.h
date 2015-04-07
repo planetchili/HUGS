@@ -74,7 +74,7 @@ public:
 	}
 	PolyClosed( std::vector< const Vec2 >&& vList,float facingCoefficient,Color color = WHITE )
 		:
-		vertices( vList ),
+		vertices( std::move( vList ) ),
 		color( color ),
 		facingCoefficient( facingCoefficient )
 	{
