@@ -7,13 +7,6 @@ class Map
 private:
 	class Loader : public DL_CreationAdapter
 	{
-	private:
-		enum Layer
-		{
-			InnerBoundary,
-			OuterBoundary,
-			Null
-		};
 	public:
 		Loader( std::string filename,Map& parent )
 			:
@@ -42,40 +35,24 @@ private:
 			if( addingPolyline )
 			{
 				addingPolyline = false;
-				switch( currentLayer )
+				if( attributes.getLayer() == "innerboundary" )
 				{
-				case InnerBoundary:
 					parent.pInnerBoundary = std::make_unique< PolyClosed >(
 						std::move( vertices ),PolyClosed::MakeOutwardCoefficient() );
 					parent.pInnerModel = std::make_unique< TriangleStrip >(
 						parent.pInnerBoundary->ExtractStripVertices( parent.wallWidth ) );
-					break;
-				case OuterBoundary:
+				}
+				else if( attributes.getLayer() == "outerboundary" )
+				{
 					parent.pOuterBoundary = std::make_unique< PolyClosed >(
 						std::move( vertices ),PolyClosed::MakeInwardCoefficient() );
 					parent.pOuterModel = std::make_unique< TriangleStrip >(
 						parent.pOuterBoundary->ExtractStripVertices( parent.wallWidth ) );
-					break;
-				default:
-					vertices.clear();
-					break;
 				}
-			}
-		}
-		// @#@ talk about copy paste circledata override
-		virtual void addLayer( const DL_LayerData& data ) override
-		{
-			if( data.name == "innerboundary" )
-			{
-				currentLayer = InnerBoundary;
-			}
-			else if( data.name == "outerboundary" )
-			{
-				currentLayer = OuterBoundary;
-			}
-			else
-			{
-				currentLayer = Null;
+				else
+				{
+					vertices.clear();
+				}
 			}
 		}
 		operator std::vector< const Vec2 >&&()
@@ -83,7 +60,6 @@ private:
 			return std::move( vertices );
 		}
 	private:
-		Layer currentLayer = Null;
 		bool addingPolyline = false;
 		Map& parent;
 		std::vector< const Vec2 > vertices;
