@@ -122,6 +122,7 @@ public:
 	void HandleCollision( CollidableCircle& obj )
 	{
 		pOuterBoundary->HandleCollision( obj );
+		pInnerBoundary->HandleCollision( obj );
 	}
 	Vec2 GetStartPosition() const
 	{
