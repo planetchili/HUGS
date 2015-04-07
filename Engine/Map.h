@@ -91,9 +91,9 @@ public:
 	{
 		Loader loader( filename,*this );
 	}
-	TriangleStrip::Drawable GetDrawable( ) const
+	Drawable GetDrawable( ) const
 	{
-		return pOuterModel->GetDrawable();
+		return Drawable( *this );
 	}
 	void HandleCollision( CollidableCircle& obj )
 	{
