@@ -69,7 +69,7 @@ private:
 			{
 				currentLayer = InnerBoundary;
 			}
-			else if( data.name == "innerboundary" )
+			else if( data.name == "outerboundary" )
 			{
 				currentLayer = OuterBoundary;
 			}
