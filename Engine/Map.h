@@ -7,11 +7,21 @@ class Map
 private:
 	class Loader : public DL_CreationAdapter
 	{
+	private:
+		enum Layer
+		{
+			InnerBoundary,
+			OuterBoundary,
+			Null
+		};
 	public:
-		Loader( std::string filename )
+		Loader( std::string filename,Map& parent )
+			:
+			parent( parent )
 		{
 			auto pDxf = std::make_unique< DL_Dxf >();
 			pDxf->in( filename,this );
+			// @#@ talk about lack of error checking (both boundaries defined etc.)
 		}
 		virtual void addVertex( const DL_VertexData& data ) override
 		{
@@ -19,37 +29,77 @@ private:
 		}
 		virtual void addCircle( const DL_CircleData& data ) override
 		{
-			startPosition = { (float)data.cx,(float)-data.cy };
+			parent.startPosition = { (float)data.cx,(float)-data.cy };
+		}
+		// @#@ talk about how figured out api functions without reference (this intelli)
+		virtual void addPolyline( const DL_PolylineData& data ) override
+		{
+			addingPolyline = true;
+			vertices.reserve( data.number );
+		}
+		virtual void endEntity() override
+		{
+			if( addingPolyline )
+			{
+				addingPolyline = false;
+				switch( currentLayer )
+				{
+				case InnerBoundary:
+					parent.pInnerBoundary = std::make_unique< PolyClosed >(
+						std::move( vertices ),PolyClosed::MakeOutwardCoefficient() );
+					parent.pInnerModel = std::make_unique< TriangleStrip >(
+						parent.pInnerBoundary->ExtractStripVertices( parent.wallWidth ) );
+					break;
+				case OuterBoundary:
+					parent.pOuterBoundary = std::make_unique< PolyClosed >(
+						std::move( vertices ),PolyClosed::MakeInwardCoefficient() );
+					parent.pOuterModel = std::make_unique< TriangleStrip >(
+						parent.pOuterBoundary->ExtractStripVertices( parent.wallWidth ) );
+					break;
+				default:
+					vertices.clear();
+					break;
+				}
+			}
+		}
+		// @#@ talk about copy paste circledata override
+		virtual void addLayer( const DL_LayerData& data ) override
+		{
+			if( data.name == "innerboundary" )
+			{
+				currentLayer = InnerBoundary;
+			}
+			else if( data.name == "innerboundary" )
+			{
+				currentLayer = OuterBoundary;
+			}
+			else
+			{
+				currentLayer = Null;
+			}
 		}
 		operator std::vector< const Vec2 >&&()
 		{
 			return std::move( vertices );
 		}
-		Vec2 GetStartPosition() const
-		{
-			return startPosition;
-		}
 	private:
+		Layer currentLayer = Null;
+		bool addingPolyline = false;
+		Map& parent;
 		std::vector< const Vec2 > vertices;
-		Vec2 startPosition = {0.0f,0.0f};
 	};
 public:
 	Map( std::string filename )
 	{
-		Loader loader( filename );
-		pBoundaries = std::make_unique< PolyClosed >( 
-			loader,PolyClosed::MakeOutwardCoefficient() );
-		pModel = std::make_unique< TriangleStrip >( 
-			pBoundaries->ExtractStripVertices( wallWidth ) );
-		startPosition = loader.GetStartPosition();
+		Loader loader( filename,*this );
 	}
 	TriangleStrip::Drawable GetDrawable( ) const
 	{
-		return pModel->GetDrawable();
+		return pOuterModel->GetDrawable();
 	}
 	void HandleCollision( CollidableCircle& obj )
 	{
-		pBoundaries->HandleCollision( obj );
+		pOuterBoundary->HandleCollision( obj );
 	}
 	Vec2 GetStartPosition() const
 	{
@@ -59,6 +109,8 @@ public:
 private:
 	const float wallWidth = 40.0f;
 	Vec2 startPosition;
-	std::unique_ptr< PolyClosed > pBoundaries;
-	std::unique_ptr< TriangleStrip > pModel;
+	std::unique_ptr< PolyClosed > pInnerBoundary;
+	std::unique_ptr< TriangleStrip > pInnerModel;
+	std::unique_ptr< PolyClosed > pOuterBoundary;
+	std::unique_ptr< TriangleStrip > pOuterModel;
 };
