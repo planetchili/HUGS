@@ -56,24 +56,27 @@ public:
 		const PolyClosed& parent;
 	};
 public:
-	PolyClosed( std::initializer_list< Vec2 > vList,Color color = WHITE )
+	PolyClosed( std::initializer_list< Vec2 > vList,float facingCoefficient,Color color = WHITE )
 		:
 		vertices( vList ),
-		color( color )
+		color( color ),
+		facingCoefficient( facingCoefficient )
 	{
 		MakeClockwise();
 	}
-	PolyClosed( std::string filename,Color color = WHITE )
+	PolyClosed( std::string filename,float facingCoefficient,Color color = WHITE )
 		:
 		vertices( Loader( filename ) ),
-		color( color )
+		color( color ),
+		facingCoefficient( facingCoefficient )
 	{
 		MakeClockwise();
 	}
-	PolyClosed( std::vector< const Vec2 >&& vList,Color color = WHITE )
+	PolyClosed( std::vector< const Vec2 >&& vList,float facingCoefficient,Color color = WHITE )
 		:
 		vertices( vList ),
-		color( color )
+		color( color ),
+		facingCoefficient( facingCoefficient )
 	{
 		MakeClockwise();
 	}
@@ -91,7 +94,7 @@ public:
 			if( objAABB.Overlaps( lineAABB ) )
 			{
 				const Vec2 objVel = obj.GetVel();
-				const Vec2 lineNormal = ( cur - prev ).CW90().Normalize();
+				const Vec2 lineNormal = ( cur - prev ).CW90().Normalize() * facingCoefficient;
 				if( objVel * lineNormal < 0.0f )
 				{
 					const std::vector< Vec2 > points = CalculateIntersectionPoints( c,cur,prev,r );
@@ -146,8 +149,10 @@ public:
 			i != end; i++ )
 		{
 			strip.push_back( *( i + 1 ) );
-			const Vec2 n0 = ( *( i + 1 ) - *( i + 0 ) ).CCW90().Normalize();
-			const Vec2 n1 = ( *( i + 2 ) - *( i + 1 ) ).CCW90().Normalize();
+			const Vec2 n0 = ( *( i + 1 ) - *( i + 0 ) ).CCW90().Normalize()
+				* facingCoefficient;
+			const Vec2 n1 = ( *( i + 2 ) - *( i + 1 ) ).CCW90().Normalize()
+				* facingCoefficient;
 			const Vec2 b = ( n0 + n1 ).Normalize();
 			const float k = width / (b * n0);
 			const Vec2 q = *(i + 1) + (b * k);
@@ -155,8 +160,10 @@ public:
 		}
 		{
 			strip.push_back( vertices.back() );
-			const Vec2 n0 = ( vertices.back() - *( vertices.end() - 2 ) ).CCW90().Normalize();
-			const Vec2 n1 = ( vertices.front() - vertices.back() ).CCW90().Normalize();
+			const Vec2 n0 = ( vertices.back() - *( vertices.end() - 2 ) ).CCW90().Normalize()
+				* facingCoefficient;
+			const Vec2 n1 = ( vertices.front() - vertices.back() ).CCW90().Normalize()
+				* facingCoefficient;
 			const Vec2 b = ( n0 + n1 ).Normalize();
 			const float k = width / ( b * n0 );
 			const Vec2 q = vertices.back() + ( b * k );
@@ -164,8 +171,10 @@ public:
 		}
 		{
 			strip.push_back( vertices.front() );
-			const Vec2 n0 = ( vertices.front() - vertices.back() ).CCW90().Normalize();
-			const Vec2 n1 = ( *( vertices.begin() + 1) - vertices.front() ).CCW90().Normalize();
+			const Vec2 n0 = ( vertices.front() - vertices.back() ).CCW90().Normalize()
+				* facingCoefficient;
+			const Vec2 n1 = ( *( vertices.begin() + 1 ) - vertices.front() ).CCW90().Normalize()
+				* facingCoefficient;
 			const Vec2 b = ( n0 + n1 ).Normalize();
 			const float k = width / ( b * n0 );
 			const Vec2 q = vertices.front() + ( b * k );
@@ -175,6 +184,14 @@ public:
 		strip.push_back( strip[1] );
 
 		return strip;
+	}
+	static float MakeInwardCoefficient()
+	{
+		return 1.0f;
+	}
+	static float MakeOutwardCoefficient()
+	{
+		return -1.0f;
 	}
 private:
 	bool IsClockwiseWinding() const
@@ -199,6 +216,8 @@ private:
 	}
 
 private:
-	Color color;
+	const Color color;
+	// +1.0 = inward -1.0 = outward
+	const float facingCoefficient;
 	std::vector< const Vec2 > vertices;
 };

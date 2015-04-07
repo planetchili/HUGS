@@ -37,7 +37,8 @@ public:
 	Map( std::string filename )
 	{
 		Loader loader( filename );
-		pBoundaries = std::make_unique< PolyClosed >( loader );
+		pBoundaries = std::make_unique< PolyClosed >( 
+			loader,PolyClosed::MakeOutwardCoefficient() );
 		pModel = std::make_unique< TriangleStrip >( 
 			pBoundaries->ExtractStripVertices( wallWidth ) );
 		startPosition = loader.GetStartPosition();
