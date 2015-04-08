@@ -25,6 +25,9 @@
     <Filter Include="Source Files\dxflib">
       <UniqueIdentifier>{14f474ce-b89b-4a90-923a-dbc76bef756f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Media">
+      <UniqueIdentifier>{ce547343-38db-41f0-a783-8b32c11ad766}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -163,5 +166,21 @@
     <Resource Include="ChiliDirectXFramework.res">
       <Filter>Resource Files</Filter>
     </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="USS Turgidity.png">
+      <Filter>Media</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MapInOut.dxf">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="shiptry.dxf">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="tracktest.dxf">
+      <Filter>Media</Filter>
+    </None>
   </ItemGroup>
 </Project>
