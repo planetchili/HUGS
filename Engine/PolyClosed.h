@@ -219,7 +219,7 @@ private:
 	}
 	void RemoveDuplicates()
 	{
-		for( auto i = vertices.begin(),end = std::prev( vertices.end() ); i != end; i++ )
+		for( auto i = vertices.begin(),end = std::prev( vertices.end() ); i != end; )
 		{
 			// @#@ talk about container algorithms
 			if( *i == *std::next( i ) )
@@ -228,6 +228,10 @@ private:
 				// @#@ talk about invalidated iterators (end)
 				end = std::prev( vertices.end() );
 				// @#@ for-loop increment messes up i (overtakes end) (pre-decrementing bad for corner case)
+			}
+			else
+			{
+				i++;
 			}
 		}
 		if( *vertices.end() == *vertices.begin() )
