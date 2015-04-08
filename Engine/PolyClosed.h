@@ -221,13 +221,10 @@ private:
 	{
 		for( auto i = vertices.begin(),end = std::prev( vertices.end() ); i != end; )
 		{
-			// @#@ talk about container algorithms
 			if( ( *i - *std::next( i ) ).Len() < fuseThreshold )
 			{
 				i = vertices.erase( i );
-				// @#@ talk about invalidated iterators (end)
 				end = std::prev( vertices.end() );
-				// @#@ for-loop increment messes up i (overtakes end) (pre-decrementing bad for corner case)
 			}
 			else
 			{
@@ -241,7 +238,6 @@ private:
 	}
 
 private:
-	// @#@ talk about const member memory space static constexpr
 	const float fuseThreshold = 0.01f;
 	const Color color;
 	// +1.0 = inward -1.0 = outward

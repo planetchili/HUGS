@@ -14,7 +14,6 @@ private:
 		{
 			auto pDxf = std::make_unique< DL_Dxf >();
 			pDxf->in( filename,this );
-			// @#@ talk about lack of error checking (both boundaries defined etc.)
 		}
 		virtual void addVertex( const DL_VertexData& data ) override
 		{
@@ -24,7 +23,6 @@ private:
 		{
 			parent.startPosition = { (float)data.cx,(float)-data.cy };
 		}
-		// @#@ talk about how figured out api functions without reference (this intelli)
 		virtual void addPolyline( const DL_PolylineData& data ) override
 		{
 			addingPolyline = true;
@@ -60,7 +58,6 @@ private:
 		Map& parent;
 		std::vector< const Vec2 > vertices;
 	};
-	// @#@ copied and pasted from ship
 	class Drawable : public ::Drawable
 	{
 	public:
