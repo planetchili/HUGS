@@ -226,6 +226,8 @@ private:
 			{
 				i = vertices.erase( i );
 				// @#@ talk about invalidated iterators (end)
+				end = std::prev( vertices.end() );
+				// @#@ for-loop increment messes up i (overtakes end) (pre-decrementing bad for corner case)
 			}
 		}
 		if( *vertices.end() == *vertices.begin() )
