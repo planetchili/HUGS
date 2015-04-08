@@ -234,7 +234,7 @@ private:
 				i++;
 			}
 		}
-		if( *vertices.end() == *vertices.begin() )
+		if( vertices.back() == vertices.front() )
 		{
 			vertices.pop_back();
 		}
