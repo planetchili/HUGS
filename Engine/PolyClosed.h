@@ -62,6 +62,7 @@ public:
 		color( color ),
 		facingCoefficient( facingCoefficient )
 	{
+		RemoveDuplicates();
 		MakeClockwise();
 	}
 	PolyClosed( std::string filename,float facingCoefficient,Color color = WHITE )
@@ -70,6 +71,7 @@ public:
 		color( color ),
 		facingCoefficient( facingCoefficient )
 	{
+		RemoveDuplicates();
 		MakeClockwise();
 	}
 	PolyClosed( std::vector< const Vec2 >&& vList,float facingCoefficient,Color color = WHITE )
@@ -78,6 +80,7 @@ public:
 		color( color ),
 		facingCoefficient( facingCoefficient )
 	{
+		RemoveDuplicates();
 		MakeClockwise();
 	}
 	void HandleCollision( CollidableCircle& obj )
@@ -211,7 +214,23 @@ private:
 	{
 		if( !IsClockwiseWinding() )
 		{
-			std::reverse( this->vertices.begin(),this->vertices.end() );
+			std::reverse( vertices.begin(),vertices.end() );
+		}
+	}
+	void RemoveDuplicates()
+	{
+		for( auto i = vertices.begin(),end = std::prev( vertices.end() ); i != end; i++ )
+		{
+			// @#@ talk about container algorithms
+			if( *i == *std::next( i ) )
+			{
+				i = vertices.erase( i );
+				// @#@ talk about invalidated iterators (end)
+			}
+		}
+		if( *vertices.end() == *vertices.begin() )
+		{
+			vertices.pop_back();
 		}
 	}
 
