@@ -55,10 +55,6 @@ private:
 				}
 			}
 		}
-		operator std::vector< const Vec2 >&&()
-		{
-			return std::move( vertices );
-		}
 	private:
 		bool addingPolyline = false;
 		Map& parent;
