@@ -35,7 +35,14 @@ public:
 	void PutPixel( int x,int y,Color c );
 	void PutPixelAlpha( int x,int y,Color c );
 	Color GetPixel( int x,int y ) const;
-	inline void DrawLine( Vec2 pt1,Vec2 pt2,Color c )
+	template< typename T >
+	inline void DrawRectangle( _Vec2< T > topLeft,_Vec2< T > bottomRight,Color c )
+	{
+		DrawRectangle( (int)topLeft.x,(int)bottomRight.x,(int)topLeft.y,(int)bottomRight.y,c );
+	}
+	void DrawRectangle( int left,int right,int top,int bottom,Color c );
+	template< typename T >
+	inline void DrawLine( _Vec2< T > pt1,_Vec2< T > pt2,Color c )
 	{
 		DrawLine( (int)pt1.x,(int)pt1.y,(int)pt2.x,(int)pt2.y,c );
 	}
@@ -53,15 +60,15 @@ public:
 	{
 		obj.Rasterize( *this );
 	}
-	void DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,RectI& clip,Color c );
-	void DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,RectI clip,const Surface &tex );
+	void DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,const RectI& clip,Color c );
+	void DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
 public:
 	static const unsigned int	SCREENWIDTH =	1024;
 	static const unsigned int	SCREENHEIGHT =	768;
 private:
-	void DrawFlatTopTriangleTex(Vertex v0, Vertex v1, Vertex v2, RectI clip, const Surface &tex);
-	void DrawFlatBottomTriangleTex(Vertex v0, Vertex v1, Vertex v2, RectI clip, const Surface &tex);
-	void DrawFlatTriangle(float yStart, float yEnd, float m0, float b0, float m1, float b1, RectI& clip, Color c);
+	void DrawFlatTopTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
+	void DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
+	void DrawFlatTriangle( float yStart,float yEnd,float m0,float b0,float m1,float b1,const RectI& clip,Color c );
 private:
 	const Color			FILLVALUE =		BLACK;
 	IDirect3D9*			pDirect3D;

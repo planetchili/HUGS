@@ -117,6 +117,18 @@ Color D3DGraphics::GetPixel( int x,int y ) const
 	return sysBuffer.GetPixel( x,y );
 }
 
+// inclusive (can never decide which is better)
+void D3DGraphics::DrawRectangle( int left,int right,int top,int bottom,Color c )
+{
+	for( int x = left; x <= right; x++ )
+	{
+		for( int y = top; y <= bottom; y++ )
+		{
+			PutPixel( x,y,c );
+		}
+	}
+}
+
 // Cohen–Sutherland clipping algorithm clips a line from
 // P0 = (x0, y0) to P1 = (x1, y1) against a rectangle with 
 // diagonal from (xmin, ymin) to (xmax, ymax).
@@ -285,7 +297,7 @@ void D3DGraphics::DrawCircle( int centerX,int centerY,int radius,Color color )
 	}
 }
 
-void D3DGraphics::DrawFlatTriangle( float y0,float y1,float m0,float b0,float m1,float b1,RectI& clip,Color c )
+void D3DGraphics::DrawFlatTriangle( float y0,float y1,float m0,float b0,float m1,float b1,const RectI& clip,Color c )
 {
 	const int yStart = max( (int)( y0 + 0.5f ),clip.top );
 	const int yEnd = min( (int)( y1 + 0.5f ),clip.bottom + 1 );
@@ -302,7 +314,7 @@ void D3DGraphics::DrawFlatTriangle( float y0,float y1,float m0,float b0,float m1
 	}
 }
 
-void D3DGraphics::DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,RectI& clip,Color c )
+void D3DGraphics::DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,const RectI& clip,Color c )
 {
 	if( v1.y < v0.y ) v0.Swap( v1 );
 	if( v2.y < v1.y ) v1.Swap( v2 );
@@ -350,7 +362,7 @@ void D3DGraphics::DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,RectI& clip,Color c )
 	}
 }
 
-void D3DGraphics::DrawTriangleTex(Vertex v0, Vertex v1, Vertex v2, RectI clip, const Surface &tex)
+void D3DGraphics::DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex )
 {
 	if (v1.v.y < v0.v.y) v0.Swap(v1);
 	if (v2.v.y < v1.v.y) v1.Swap(v2);
@@ -392,7 +404,7 @@ void D3DGraphics::DrawTriangleTex(Vertex v0, Vertex v1, Vertex v2, RectI clip, c
 	}
 }
 
-void D3DGraphics::DrawFlatTopTriangleTex(Vertex v0, Vertex v1, Vertex v2, RectI clip, const Surface &tex)
+void D3DGraphics::DrawFlatTopTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex)
 {
 	// To do: Replace v2 - v0 with precalculated height
 	// calulcate slopes in screen space
@@ -439,7 +451,7 @@ void D3DGraphics::DrawFlatTopTriangleTex(Vertex v0, Vertex v1, Vertex v2, RectI 
 	}
 }
 
-void D3DGraphics::DrawFlatBottomTriangleTex(Vertex v0, Vertex v1, Vertex v2, RectI clip, const Surface &tex)
+void D3DGraphics::DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex )
 {
 	// To do: Replace v2 - v0 with precalculated height
 	// calulcate slopes in screen space

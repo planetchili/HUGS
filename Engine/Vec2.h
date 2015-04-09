@@ -206,6 +206,7 @@ public:
 
 typedef _Vec2< float > Vec2;
 typedef _Vec2< double > Ved2;
+typedef _Vec2< int > Vei2;
 
 template< typename T >
 inline std::vector< _Vec2<T> > CalculateIntersectionPoints( _Vec2<T> q,_Vec2<T> p1,_Vec2<T> p2,T r )

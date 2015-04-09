@@ -106,4 +106,5 @@ void Game::ComposeFrame()
 	ship.FocusOn( cam );
 	cam.Draw( ship.GetDrawable() );
 	cam.Draw( map.GetDrawable() );
+	gfx.DrawRectangle( Vei2{ 20,20 },Vei2{ 200,200 },RED );
 }
