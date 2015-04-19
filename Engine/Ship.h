@@ -94,6 +94,10 @@ public:
 	{
 		cam.MoveTo( pos );
 	}
+	float GetShieldPercent() const
+	{
+		return 1.0f;
+	}
 	// control functions
 	void Thrust()
 	{

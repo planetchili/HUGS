@@ -109,6 +109,7 @@
     <ClInclude Include="PolyClosed.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="ShieldMeter.h" />
     <ClInclude Include="Ship.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="Surface.h" />
