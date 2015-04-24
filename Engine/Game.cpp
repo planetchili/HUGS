@@ -31,7 +31,8 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	map( "tracktest.dxf" ),
 	ship( L"USS Turgidity.png",map.GetStartPosition() ),
 	port( gfx,{0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1} ),
-	cam( port,port.GetWidth(),port.GetHeight() )
+	cam( port,port.GetWidth(),port.GetHeight() ),
+	meter( { 10,D3DGraphics::SCREENWIDTH - 11,10,110 },ship )
 {
 }
 
@@ -106,5 +107,5 @@ void Game::ComposeFrame()
 	ship.FocusOn( cam );
 	cam.Draw( ship.GetDrawable() );
 	cam.Draw( map.GetDrawable() );
-	gfx.DrawRectangle( Vei2{ 20,20 },Vei2{ 200,200 },RED );
+	port.Draw( meter.GetDrawable() );
 }

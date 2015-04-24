@@ -31,6 +31,7 @@
 #include "Viewport.h"
 #include "Ship.h"
 #include "Map.h"
+#include "ShieldMeter.h"
 
 class Game
 {
@@ -60,5 +61,6 @@ private:
 	Camera cam;
 	Map map;
 	Ship ship;
+	ShieldMeter meter;
 	/********************************/
 };
