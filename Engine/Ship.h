@@ -96,7 +96,7 @@ public:
 	}
 	float GetShieldPercent() const
 	{
-		return 1.0f;
+		return vel.Len() / maxSpeed;
 	}
 	// control functions
 	void Thrust()

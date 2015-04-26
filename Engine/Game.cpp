@@ -32,7 +32,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	ship( L"USS Turgidity.png",map.GetStartPosition() ),
 	port( gfx,{0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1} ),
 	cam( port,port.GetWidth(),port.GetHeight() ),
-	meter( { 10,D3DGraphics::SCREENWIDTH - 11,10,110 },ship )
+	meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship )
 {
 }
 
