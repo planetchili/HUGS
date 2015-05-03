@@ -96,7 +96,7 @@ public:
 	}
 	float GetShieldPercent() const
 	{
-		return vel.Len() / maxSpeed;
+		return shieldLevel;
 	}
 	// control functions
 	void Thrust()
@@ -138,11 +138,17 @@ public:
 	}
 	virtual void Rebound( Vec2 normal ) override
 	{
+		shieldLevel = max( 0.0f,
+			shieldLevel - ( (-vel * normal) / maxSpeed ) * maxDamage );
 		vel -= normal * ( vel * normal ) * 2.0f;
 	}
 
 
 private:
+	// stats
+	float shieldLevel = 1.0f;
+	const float maxDamage = 0.2f;
+
 	// structural
 	Surface shipTexture;
 	const float shipScale = 0.27f;
