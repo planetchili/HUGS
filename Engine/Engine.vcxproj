@@ -106,6 +106,7 @@
     <ClInclude Include="Map.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mouse.h" />
+    <ClInclude Include="Observer.h" />
     <ClInclude Include="PolyClosed.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Resource.h" />

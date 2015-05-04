@@ -32,13 +32,15 @@
 #include "Ship.h"
 #include "Map.h"
 #include "ShieldMeter.h"
+#include "Observer.h"
 
-class Game
+class Game : public Observer
 {
 public:
 	Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer );
 	~Game();
 	void Go();
+	virtual void OnNotify() override;
 private:
 	void ComposeFrame();
 	/********************************/

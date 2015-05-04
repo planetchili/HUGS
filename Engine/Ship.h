@@ -4,8 +4,9 @@
 #include "CollidableCircle.h"
 #include <array>
 #include "Vertex.h"
+#include "Observer.h"
 
-class Ship : public CollidableCircle
+class Ship : public CollidableCircle, public Observable
 {
 public:
 	class Drawable : public ::Drawable
@@ -138,8 +139,15 @@ public:
 	}
 	virtual void Rebound( Vec2 normal ) override
 	{
-		shieldLevel = max( 0.0f,
-			shieldLevel - ( (-vel * normal) / maxSpeed ) * maxDamage );
+		if( shieldLevel > 0.0f )
+		{
+			shieldLevel = max( 0.0f,
+				shieldLevel - ( ( -vel * normal ) / maxSpeed ) * maxDamage );
+		}
+		else
+		{
+			Notify();
+		}
 		vel -= normal * ( vel * normal ) * 2.0f;
 	}
 

@@ -34,6 +34,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	cam( port,port.GetWidth(),port.GetHeight() ),
 	meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship )
 {
+	ship.AddObserver( this );
 }
 
 Game::~Game()
@@ -50,6 +51,11 @@ void Game::Go()
 	gfx.EndFrame();
 }
 
+void Game::OnNotify()
+{
+	// #@# mixing of game and platform code not optimal
+	PostQuitMessage( 0 );
+}
 
 void Game::HandleInput( )
 {
