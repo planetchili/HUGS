@@ -64,5 +64,7 @@ private:
 	Map map;
 	Ship ship;
 	ShieldMeter meter;
+	bool gameIsOver = false;
+	Font timesFont;
 	/********************************/
 };
