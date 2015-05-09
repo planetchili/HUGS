@@ -155,7 +155,7 @@ public:
 private:
 	// stats
 	float shieldLevel = 1.0f;
-	const float maxDamage = 0.2f;
+	const float maxDamage = 0.5f;
 
 	// structural
 	Surface shipTexture;
@@ -169,7 +169,7 @@ private:
 	Vec2 pos;
 	Vec2 vel = { 0.0f,0.0f };
 	const float accel = 0.2f * 60.0f * 60.0f;
-	const float maxSpeed = 450.0f;
+	const float maxSpeed = 800.0f;
 	float thrust = 0.0f;
 
 	// angular
