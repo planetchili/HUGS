@@ -100,8 +100,10 @@
     <ClInclude Include="dxflib\dl_extrusion.h" />
     <ClInclude Include="dxflib\dl_writer.h" />
     <ClInclude Include="dxflib\dl_writer_ascii.h" />
+    <ClInclude Include="Font.h" />
     <ClInclude Include="FrameTimer.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GdiPlusManager.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Mat3.h" />
@@ -130,6 +132,7 @@
       <BufferSecurityCheck Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
+    <ClCompile Include="GdiPlusManager.cpp" />
     <ClCompile Include="Keyboard.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Sound.cpp" />

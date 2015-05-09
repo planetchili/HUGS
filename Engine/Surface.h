@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Colors.h"
+#include "Font.h"
 #include <gdiplus.h>
 #include <string>
 #include <assert.h>
@@ -15,7 +16,10 @@ public:
 		buffer( new Color[ pitch * height ] ),
 		width( width ),
 		height( height ),
-		pitch( pitch )
+		pitch( pitch ),
+		bitmap( width,height,pitch * sizeof( Color ),
+			PixelFormat32bppARGB,(BYTE*)buffer ),
+		g( &bitmap )
 	{}
 	Surface( unsigned int width,unsigned int height ) // 16-byte alignment
 		:
@@ -26,7 +30,10 @@ public:
 		buffer( source.buffer ),
 		width( source.width ),
 		height( source.height ),
-		pitch( source.pitch )
+		pitch( source.pitch ),
+		bitmap( width,height,pitch * sizeof( Color ),
+			PixelFormat32bppARGB,(BYTE*)buffer ),
+		g( &bitmap )
 	{
 		const_cast<Color*>( source.buffer ) = nullptr;
 	}
@@ -110,6 +117,37 @@ public:
 		assert( y < height );
 		return buffer[y * pitch + x];
 	}
+	inline void DrawString( const std::wstring& string,Vec2 pt,const Font& font,Color c )
+	{
+		Gdiplus::Color textColor( c.r,c.g,c.b );
+		Gdiplus::SolidBrush textBrush( textColor );
+		g.DrawString( string.c_str(),-1,font,
+			Gdiplus::PointF( pt.x,pt.y ),&textBrush );
+	}
+	inline void DrawString( const std::wstring& string,const RectF& rect,const Font& font,
+		Color c = WHITE,Font::Alignment a = Font::Center )
+	{
+		Gdiplus::StringFormat format;
+		switch( a )
+		{
+		case Font::Left:
+			format.SetAlignment( Gdiplus::StringAlignmentNear );
+			break;
+		case Font::Right:
+			format.SetAlignment( Gdiplus::StringAlignmentFar );
+			break;
+		case Font::Center:
+		default:
+			format.SetAlignment( Gdiplus::StringAlignmentCenter );
+			break;
+		}
+		Gdiplus::Color textColor( c.r,c.g,c.b );
+		Gdiplus::SolidBrush textBrush( textColor );
+		g.DrawString( string.c_str(),-1,font,
+			Gdiplus::RectF( rect.left,rect.top,rect.GetWidth(),rect.GetHeight() ),
+			&format,
+			&textBrush );
+	}
 	inline unsigned int GetWidth() const
 	{
 		return width;
@@ -173,11 +211,16 @@ private:
 		width( width ),
 		height( height ),
 		buffer( buffer ),
-		pitch( pitch )
+		pitch( pitch ),
+		bitmap( width,height,pitch * sizeof( Color ),
+			PixelFormat32bppARGB,(BYTE*)buffer ),
+		g( &bitmap )
 	{}
 private:
 	Color* const buffer;
 	const unsigned int width;
 	const unsigned int height;
 	const unsigned int pitch;
+	Gdiplus::Bitmap	bitmap;
+	Gdiplus::Graphics g;
 };

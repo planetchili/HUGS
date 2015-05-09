@@ -21,6 +21,7 @@
 #pragma once
 
 #include <d3d9.h>
+#include "GdiPlusManager.h"
 #include "Vec2.h"
 #include "Colors.h"
 #include "DrawTarget.h"
@@ -54,6 +55,14 @@ public:
 		DrawCircle( (int)center.x,(int)center.y,radius,c );
 	}
 	void DrawCircle( int centerX,int centerY,int radius,Color c );
+	inline void DrawString( const std::wstring& string,Vec2 pt,const Font& font,Color c = WHITE )
+	{
+		sysBuffer.DrawString( string,pt,font,c );
+	}
+	inline void DrawString( const std::wstring& string,const RectF &rect,const Font& font,Color c = WHITE,Font::Alignment a = Font::Center )
+	{
+		sysBuffer.DrawString( string,rect,font,c,a );
+	}
 	void BeginFrame();
 	void EndFrame();
 	virtual void Draw( Drawable& obj ) override
@@ -70,6 +79,7 @@ private:
 	void DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
 	void DrawFlatTriangle( float yStart,float yEnd,float m0,float b0,float m1,float b1,const RectI& clip,Color c );
 private:
+	GdiPlusManager		gdiManager;
 	const Color			FILLVALUE =		BLACK;
 	IDirect3D9*			pDirect3D;
 	IDirect3DDevice9*	pDevice;

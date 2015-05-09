@@ -123,9 +123,6 @@
     <ClInclude Include="TriangleStrip.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Surface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Mat3.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
@@ -137,6 +134,15 @@
     </ClInclude>
     <ClInclude Include="Observer.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Font.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="GdiPlusManager.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="Surface.h">
+      <Filter>Header Files\Framework</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -166,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="dxflib\dl_writer_ascii.cpp">
       <Filter>Source Files\dxflib</Filter>
+    </ClCompile>
+    <ClCompile Include="GdiPlusManager.cpp">
+      <Filter>Source Files\Framework</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
