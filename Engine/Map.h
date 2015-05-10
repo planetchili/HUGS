@@ -1,5 +1,5 @@
 #pragma once
-#include "PolyClosed.h"
+#include "PolyClosedRebounding.h"
 #include "TriangleStrip.h"
 
 class Map
@@ -35,14 +35,14 @@ private:
 				addingPolyline = false;
 				if( attributes.getLayer() == "innerboundary" )
 				{
-					parent.pInnerBoundary = std::make_unique< PolyClosed >(
+					parent.pInnerBoundary = std::make_unique< PolyClosedRebounding >(
 						std::move( vertices ),PolyClosed::MakeOutwardCoefficient() );
 					parent.pInnerModel = std::make_unique< TriangleStrip >(
 						parent.pInnerBoundary->ExtractStripVertices( parent.wallWidth ) );
 				}
 				else if( attributes.getLayer() == "outerboundary" )
 				{
-					parent.pOuterBoundary = std::make_unique< PolyClosed >(
+					parent.pOuterBoundary = std::make_unique< PolyClosedRebounding >(
 						std::move( vertices ),PolyClosed::MakeInwardCoefficient() );
 					parent.pOuterModel = std::make_unique< TriangleStrip >(
 						parent.pOuterBoundary->ExtractStripVertices( parent.wallWidth ) );

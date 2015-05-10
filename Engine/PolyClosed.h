@@ -127,12 +127,12 @@ public:
 
 							if( dClosest * objVel < 0.0f )
 							{
-								obj.Rebound( dClosest / sqrt( dSquaredClosest ) );
+								HandleCollision( obj,dClosest / sqrt( dSquaredClosest ) );
 							}
 						}
 						else if( cons0 || cons1 )
 						{
-							obj.Rebound( lineNormal );
+							HandleCollision( obj,lineNormal );
 						}
 					}
 				}
@@ -236,6 +236,8 @@ private:
 			vertices.pop_back();
 		}
 	}
+protected:
+	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) = 0;
 
 private:
 	const float fuseThreshold = 0.01f;

@@ -110,6 +110,7 @@
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Observer.h" />
     <ClInclude Include="PolyClosed.h" />
+    <ClInclude Include="PolyClosedRebounding.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ShieldMeter.h" />
