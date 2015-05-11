@@ -1,3 +1,4 @@
+#pragma once
 #include "PolyClosed.h"
 
 class PolyClosedRebounding : public PolyClosed
