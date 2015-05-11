@@ -38,46 +38,45 @@ public:
 	class Drawable : public ::Drawable
 	{
 	public:
-		Drawable( const PolyClosed& parent )
+		Drawable( const PolyClosed& parent,Color color )
 			:
-			parent( parent )
+			parent( parent ),
+			color( color )
 		{}
 		virtual void Rasterize( D3DGraphics& gfx ) const override
 		{
 			for( auto i = parent.vertices.begin( ),end = parent.vertices.end( ) - 1; 
 				i != end; i++ )
 			{
-				gfx.DrawLineClip( trans * *i,trans * *( i + 1 ),parent.color,clip );
+				gfx.DrawLineClip( trans * *i,trans * *( i + 1 ),color,clip );
 			}
 			gfx.DrawLineClip( trans * parent.vertices.back( ),
-				trans * parent.vertices.front( ),parent.color,clip );
+				trans * parent.vertices.front( ),color,clip );
 		}
 	private:
+		const Color color;
 		const PolyClosed& parent;
 	};
 public:
-	PolyClosed( std::initializer_list< Vec2 > vList,float facingCoefficient,Color color = WHITE )
+	PolyClosed( std::initializer_list< Vec2 > vList,float facingCoefficient )
 		:
 		vertices( vList ),
-		color( color ),
 		facingCoefficient( facingCoefficient )
 	{
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	PolyClosed( std::string filename,float facingCoefficient,Color color = WHITE )
+	PolyClosed( std::string filename,float facingCoefficient )
 		:
 		vertices( Loader( filename ) ),
-		color( color ),
 		facingCoefficient( facingCoefficient )
 	{
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	PolyClosed( std::vector< const Vec2 >&& vList,float facingCoefficient,Color color = WHITE )
+	PolyClosed( std::vector< const Vec2 >&& vList,float facingCoefficient )
 		:
 		vertices( std::move( vList ) ),
-		color( color ),
 		facingCoefficient( facingCoefficient )
 	{
 		RemoveDuplicates();
@@ -140,9 +139,9 @@ public:
 			prev = cur;
 		}
 	}
-	Drawable GetDrawable() const
+	Drawable GetDrawable( Color color ) const
 	{
-		return Drawable( *this );
+		return Drawable( *this,color );
 	}
 	std::vector< const Vec2 > ExtractStripVertices( const float width ) const
 	{
@@ -241,7 +240,6 @@ protected:
 
 private:
 	const float fuseThreshold = 0.01f;
-	const Color color;
 	// +1.0 = inward -1.0 = outward
 	const float facingCoefficient;
 	std::vector< const Vec2 > vertices;
