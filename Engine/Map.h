@@ -88,10 +88,10 @@ public:
 	{
 		return Drawable( *this );
 	}
-	void HandleCollision( CollidableCircle& obj )
+	void TestCollision( CollidableCircle& obj )
 	{
-		pOuterBoundary->HandleCollision( obj );
-		pInnerBoundary->HandleCollision( obj );
+		pOuterBoundary->TestCollision( obj );
+		pInnerBoundary->TestCollision( obj );
 	}
 	Vec2 GetStartPosition() const
 	{
@@ -101,8 +101,8 @@ public:
 private:
 	const float wallWidth = 40.0f;
 	Vec2 startPosition;
-	std::unique_ptr< PolyClosed > pInnerBoundary;
+	std::unique_ptr< PolyClosedRebounding > pInnerBoundary;
 	std::unique_ptr< TriangleStrip > pInnerModel;
-	std::unique_ptr< PolyClosed > pOuterBoundary;
+	std::unique_ptr< PolyClosedRebounding > pOuterBoundary;
 	std::unique_ptr< TriangleStrip > pOuterModel;
 };

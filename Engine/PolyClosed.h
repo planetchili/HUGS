@@ -83,7 +83,7 @@ public:
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	void HandleCollision( CollidableCircle& obj )
+	void TestCollision( CollidableCircle& obj )
 	{
 		const RectF objAABB = obj.GetAABB();
 		const Vec2 c = obj.GetCenter();

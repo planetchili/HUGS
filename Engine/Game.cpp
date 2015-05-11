@@ -107,7 +107,7 @@ void Game::UpdateModel( )
 	if( !gameIsOver )
 	{
 		ship.Update( dt );
-		map.HandleCollision( ship );
+		map.TestCollision( ship );
 	}
 }
 
