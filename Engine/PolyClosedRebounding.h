@@ -9,7 +9,7 @@ public:
 		PolyClosed( std::move( vList ),facingCoefficient )
 	{}
 protected:
-	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) override
+	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) const override
 	{
 		obj.Rebound( normal );
 	}

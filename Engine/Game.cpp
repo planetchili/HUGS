@@ -29,13 +29,14 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	kbd( kServer ),
 	mouse( mServer ),
 	map( "tracktest.dxf" ),
-	ship( L"USS Turgidity.png",map.GetStartPosition() ),
+	ship( L"USS Turgidity.png",map.GetTrackRegionManager(),map.GetStartPosition() ),
 	port( gfx,{0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1} ),
 	cam( port,port.GetWidth(),port.GetHeight() ),
 	meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship ),
 	timesFont( L"Times New Roman",60 )
 {
 	ship.AddObserver( this );
+	ship.RegisterLapObserver( listener );
 }
 
 Game::~Game()
@@ -125,4 +126,6 @@ void Game::ComposeFrame()
 	{
 		gfx.DrawString( L"GAME\nOVER",{ 400.0f,300.0f },timesFont,GRAY );
 	}
+
+	gfx.DrawString( std::to_wstring( listener.GetLapCount() ),{ 920.0f,0.0f },timesFont,GRAY );
 }

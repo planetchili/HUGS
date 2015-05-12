@@ -5,6 +5,7 @@
 #include <array>
 #include "Vertex.h"
 #include "Observer.h"
+#include "TrackRegionManager.h"
 
 class Ship : public CollidableCircle, public Observable
 {
@@ -40,9 +41,52 @@ public:
 	private:
 		const Ship& parent;
 	};
+private:
+	class TrackSequencer : public Observable
+	{
+	public:
+		TrackSequencer( const TrackRegionManager& tMan )
+			:
+			nRegions( tMan.GetRegionCount() )
+		{}
+		void HitRegion( unsigned int uid )
+		{
+			if( uid == curRegion );
+			else if( uid == GetNextRegion() )
+			{
+				if( uid == 0 && !isWrong )
+				{
+					Notify();
+				}
+				isWrong = false;
+				curRegion = uid;
+			}
+			else if( !isWrong )
+			{
+				isWrong = true;
+				curRegion = GetPrevRegion();
+			}
+		}
+	private:
+		unsigned int GetNextRegion() const
+		{
+			return ( curRegion + 1 ) % nRegions;
+		}
+		unsigned int GetPrevRegion() const
+		{
+			return int( curRegion ) - 1 < 0 ?
+				nRegions - 1 :
+				( curRegion - 1 ) % nRegions;
+		}
+	private:
+		bool isWrong = false;
+		const unsigned int nRegions;
+		unsigned int curRegion = 0;
+	};
 public:
-	Ship( const std::wstring& filename,Vec2 pos = { 0.0f,0.0f } )
+	Ship( const std::wstring& filename,const TrackRegionManager& tMan,Vec2 pos = { 0.0f,0.0f } )
 		:
+		seq( tMan ),
 		pos( pos ),
 		shipTexture( Surface::FromFile( filename ) )
 	{
@@ -99,6 +143,10 @@ public:
 	{
 		return shieldLevel;
 	}
+	void RegisterLapObserver( Observer& lapObs )
+	{
+		seq.AddObserver( &lapObs );
+	}
 	// control functions
 	void Thrust()
 	{
@@ -150,12 +198,18 @@ public:
 		}
 		vel -= normal * ( vel * normal ) * 2.0f;
 	}
-
+	virtual void Track( unsigned int uid ) override
+	{
+		seq.HitRegion( uid );
+	}
 
 private:
+	// rules stuff
+	TrackSequencer seq;
+
 	// stats
 	float shieldLevel = 1.0f;
-	const float maxDamage = 0.5f;
+	const float maxDamage = 0.01f;
 
 	// structural
 	Surface shipTexture;

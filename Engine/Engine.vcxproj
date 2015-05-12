@@ -118,6 +118,8 @@
     <ClInclude Include="Sound.h" />
     <ClInclude Include="Surface.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="TrackRegion.h" />
+    <ClInclude Include="TrackRegionManager.h" />
     <ClInclude Include="TriangleStrip.h" />
     <ClInclude Include="Vec2.h" />
     <ClInclude Include="Camera.h" />

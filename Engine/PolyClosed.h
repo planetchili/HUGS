@@ -82,7 +82,7 @@ public:
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	void TestCollision( CollidableCircle& obj )
+	void TestCollision( CollidableCircle& obj ) const
 	{
 		const RectF objAABB = obj.GetAABB();
 		const Vec2 c = obj.GetCenter();
@@ -236,11 +236,12 @@ private:
 		}
 	}
 protected:
-	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) = 0;
+	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) const = 0;
 
 private:
-	const float fuseThreshold = 0.01f;
+	// #@# const correctness vs. stl compatibility (avoid const members) (workaround smart ptr)
+	float fuseThreshold = 0.01f;
 	// +1.0 = inward -1.0 = outward
-	const float facingCoefficient;
+	float facingCoefficient;
 	std::vector< const Vec2 > vertices;
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include "PolyClosedRebounding.h"
 #include "TriangleStrip.h"
+#include "TrackRegionManager.h"
 
 class Map
 {
@@ -47,11 +48,20 @@ private:
 					parent.pOuterModel = std::make_unique< TriangleStrip >(
 						parent.pOuterBoundary->ExtractStripVertices( parent.wallWidth ) );
 				}
+				else if( attributes.getLayer().substr( 0,2 ) == "tr" )
+				{
+					parent.tMan.AddRegion( std::move( vertices ),
+						std::stoi( attributes.getLayer().substr( 2 ) ) );					
+				}
 				else
 				{
 					vertices.clear();
 				}
 			}
+		}
+		virtual ~Loader() override
+		{
+			assert( parent.tMan.IDsAreContiguous() );
 		}
 	private:
 		bool addingPolyline = false;
@@ -92,13 +102,19 @@ public:
 	{
 		pOuterBoundary->TestCollision( obj );
 		pInnerBoundary->TestCollision( obj );
+		tMan.TestCollision( obj );
 	}
 	Vec2 GetStartPosition() const
 	{
 		return startPosition;
 	}
+	const TrackRegionManager& GetTrackRegionManager() const
+	{
+		return tMan;
+	}
 
 private:
+	TrackRegionManager tMan;
 	const float wallWidth = 40.0f;
 	Vec2 startPosition;
 	std::unique_ptr< PolyClosedRebounding > pInnerBoundary;

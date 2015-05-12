@@ -147,6 +147,12 @@
     <ClInclude Include="PolyClosedRebounding.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TrackRegion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackRegionManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">

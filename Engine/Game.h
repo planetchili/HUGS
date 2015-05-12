@@ -36,6 +36,21 @@
 
 class Game : public Observer
 {
+private:
+	class LapListener : public Observer
+	{
+	public:
+		virtual void OnNotify() override
+		{
+			count++;
+		}
+		int GetLapCount() const
+		{
+			return count;
+		}
+	private:
+		int count = 0;
+	} listener;
 public:
 	Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer );
 	~Game();
