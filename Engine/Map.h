@@ -59,10 +59,6 @@ private:
 				}
 			}
 		}
-		virtual ~Loader() override
-		{
-			assert( parent.tMan.IDsAreContiguous() );
-		}
 	private:
 		bool addingPolyline = false;
 		Map& parent;

@@ -47,19 +47,21 @@ private:
 	public:
 		TrackSequencer( const TrackRegionManager& tMan )
 			:
-			nRegions( tMan.GetRegionCount() )
+			startRegion(tMan.GetStart()),
+			endRegion(tMan.GetEnd()),
+			curRegion(tMan.GetStart())
 		{}
 		void HitRegion( unsigned int uid )
 		{
-			if( uid == curRegion );
-			else if( uid == GetNextRegion() )
+			if( uid == curRegion->GetID() );
+			else if( uid == GetNextRegion()->GetID() )
 			{
-				if( uid == 0 && !isWrong )
+				if( uid == startRegion->GetID() && !isWrong )
 				{
 					Notify();
 				}
 				isWrong = false;
-				curRegion = uid;
+				curRegion = GetNextRegion();
 			}
 			else if( !isWrong )
 			{
@@ -68,20 +70,33 @@ private:
 			}
 		}
 	private:
-		unsigned int GetNextRegion() const
+		std::set< TrackRegion >::const_iterator GetNextRegion() const
 		{
-			return ( curRegion + 1 ) % nRegions;
+			if( std::next( curRegion ) == endRegion )
+			{
+				return startRegion;
+			}
+			else
+			{
+				return std::next( curRegion );
+			}
 		}
-		unsigned int GetPrevRegion() const
+		std::set< TrackRegion >::const_iterator GetPrevRegion() const
 		{
-			return int( curRegion ) - 1 < 0 ?
-				nRegions - 1 :
-				( curRegion - 1 ) % nRegions;
+			if( curRegion == startRegion )
+			{
+				return std::prev( endRegion );
+			}
+			else
+			{
+				return std::prev( curRegion );
+			}
 		}
 	private:
 		bool isWrong = false;
-		const unsigned int nRegions;
-		unsigned int curRegion = 0;
+		std::set< TrackRegion >::const_iterator curRegion;
+		const std::set< TrackRegion >::const_iterator startRegion;
+		const std::set< TrackRegion >::const_iterator endRegion;
 	};
 public:
 	Ship( const std::wstring& filename,const TrackRegionManager& tMan,Vec2 pos = { 0.0f,0.0f } )

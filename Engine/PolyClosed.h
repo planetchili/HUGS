@@ -239,9 +239,8 @@ protected:
 	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) const = 0;
 
 private:
-	// #@# const correctness vs. stl compatibility (avoid const members) (workaround smart ptr)
-	float fuseThreshold = 0.01f;
+	const float fuseThreshold = 0.01f;
 	// +1.0 = inward -1.0 = outward
-	float facingCoefficient;
+	const float facingCoefficient;
 	std::vector< const Vec2 > vertices;
 };

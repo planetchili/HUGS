@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include <set>
 #include "TrackRegion.h"
 
 class TrackRegionManager
@@ -7,23 +7,15 @@ class TrackRegionManager
 public:
 	void AddRegion( std::vector< const Vec2 >&& vList,unsigned int uid )
 	{
-		regions.emplace_back( std::move( vList ),uid );
-		std::sort( regions.begin(),regions.end() );
+		regions.emplace( std::move( vList ),uid );
 	}
-	unsigned int GetRegionCount() const
+	std::set< TrackRegion >::const_iterator GetStart() const
 	{
-		return regions.size();
+		return regions.cbegin();
 	}
-	bool IDsAreContiguous() const
+	std::set< TrackRegion >::const_iterator GetEnd() const
 	{
-		for( unsigned int i = 0; i < regions.size(); i++ )
-		{
-			if( regions[i].GetID() != i )
-			{
-				return false;
-			}
-		}
-		return true;
+		return regions.cend();
 	}
 	void TestCollision( CollidableCircle& obj ) const
 	{
@@ -33,5 +25,5 @@ public:
 		}
 	}
 private:
-	std::vector< TrackRegion > regions;
+	std::set< const TrackRegion > regions;
 };

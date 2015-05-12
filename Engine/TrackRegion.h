@@ -23,5 +23,5 @@ protected:
 		obj.Track( uid );
 	}
 private:
-	unsigned int uid;
+	const unsigned int uid;
 };
