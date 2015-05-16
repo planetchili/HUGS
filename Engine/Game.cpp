@@ -36,6 +36,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	timesFont( L"Times New Roman",60 )
 {
 	ship.AddObserver( this );
+	// dumb shit all done now
 }
 
 Game::~Game()
