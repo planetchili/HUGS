@@ -11,13 +11,13 @@ public:
 class Observable
 {
 public:
-	inline void AddObserver( Observer* obs )
+	inline void AddObserver( Observer& obs )
 	{
-		observers.push_back( obs );
+		observers.push_back( &obs );
 	}
-	inline void RemoveObserver( Observer* obs )
+	inline void RemoveObserver( Observer& obs )
 	{
-		std::remove( observers.begin(),observers.end(),obs );
+		std::remove( observers.begin(),observers.end(),&obs );
 	}
 	inline void Disable()
 	{

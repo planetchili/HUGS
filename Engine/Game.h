@@ -34,7 +34,7 @@
 #include "ShieldMeter.h"
 #include "Observer.h"
 
-class Game : public Observer
+class Game
 {
 private:
 	class LapListener : public Observer
@@ -50,12 +50,25 @@ private:
 		}
 	private:
 		int count = 0;
-	} listener;
+	} lapListener;
+	class DeathListener : public Observer
+	{
+	public:
+		virtual void OnNotify() override
+		{
+			isDead = true;
+		}
+		bool IsDead() const
+		{
+			return isDead;
+		}
+	private:
+		bool isDead = false;
+	} deathListener;
 public:
 	Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer );
 	~Game();
 	void Go();
-	virtual void OnNotify() override;
 private:
 	void ComposeFrame();
 	/********************************/
@@ -79,7 +92,6 @@ private:
 	Map map;
 	Ship ship;
 	ShieldMeter meter;
-	bool gameIsOver = false;
 	Font timesFont;
 	/********************************/
 };

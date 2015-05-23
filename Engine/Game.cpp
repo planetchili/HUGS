@@ -35,8 +35,8 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship ),
 	timesFont( L"Times New Roman",60 )
 {
-	ship.AddObserver( this );
-	ship.RegisterLapObserver( listener );
+	ship.AddObserver( deathListener );
+	ship.RegisterLapObserver( lapListener );
 }
 
 Game::~Game()
@@ -51,11 +51,6 @@ void Game::Go()
 	gfx.BeginFrame();
 	ComposeFrame();
 	gfx.EndFrame();
-}
-
-void Game::OnNotify()
-{
-	gameIsOver = true;
 }
 
 void Game::HandleInput( )
@@ -105,7 +100,7 @@ void Game::UpdateModel( )
 	const float dt = 1.0f / 60.0f;
 #endif
 
-	if( !gameIsOver )
+	if( !deathListener.IsDead() )
 	{
 		ship.Update( dt );
 		map.TestCollision( ship );
@@ -114,7 +109,7 @@ void Game::UpdateModel( )
 
 void Game::ComposeFrame()
 {
-	if( !gameIsOver )
+	if( !deathListener.IsDead() )
 	{
 		ship.FocusOn( cam );
 		cam.Draw( ship.GetDrawable() );
@@ -122,10 +117,10 @@ void Game::ComposeFrame()
 	cam.Draw( map.GetDrawable() );
 	port.Draw( meter.GetDrawable() );
 
-	if( gameIsOver )
+	if( deathListener.IsDead() )
 	{
 		gfx.DrawString( L"GAME\nOVER",{ 400.0f,300.0f },timesFont,GRAY );
 	}
 
-	gfx.DrawString( std::to_wstring( listener.GetLapCount() ),{ 920.0f,0.0f },timesFont,GRAY );
+	gfx.DrawString( std::to_wstring( lapListener.GetLapCount() ),{ 920.0f,0.0f },timesFont,GRAY );
 }

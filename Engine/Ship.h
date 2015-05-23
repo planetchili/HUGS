@@ -160,7 +160,7 @@ public:
 	}
 	void RegisterLapObserver( Observer& lapObs )
 	{
-		seq.AddObserver( &lapObs );
+		seq.AddObserver( lapObs );
 	}
 	// control functions
 	void Thrust()
@@ -224,7 +224,7 @@ private:
 
 	// stats
 	float shieldLevel = 1.0f;
-	const float maxDamage = 0.01f;
+	const float maxDamage = 0.2f;
 
 	// structural
 	Surface shipTexture;
