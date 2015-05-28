@@ -216,7 +216,7 @@ private:
 	const Color shieldColor = GREEN;
 
 	// linear
-	float thrustForce = 1000.0f;
+	float thrustForce = 1200.0f;
 	bool thrusting = false;
 
 	// angular
