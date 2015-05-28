@@ -94,7 +94,7 @@ public:
 	{
 		return Drawable( *this );
 	}
-	void TestCollision( CollidableCircle& obj )
+	void TestCollision( PhysicalCircle& obj )
 	{
 		pOuterBoundary->TestCollision( obj );
 		pInnerBoundary->TestCollision( obj );

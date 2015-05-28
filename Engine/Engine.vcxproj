@@ -109,6 +109,7 @@
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Observer.h" />
+    <ClInclude Include="PhysicalCircle.h" />
     <ClInclude Include="PolyClosed.h" />
     <ClInclude Include="PolyClosedRebounding.h" />
     <ClInclude Include="Rect.h" />
@@ -140,6 +141,7 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="TrackRegion.cpp" />
     <ClCompile Include="Windows.cpp" />
   </ItemGroup>
   <ItemGroup>

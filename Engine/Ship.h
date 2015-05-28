@@ -1,13 +1,13 @@
 #pragma once
 #include "PolyClosed.h"
 #include "Camera.h"
-#include "CollidableCircle.h"
+#include "PhysicalCircle.h"
 #include <array>
 #include "Vertex.h"
 #include "Observer.h"
 #include "TrackRegionManager.h"
 
-class Ship : public CollidableCircle, public Observable
+class Ship : public PhysicalCircle, public Observable
 {
 public:
 	class Drawable : public ::Drawable
@@ -36,7 +36,7 @@ public:
 				parent.shipTexture);
 
 			const Vec2 shieldCenter = trans * Vec2 { 0.0f,0.0f };
-			gfx.DrawCircle( shieldCenter,parent.shieldRadius,parent.shieldColor );
+			gfx.DrawCircle( shieldCenter,(int)parent.radius,parent.shieldColor );
 		}
 	private:
 		const Ship& parent;
@@ -101,8 +101,8 @@ private:
 public:
 	Ship( const std::wstring& filename,const TrackRegionManager& tMan,Vec2 pos = { 0.0f,0.0f } )
 		:
+		PhysicalCircle( 50.0f,1.0f,0.001f,pos ),
 		seq( tMan ),
-		pos( pos ),
 		shipTexture( Surface::FromFile( filename ) )
 	{
 		quad[0].v = { -80,-135.0f };
@@ -118,11 +118,11 @@ public:
 	{
 		return Drawable( *this );
 	}
-	void Update( float dt )
+	virtual void Update( float dt ) override
 	{
 		// angular (1st order then 0th order)
 		// deccel faster than accel
-		if( angAccelDir == 0.0f )
+   		if( angAccelDir == 0.0f )
 		{
 			if( abs( angVel ) <= angAccel * dt )
 			{
@@ -142,13 +142,13 @@ public:
 		// clamp angle to within 2pi
 		angle = fmodf( angle,2.0f * PI );
 
-		// linear (1st order then 0th order)
-		vel += Vec2 { 0.0f,-1.0f }.Rotation( angle ) * accel * thrust * dt;
-		if( vel.LenSq() > sq( maxSpeed ) )
+		// thrust force
+		if( thrusting )
 		{
-			vel *= maxSpeed / vel.Len();
+			ApplyForce( Vec2 { 0.0f,-1.0f }.Rotation( angle ) * thrustForce );
 		}
-		pos += vel * dt;
+
+		PhysicalCircle::Update( dt );
 	}
 	void FocusOn( Camera& cam ) const
 	{
@@ -165,11 +165,11 @@ public:
 	// control functions
 	void Thrust()
 	{
-		thrust = 1.0f;
+		thrusting = true;
 	}
 	void StopThrusting()
 	{
-		thrust = 0.0f;
+		thrusting = false;
 	}
 	void Spin( float dir )
 	{
@@ -182,38 +182,20 @@ public:
 			angAccelDir = 0.0f;
 		}
 	}
-	// collidable interface
-	virtual RectF GetAABB() const override
-	{
-		return RectF( pos.y - shieldRadius,pos.y + shieldRadius,
-			pos.x - shieldRadius,pos.x + shieldRadius );
-	}
-	virtual Vec2 GetCenter() const override
-	{
-		return pos;
-	}
-	virtual float GetRadius() const override
-	{
-		return (float)shieldRadius;
-	}
-	virtual Vec2 GetVel() const override
-	{
-		return vel;
-	}
 	virtual void Rebound( Vec2 normal ) override
 	{
 		if( shieldLevel > 0.0f )
 		{
 			shieldLevel = max( 0.0f,
-				shieldLevel - ( ( -vel * normal ) / maxSpeed ) * maxDamage );
+				shieldLevel - ( -vel * normal ) * kDamage );
 		}
 		else
 		{
 			Notify();
 		}
-		vel -= normal * ( vel * normal ) * 2.0f;
+		PhysicalCircle::Rebound( normal );
 	}
-	virtual void Track( unsigned int uid ) override
+	void Track( unsigned int uid )
 	{
 		seq.HitRegion( uid );
 	}
@@ -224,22 +206,18 @@ private:
 
 	// stats
 	float shieldLevel = 1.0f;
-	const float maxDamage = 0.2f;
+	const float kDamage = 0.0003f;
 
 	// structural
 	Surface shipTexture;
 	const float shipScale = 0.27f;
 	std::array<Vertex, 4> quad;
 	const Vec2 shipCenter = {0.0f,6.0f};
-	const int shieldRadius = 50;
 	const Color shieldColor = GREEN;
 
 	// linear
-	Vec2 pos;
-	Vec2 vel = { 0.0f,0.0f };
-	const float accel = 0.2f * 60.0f * 60.0f;
-	const float maxSpeed = 800.0f;
-	float thrust = 0.0f;
+	float thrustForce = 1000.0f;
+	bool thrusting = false;
 
 	// angular
 	float angle = 0.0f;

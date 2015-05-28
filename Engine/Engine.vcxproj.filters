@@ -153,6 +153,9 @@
     <ClInclude Include="TrackRegionManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PhysicalCircle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -184,6 +187,9 @@
     </ClCompile>
     <ClCompile Include="GdiPlusManager.cpp">
       <Filter>Source Files\Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="TrackRegion.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

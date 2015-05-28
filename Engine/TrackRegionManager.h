@@ -17,7 +17,7 @@ public:
 	{
 		return regions.cend();
 	}
-	void TestCollision( CollidableCircle& obj ) const
+	void TestCollision( PhysicalCircle& obj ) const
 	{
 		for( const TrackRegion& r : regions )
 		{

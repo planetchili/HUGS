@@ -18,10 +18,7 @@ public:
 		return uid;
 	}
 protected:
-	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) const override
-	{
-		obj.Track( uid );
-	}
+	virtual void HandleCollision( PhysicalCircle& obj,Vec2 normal ) const override;
 private:
 	const unsigned int uid;
 };

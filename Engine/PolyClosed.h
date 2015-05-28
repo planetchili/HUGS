@@ -6,7 +6,7 @@
 #include "dxflib\dl_dxf.h"
 #include "Mat3.h"
 #include "Drawable.h"
-#include "CollidableCircle.h"
+#include "PhysicalCircle.h"
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -82,7 +82,7 @@ public:
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	void TestCollision( CollidableCircle& obj ) const
+	void TestCollision( PhysicalCircle& obj ) const
 	{
 		const RectF objAABB = obj.GetAABB();
 		const Vec2 c = obj.GetCenter();
@@ -236,7 +236,7 @@ private:
 		}
 	}
 protected:
-	virtual void HandleCollision( CollidableCircle& obj,Vec2 normal ) const = 0;
+	virtual void HandleCollision( PhysicalCircle& obj,Vec2 normal ) const = 0;
 
 private:
 	const float fuseThreshold = 0.01f;
