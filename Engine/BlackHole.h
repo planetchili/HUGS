@@ -12,7 +12,7 @@ class BlackHole : public CollidableCircle
 public:
 	BlackHole( Vec2 pos )
 		:
-		CollidableCircle( 500.0f,pos ),
+		CollidableCircle( 800.0f,pos ),
 		holeQuad(L"bhole.png",2.3f),
 		bias( kGravity / sq( radius ) )
 	{}
@@ -35,15 +35,13 @@ protected:
 		float distSq = displacement.LenSq();
 		if( distSq <= sq( radius ) )
 		{
-			distSq = min( distSq,sq( minDist ) );
-			obj.ApplyForce( displacement.GetNorm() * ( kGravity / distSq ) );
+			obj.ApplyForce( displacement.GetNorm() * ( kGravity / distSq - bias ) );
 		}
 	}
 private:
-	const float kGravity = 1200.0f;
-	const float minDist = 1.0f;
+	const float kGravity = 100000000.0f;
 	const float bias;
 	const TexturedQuad holeQuad;
+	const float angVel = PI / 2.0f;
 	float angle = 0.0f;
-	const float angVel = 3.14f / 2.2f;
 };
