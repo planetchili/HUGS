@@ -6,6 +6,7 @@
 #include "Vertex.h"
 #include "Observer.h"
 #include "TrackRegionManager.h"
+#include "TexturedQuad.h"
 
 class Ship : public PhysicalCircle, public Observable
 {
@@ -21,19 +22,10 @@ public:
 		}
 		virtual void Rasterize( D3DGraphics& gfx ) const override
 		{
-			std::array<Vertex, 4 > quadTrans;
-			const Mat3 shipTrans = trans * Mat3::Translation( -parent.shipCenter )
-				* Mat3::Scaling( parent.shipScale );
-			for (int i = 0; i < 4; i++)
-			{
-				quadTrans[i].t = parent.quad[i].t;
-				quadTrans[i].v = shipTrans * parent.quad[i].v;
-			}
-
-			gfx.DrawTriangleTex(quadTrans[0], quadTrans[1], quadTrans[3], clip, 
-				parent.shipTexture);
-			gfx.DrawTriangleTex(quadTrans[1], quadTrans[2], quadTrans[3], clip,
-				parent.shipTexture);
+			auto shipQuad = parent.shipQuad.GetDrawable();
+			shipQuad.Transform( trans );
+			shipQuad.Clip( clip );
+			shipQuad.Rasterize( gfx );
 
 			const Vec2 shieldCenter = trans * Vec2 { 0.0f,0.0f };
 			gfx.DrawCircle( shieldCenter,(int)parent.radius,parent.shieldColor );
@@ -103,17 +95,8 @@ public:
 		:
 		PhysicalCircle( 50.0f,1.0f,0.001f,pos ),
 		seq( tMan ),
-		shipTexture( Surface::FromFile( filename ) )
-	{
-		quad[0].v = { -80,-135.0f };
-		quad[0].t = { 0.0f,0.0f };
-		quad[1].v = { 79,-135.0f };
-		quad[1].t = { 159.0f,0.0f };
-		quad[2].v = { 79,134.0f };
-		quad[2].t = { 159.0f,269.0f };
-		quad[3].v = { -80,134.0f };
-		quad[3].t = { 0.0f,269.0f };
-	}
+		shipQuad( filename,0.27f,{ 0.0f,6.0f } )
+	{}
 	Drawable GetDrawable() const
 	{
 		return Drawable( *this );
@@ -209,10 +192,7 @@ private:
 	const float kDamage = 0.0003f;
 
 	// structural
-	Surface shipTexture;
-	const float shipScale = 0.27f;
-	std::array<Vertex, 4> quad;
-	const Vec2 shipCenter = {0.0f,6.0f};
+	TexturedQuad shipQuad;
 	const Color shieldColor = GREEN;
 
 	// linear

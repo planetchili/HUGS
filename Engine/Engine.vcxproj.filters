@@ -159,6 +159,9 @@
     <ClInclude Include="BlackHole.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TexturedQuad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -205,6 +208,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="USS Turgidity.png">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="bhole.png">
       <Filter>Media</Filter>
     </Image>
   </ItemGroup>
