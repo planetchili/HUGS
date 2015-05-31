@@ -5,7 +5,7 @@
 
 class Font
 {
-	friend class Surface;
+	friend class TextSurface;
 public:
 	enum Alignment
 	{

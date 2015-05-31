@@ -84,5 +84,5 @@ private:
 	IDirect3D9*			pDirect3D;
 	IDirect3DDevice9*	pDevice;
 	IDirect3DSurface9*	pBackBuffer;
-	Surface				sysBuffer;
+	TextSurface			sysBuffer;
 };
