@@ -23,15 +23,9 @@ public:
 	{
 		return pos;
 	}
-	void TestCollision( CollidableCircle& other )
-	{
-		if( ( pos - other.pos ).LenSq() < sq( radius + other.radius ) )
-		{
-			HandleCollision( other );
-		}
-	}
+	void TestCollision( class PhysicalCircle& other );
 protected:
-	virtual void HandleCollision( CollidableCircle& other ) {}
+	virtual void HandleCollision( class PhysicalCircle& other ) {}
 protected:
 	float radius;
 	Vec2 pos;

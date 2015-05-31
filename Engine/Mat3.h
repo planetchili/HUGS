@@ -56,6 +56,10 @@ public:
 		result.y = elements[ 1 ][ 0 ] * rhs.x + elements[ 1 ][ 1 ] * rhs.y + elements[ 1 ][ 2 ];
 		return result;
 	}
+	_Vec2< T > ExtractTranslation() const
+	{
+		return _Vec2< T >{ elements[0][2],elements[1][2] };
+	}
 	static _Mat3 Identity()
 	{
 		_Mat3 i = { (T)1.0,(T)0.0,(T)0.0,(T)0.0,(T)1.0,(T)0.0,(T)0.0,(T)0.0,(T)1.0 };

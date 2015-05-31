@@ -84,6 +84,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BlackHole.h" />
     <ClInclude Include="ChiliMath.h" />
     <ClInclude Include="CollidableCircle.h" />
     <ClInclude Include="Colors.h" />
@@ -128,6 +129,7 @@
     <ClInclude Include="Viewport.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CollidableCircle.cpp" />
     <ClCompile Include="D3DGraphics.cpp" />
     <ClCompile Include="dxflib\dl_dxf.cpp" />
     <ClCompile Include="dxflib\dl_writer_ascii.cpp" />

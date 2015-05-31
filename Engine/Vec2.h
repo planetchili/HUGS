@@ -57,6 +57,12 @@ public:
 		y /= length;
 		return *this;
 	}
+	inline _Vec2	GetNorm() const
+	{
+		_Vec2 norm = *this;
+		norm.Normalize();
+		return norm;
+	}
 	inline _Vec2&	CCW90()
 	{
 		T temp = y;

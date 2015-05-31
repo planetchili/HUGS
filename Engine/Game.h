@@ -33,6 +33,7 @@
 #include "Map.h"
 #include "ShieldMeter.h"
 #include "Observer.h"
+#include "BlackHole.h"
 
 class Game
 {
@@ -91,6 +92,7 @@ private:
 	Camera cam;
 	Map map;
 	Ship ship;
+	BlackHole bHole;
 	ShieldMeter meter;
 	Font timesFont;
 	/********************************/

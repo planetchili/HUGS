@@ -156,6 +156,9 @@
     <ClInclude Include="PhysicalCircle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BlackHole.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -189,6 +192,9 @@
       <Filter>Source Files\Framework</Filter>
     </ClCompile>
     <ClCompile Include="TrackRegion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CollidableCircle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
