@@ -16,6 +16,15 @@ public:
 		holeQuad(L"bhole.png",2.3f),
 		bias( kGravity / sq( radius ) )
 	{}
+	BlackHole( BlackHole&& donor )
+		:
+		CollidableCircle( donor ),
+		kGravity( donor.kGravity ),
+		bias( donor.bias ),
+		angVel( donor.angVel ),
+		angle( donor.angle ),
+		holeQuad( std::move( donor.holeQuad ) )
+	{}
 	TexturedQuad::Drawable GetDrawable() const
 	{
 		TexturedQuad::Drawable drawable = holeQuad.GetDrawable();
@@ -41,7 +50,7 @@ protected:
 private:
 	const float kGravity = 100000000.0f;
 	const float bias;
-	const TexturedQuad holeQuad;
+	TexturedQuad holeQuad;
 	const float angVel = PI / 2.0f;
 	float angle = 0.0f;
 };

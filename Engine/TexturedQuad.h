@@ -50,11 +50,16 @@ public:
 			v.v = ( v.v - center ) * scale;
 		}
 	}
+	TexturedQuad( TexturedQuad&& donor )
+		:
+		texture( std::move( donor.texture ) ),
+		quad( std::move( donor.quad ) )
+	{}
 	Drawable GetDrawable() const
 	{
 		return Drawable( *this );
 	}
 private:
-	const Surface texture;
+	Surface texture;
 	std::array<Vertex,4> quad;
 };

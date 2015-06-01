@@ -31,6 +31,7 @@ public:
 	{
 		const_cast<Color*>( source.buffer ) = nullptr;
 	}
+	Surface( Surface& ) = delete;
 	Surface& operator=( Surface&& donor )
 	{
 		width = donor.width;
@@ -40,11 +41,13 @@ public:
 		const_cast<Color*>( donor.buffer ) = nullptr;
 		return *this;
 	}
+	Surface& operator=( const Surface& ) = delete;
 	~Surface()
 	{
 		if( buffer != nullptr )
 		{
 			delete[] buffer;
+			const_cast<Color*>( buffer ) = nullptr;
 		}
 	}
 	inline void Clear( Color fillValue  )
