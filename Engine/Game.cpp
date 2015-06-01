@@ -33,8 +33,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	port( gfx,{ 0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1 } ),
 	cam( port,port.GetWidth(),port.GetHeight() ),
 	meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship ),
-	timesFont( L"Times New Roman",60 ),
-	bHole( { 1000.0f,-900.0f } )
+	timesFont( L"Times New Roman",60 )
 {
 	ship.AddObserver( deathListener );
 	ship.RegisterLapObserver( lapListener );
@@ -103,10 +102,8 @@ void Game::UpdateModel( )
 
 	if( !deathListener.IsDead() )
 	{
-		bHole.TestCollision( ship );
 		ship.Update( dt );
 		map.TestCollision( ship );
-		bHole.Update( dt );
 	}
 }
 
@@ -118,7 +115,6 @@ void Game::ComposeFrame()
 		cam.Draw( ship.GetDrawable() );
 	}
 
-	cam.Draw( bHole.GetDrawable() );
 	cam.Draw( map.GetDrawable() );
 	port.Draw( meter.GetDrawable() );
 

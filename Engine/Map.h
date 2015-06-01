@@ -2,6 +2,8 @@
 #include "PolyClosedRebounding.h"
 #include "TriangleStrip.h"
 #include "TrackRegionManager.h"
+#include "BlackHole.h"
+#include <vector>
 
 class Map
 {
@@ -22,7 +24,16 @@ private:
 		}
 		virtual void addCircle( const DL_CircleData& data ) override
 		{
-			parent.startPosition = { (float)data.cx,(float)-data.cy };
+			if( attributes.getLayer() == "startposition" )
+			{
+				parent.startPosition = { (float)data.cx,(float)-data.cy };
+			}
+			else if( attributes.getLayer() == "blackholes" )
+			{
+				parent.bHoles.emplace_back( Vec2{ (float)data.cx,(float)-data.cy } );
+			}
+			else
+			{}
 		}
 		virtual void addPolyline( const DL_PolylineData& data ) override
 		{
@@ -73,6 +84,14 @@ private:
 		{}
 		virtual void Rasterize( D3DGraphics& gfx ) const override
 		{
+			for( const BlackHole& hole : parent.bHoles )
+			{
+				auto hd = hole.GetDrawable();
+				hd.Transform( trans );
+				hd.Clip( clip );
+				hd.Rasterize( gfx );
+			}
+
 			TriangleStrip::Drawable innerDrawable = parent.pInnerModel->GetDrawable();
 			TriangleStrip::Drawable outerDrawable = parent.pOuterModel->GetDrawable();
 			innerDrawable.Transform( trans );
@@ -99,6 +118,10 @@ public:
 		pOuterBoundary->TestCollision( obj );
 		pInnerBoundary->TestCollision( obj );
 		tMan.TestCollision( obj );
+		for( BlackHole& hole : bHoles )
+		{
+			hole.TestCollision( obj );
+		}
 	}
 	Vec2 GetStartPosition() const
 	{
@@ -113,6 +136,7 @@ private:
 	TrackRegionManager tMan;
 	const float wallWidth = 40.0f;
 	Vec2 startPosition;
+	std::vector< BlackHole > bHoles;
 	std::unique_ptr< PolyClosedRebounding > pInnerBoundary;
 	std::unique_ptr< TriangleStrip > pInnerModel;
 	std::unique_ptr< PolyClosedRebounding > pOuterBoundary;

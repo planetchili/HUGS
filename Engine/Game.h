@@ -92,7 +92,6 @@ private:
 	Camera cam;
 	Map map;
 	Ship ship;
-	BlackHole bHole;
 	ShieldMeter meter;
 	Font timesFont;
 	/********************************/
