@@ -123,6 +123,13 @@ public:
 			hole.TestCollision( obj );
 		}
 	}
+	void Update( float dt )
+	{
+		for( BlackHole& hole : bHoles )
+		{
+			hole.Update( dt );
+		}
+	}
 	Vec2 GetStartPosition() const
 	{
 		return startPosition;

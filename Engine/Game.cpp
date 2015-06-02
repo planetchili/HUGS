@@ -105,6 +105,7 @@ void Game::UpdateModel( )
 		ship.Update( dt );
 		map.TestCollision( ship );
 	}
+	map.Update( dt );
 }
 
 void Game::ComposeFrame()
