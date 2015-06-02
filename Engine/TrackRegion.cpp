@@ -11,6 +11,6 @@ void TrackRegion::HandleCollision( PhysicalCircle& obj,Vec2 normal ) const
 	}
 	catch( std::bad_cast )
 	{
-		assert( true );
+		assert( "Non-ship collided with track region" && false );
 	}
 }
