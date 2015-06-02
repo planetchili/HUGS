@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "PhysicalCircle.h"
 #include <array>
+#include <numeric>
 #include "Vertex.h"
 #include "Observer.h"
 #include "TrackRegionManager.h"
@@ -90,12 +91,46 @@ private:
 		const std::set< TrackRegion >::const_iterator startRegion;
 		const std::set< TrackRegion >::const_iterator endRegion;
 	};
+private:
+	class LapTimer : public Observer
+	{
+	public:
+		LapTimer( TrackSequencer& seq )
+		{
+			seq.AddObserver( *this );
+		}
+		float GetCurrentLapTime() const
+		{
+			return currentLapTime;
+		}
+		float GetTotalTime() const
+		{
+			return std::accumulate( lapTimes.begin(),lapTimes.end(),currentLapTime );
+		}
+		unsigned int GetLapCount() const
+		{
+			return lapTimes.size();
+		}
+		virtual void OnNotify() override
+		{
+			lapTimes.push_back( currentLapTime );
+			currentLapTime = 0.0f;
+		}
+		void Update( float dt )
+		{
+			currentLapTime += dt;
+		}
+	private:
+		std::vector< float > lapTimes;
+		float currentLapTime = 0.0f;
+	};
 public:
 	Ship( const std::wstring& filename,const TrackRegionManager& tMan,Vec2 pos = { 0.0f,0.0f } )
 		:
 		PhysicalCircle( 50.0f,1.0f,0.001f,pos ),
 		seq( tMan ),
-		shipQuad( filename,0.27f,{ 0.0f,6.0f } )
+		shipQuad( filename,0.27f,{ 0.0f,6.0f } ),
+		timer( seq )
 	{}
 	Drawable GetDrawable() const
 	{
@@ -145,7 +180,6 @@ public:
 	{
 		seq.AddObserver( lapObs );
 	}
-	// control functions
 	void Thrust()
 	{
 		thrusting = true;
@@ -178,6 +212,10 @@ public:
 		}
 		PhysicalCircle::Rebound( normal );
 	}
+	const LapTimer& Timer() const
+	{
+		return timer;
+	}
 	void Track( unsigned int uid )
 	{
 		seq.HitRegion( uid );
@@ -186,6 +224,7 @@ public:
 private:
 	// rules stuff
 	TrackSequencer seq;
+	LapTimer timer;
 
 	// stats
 	float shieldLevel = 1.0f;
