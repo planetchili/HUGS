@@ -123,7 +123,7 @@ public:
 
 		return Surface( width,height,pitch,buffer );
 	}
-	void Save( const std::wstring& filename )
+	void Save( const std::wstring& filename ) const
 	{
 		auto GetEncoderClsid = []( const WCHAR* format,CLSID* pClsid ) -> int
 		{
