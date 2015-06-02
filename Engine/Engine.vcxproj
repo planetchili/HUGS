@@ -106,6 +106,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GdiPlusManager.h" />
     <ClInclude Include="Keyboard.h" />
+    <ClInclude Include="LapDisplay.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Mouse.h" />

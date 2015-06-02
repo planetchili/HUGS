@@ -33,10 +33,10 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	port( gfx,{ 0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1 } ),
 	cam( port,port.GetWidth(),port.GetHeight() ),
 	meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship ),
-	timesFont( L"Times New Roman",60 )
+	timesFont( L"Times New Roman",60 ),
+	lapDisplay( ship,{ 860.0f,15.0f } )
 {
 	ship.AddObserver( deathListener );
-	ship.RegisterLapObserver( lapListener );
 }
 
 Game::~Game()
@@ -118,11 +118,10 @@ void Game::ComposeFrame()
 
 	cam.Draw( map.GetDrawable() );
 	port.Draw( meter.GetDrawable() );
+	port.Draw( lapDisplay.GetDrawable() );
 
 	if( deathListener.IsDead() )
 	{
 		gfx.DrawString( L"GAME\nOVER",{ 400.0f,300.0f },timesFont,GRAY );
 	}
-
-	gfx.DrawString( std::to_wstring( lapListener.GetLapCount() ),{ 920.0f,0.0f },timesFont,GRAY );
 }

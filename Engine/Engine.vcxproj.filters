@@ -120,9 +120,6 @@
     <ClInclude Include="CollidableCircle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TriangleStrip.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Mat3.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
@@ -160,6 +157,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TexturedQuad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LapDisplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleStrip.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

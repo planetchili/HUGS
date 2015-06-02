@@ -34,24 +34,11 @@
 #include "ShieldMeter.h"
 #include "Observer.h"
 #include "BlackHole.h"
+#include "LapDisplay.h"
 
 class Game
 {
 private:
-	class LapListener : public Observer
-	{
-	public:
-		virtual void OnNotify() override
-		{
-			count++;
-		}
-		int GetLapCount() const
-		{
-			return count;
-		}
-	private:
-		int count = 0;
-	} lapListener;
 	class DeathListener : public Observer
 	{
 	public:
@@ -94,5 +81,6 @@ private:
 	Ship ship;
 	ShieldMeter meter;
 	Font timesFont;
+	LapDisplay lapDisplay;
 	/********************************/
 };

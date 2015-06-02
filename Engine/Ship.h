@@ -120,6 +120,14 @@ private:
 		{
 			currentLapTime += dt;
 		}
+		std::vector< float >::const_iterator begin() const
+		{
+			return lapTimes.begin();
+		}
+		std::vector< float >::const_iterator end() const
+		{
+			return lapTimes.end();
+		}
 	private:
 		std::vector< float > lapTimes;
 		float currentLapTime = 0.0f;
@@ -166,6 +174,7 @@ public:
 			ApplyForce( Vec2 { 0.0f,-1.0f }.Rotation( angle ) * thrustForce );
 		}
 
+		timer.Update( dt );
 		PhysicalCircle::Update( dt );
 	}
 	void FocusOn( Camera& cam ) const
