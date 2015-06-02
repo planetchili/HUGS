@@ -51,6 +51,6 @@ private:
 	const float kGravity = 100000000.0f;
 	const float bias;
 	TexturedQuad holeQuad;
-	const float angVel = PI / 2.0f;
+	const float angVel = -PI / 2.0f;
 	float angle = 0.0f;
 };
