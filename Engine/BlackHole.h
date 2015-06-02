@@ -39,7 +39,7 @@ protected:
 	virtual void HandleCollision( PhysicalCircle& obj ) override
 	{
 		const Vec2 displacement = pos - obj.GetCenter();
-		float distSq = displacement.LenSq();
+		const float distSq = displacement.LenSq();
 		if( distSq <= sq( radius ) )
 		{
 			obj.ApplyForce( displacement.GetNorm() * ( kGravity / distSq - bias ) );
