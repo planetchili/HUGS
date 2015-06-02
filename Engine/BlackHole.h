@@ -19,9 +19,7 @@ public:
 	BlackHole( BlackHole&& donor )
 		:
 		CollidableCircle( donor ),
-		kGravity( donor.kGravity ),
 		bias( donor.bias ),
-		angVel( donor.angVel ),
 		angle( donor.angle ),
 		holeQuad( std::move( donor.holeQuad ) )
 	{}
