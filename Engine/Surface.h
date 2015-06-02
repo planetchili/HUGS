@@ -97,7 +97,7 @@ public:
 	{
 		return buffer;
 	}
-	static Surface FromFile( const std::wstring name )
+	static Surface FromFile( const std::wstring& name )
 	{
 		unsigned int width = 0;
 		unsigned int height = 0;
@@ -123,7 +123,7 @@ public:
 
 		return Surface( width,height,pitch,buffer );
 	}
-	void Save( const std::wstring filename )
+	void Save( const std::wstring& filename )
 	{
 		auto GetEncoderClsid = []( const WCHAR* format,CLSID* pClsid ) -> int
 		{
