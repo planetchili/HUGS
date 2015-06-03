@@ -34,9 +34,12 @@ public:
 protected:
 	inline void Notify()
 	{
-		for( Observer* obs : observers )
+		if( enabled )
 		{
-			obs->OnNotify();
+			for( Observer* obs : observers )
+			{
+				obs->OnNotify();
+			}
 		}
 	}
 private:
