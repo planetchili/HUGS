@@ -104,6 +104,7 @@
     <ClInclude Include="Font.h" />
     <ClInclude Include="FrameTimer.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameScreen.h" />
     <ClInclude Include="GdiPlusManager.h" />
     <ClInclude Include="Keyboard.h" />
     <ClInclude Include="LapDisplay.h" />
@@ -116,6 +117,7 @@
     <ClInclude Include="PolyClosedRebounding.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="Screen.h" />
     <ClInclude Include="ShieldMeter.h" />
     <ClInclude Include="Ship.h" />
     <ClInclude Include="Sound.h" />

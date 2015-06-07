@@ -23,10 +23,8 @@
 #include "D3DGraphics.h"
 #include "Keyboard.h"
 #include "Mouse.h"
-#include "Sound.h"
 #include "Timer.h"
 #include "FrameTimer.h"
-#include "PolyClosed.h"
 #include "Camera.h"
 #include "Viewport.h"
 #include "Ship.h"
@@ -35,52 +33,20 @@
 #include "Observer.h"
 #include "BlackHole.h"
 #include "LapDisplay.h"
+#include "GameScreen.h"
 
-class Game
+class Game : public ScreenContainer
 {
-private:
-	class DeathListener : public Observer
-	{
-	public:
-		virtual void OnNotify() override
-		{
-			isDead = true;
-		}
-		bool IsDead() const
-		{
-			return isDead;
-		}
-	private:
-		bool isDead = false;
-	} deathListener;
 public:
 	Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer );
 	~Game();
 	void Go();
 private:
 	void ComposeFrame();
-	/********************************/
-	/*  User Functions              */
-
-	void UpdateModel( );
-	void HandleInput();
-
-	/********************************/
+	void UpdateModel();
 private:
 	D3DGraphics gfx;
 	KeyboardClient kbd;
 	MouseClient mouse;
-	DSound audio;
-	/********************************/
-	/*  User Variables              */
-
 	Timer timer;
-	Viewport port;
-	Camera cam;
-	Map map;
-	Ship ship;
-	ShieldMeter meter;
-	Font timesFont;
-	LapDisplay lapDisplay;
-	/********************************/
 };

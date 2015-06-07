@@ -24,19 +24,12 @@
 #include <array>
 
 Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
-	: gfx( hWnd ),
-	audio( hWnd ),
+	:
+	gfx( hWnd ),
 	kbd( kServer ),
-	mouse( mServer ),
-	map( "tracktest.dxf" ),
-	ship( L"USS Turgidity.png",map.GetTrackRegionManager(),map.GetStartPosition() ),
-	port( gfx,{ 0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1 } ),
-	cam( port,port.GetWidth(),port.GetHeight() ),
-	meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship ),
-	timesFont( L"Times New Roman",60 ),
-	lapDisplay( ship,{ 860.0f,15.0f } )
+	mouse( mServer )
 {
-	ship.AddObserver( deathListener );
+	pScreen = std::make_unique< GameScreen >( gfx,kbd,*this );
 }
 
 Game::~Game()
@@ -45,50 +38,11 @@ Game::~Game()
 
 void Game::Go()
 {
-	HandleInput();
 	UpdateModel();
 
 	gfx.BeginFrame();
 	ComposeFrame();
 	gfx.EndFrame();
-}
-
-void Game::HandleInput( )
-{
-	const KeyEvent key = kbd.ReadKey( );
-	switch( key.GetCode( ) )
-	{
-	case VK_LEFT:
-		if( key.IsPress( ) )
-		{
-			ship.Spin( -1.0f );
-		}
-		else
-		{
-			ship.StopSpinning( -1.0f );
-		}
-		break;
-	case VK_RIGHT:
-		if( key.IsPress( ) )
-		{
-			ship.Spin( 1.0f );
-		}
-		else
-		{
-			ship.StopSpinning( 1.0f );
-		}
-		break;
-	case VK_SPACE:
-		if( key.IsPress( ) )
-		{
-			ship.Thrust( );
-		}
-		else
-		{
-			ship.StopThrusting( );
-		}
-		break;
-	}
 }
 
 void Game::UpdateModel( )
@@ -100,28 +54,10 @@ void Game::UpdateModel( )
 	const float dt = 1.0f / 60.0f;
 #endif
 
-	if( !deathListener.IsDead() )
-	{
-		ship.Update( dt );
-		map.TestCollision( ship );
-	}
-	map.Update( dt );
+	pScreen->Update( dt );
 }
 
 void Game::ComposeFrame()
 {
-	if( !deathListener.IsDead() )
-	{
-		ship.FocusOn( cam );
-		cam.Draw( ship.GetDrawable() );
-	}
-
-	cam.Draw( map.GetDrawable() );
-	port.Draw( meter.GetDrawable() );
-	port.Draw( lapDisplay.GetDrawable() );
-
-	if( deathListener.IsDead() )
-	{
-		gfx.DrawString( L"GAME\nOVER",{ 400.0f,300.0f },timesFont,GRAY );
-	}
+	pScreen->Draw( gfx );
 }

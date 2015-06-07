@@ -1,3 +1,4 @@
+#pragma once
 #include "Drawable.h"
 #include "Ship.h"
 
