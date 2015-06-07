@@ -43,6 +43,7 @@ void Game::Go()
 	gfx.BeginFrame();
 	ComposeFrame();
 	gfx.EndFrame();
+	pScreen->EndFrame();
 }
 
 void Game::UpdateModel( )

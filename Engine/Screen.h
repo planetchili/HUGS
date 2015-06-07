@@ -18,11 +18,23 @@ public:
 	{}
 	virtual void Update( float dt ) = 0;
 	virtual void Draw( D3DGraphics& gfx ) = 0;
-protected:
-	void ChangeScreen( std::unique_ptr< class Screen > pNewScreen )
+	void EndFrame()
 	{
-		parent.pScreen = std::move( pNewScreen );
+		if( onDeck )
+		{
+			parent.pScreen = std::move( onDeck );
+		}
+	}
+protected:
+	void ChangeScreen( std::unique_ptr< Screen > pNewScreen )
+	{
+		if( !onDeck )
+		{
+			onDeck = std::move( pNewScreen );
+		}
 	}
 protected:
 	ScreenContainer& parent;
+private:
+	std::unique_ptr< Screen > onDeck;
 };
