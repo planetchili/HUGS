@@ -39,7 +39,8 @@ public:
 		meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship ),
 		timesFont( L"Times New Roman",60 ),
 		lapDisplay( ship,{ 860.0f,15.0f } ),
-		kbd( kbd )
+		kbd( kbd ),
+		gfx( gfx )
 	{
 		ship.AddObserver( deathListener );
 	}
@@ -74,41 +75,53 @@ private:
 	void HandleInput()
 	{
 		const KeyEvent key = kbd.ReadKey();
-		switch( key.GetCode() )
+
+		if( deathListener.IsDead() )
 		{
-		case VK_LEFT:
-			if( key.IsPress() )
+			if( key.GetCode() == VK_RETURN && key.IsPress() )
 			{
-				ship.Spin( -1.0f );
+				ChangeScreen( std::make_unique< GameScreen >( gfx,kbd,parent ) );
 			}
-			else
+		}
+		else
+		{
+			switch( key.GetCode() )
 			{
-				ship.StopSpinning( -1.0f );
+			case VK_LEFT:
+				if( key.IsPress() )
+				{
+					ship.Spin( -1.0f );
+				}
+				else
+				{
+					ship.StopSpinning( -1.0f );
+				}
+				break;
+			case VK_RIGHT:
+				if( key.IsPress() )
+				{
+					ship.Spin( 1.0f );
+				}
+				else
+				{
+					ship.StopSpinning( 1.0f );
+				}
+				break;
+			case VK_SPACE:
+				if( key.IsPress() )
+				{
+					ship.Thrust();
+				}
+				else
+				{
+					ship.StopThrusting();
+				}
+				break;
 			}
-			break;
-		case VK_RIGHT:
-			if( key.IsPress() )
-			{
-				ship.Spin( 1.0f );
-			}
-			else
-			{
-				ship.StopSpinning( 1.0f );
-			}
-			break;
-		case VK_SPACE:
-			if( key.IsPress() )
-			{
-				ship.Thrust();
-			}
-			else
-			{
-				ship.StopThrusting();
-			}
-			break;
 		}
 	}
 private:
+	D3DGraphics& gfx;
 	KeyboardClient& kbd;
 	Viewport port;
 	Camera cam;

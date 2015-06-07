@@ -19,7 +19,7 @@ public:
 	virtual void Update( float dt ) = 0;
 	virtual void Draw( D3DGraphics& gfx ) = 0;
 protected:
-	void ChangeScreen( std::unique_ptr< class Screen >& pNewScreen )
+	void ChangeScreen( std::unique_ptr< class Screen > pNewScreen )
 	{
 		parent.pScreen = std::move( pNewScreen );
 	}
