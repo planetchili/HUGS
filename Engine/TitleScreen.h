@@ -109,7 +109,6 @@ public:
 	}
 	virtual void Update( float dt ) override
 	{
-		HandleInput();
 		for( Brush& b : brushes )
 		{
 			b.Step();
@@ -121,8 +120,7 @@ public:
 		gfx.DrawString( L"H.U.G.S.",{ 250.0f,300.0f },timesFont,BLACK );
 		gfx.DrawString( L"PRESS ENTER",{ 400.0f,500.0f },arialFont,BLACK );
 	}
-private:
-	void HandleInput()
+	virtual void HandleInput() override
 	{
 		const KeyEvent key = kbd.ReadKey();
 

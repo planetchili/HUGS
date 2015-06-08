@@ -47,7 +47,6 @@ public:
 	}
 	virtual void Update( float dt ) override
 	{
-		HandleInput();
 		if( !deathListener.IsDead() )
 		{
 			ship.Update( dt );
@@ -73,8 +72,7 @@ public:
 			gfx.DrawString( L"Press ENTER to RESTART",{375.0f,550.0f },arialFont,RED );
 		}
 	}
-private:
-	void HandleInput()
+	virtual void HandleInput() override
 	{
 		const KeyEvent key = kbd.ReadKey();
 

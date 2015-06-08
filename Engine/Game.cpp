@@ -55,6 +55,7 @@ void Game::UpdateModel( )
 	const float dt = 1.0f / 60.0f;
 #endif
 
+	pScreen->HandleInput();
 	pScreen->Update( dt );
 }
 
