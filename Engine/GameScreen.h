@@ -38,6 +38,7 @@ public:
 		cam( port,port.GetWidth(),port.GetHeight() ),
 		meter( { 20,45,20,D3DGraphics::SCREENWIDTH / 4 },ship ),
 		timesFont( L"Times New Roman",60 ),
+		arialFont( L"Arial",20 ),
 		lapDisplay( ship,{ 860.0f,15.0f } ),
 		kbd( kbd ),
 		gfx( gfx )
@@ -69,6 +70,7 @@ public:
 		if( deathListener.IsDead() )
 		{
 			gfx.DrawString( L"GAME\nOVER",{ 400.0f,300.0f },timesFont,GRAY );
+			gfx.DrawString( L"Press ENTER to RESTART",{375.0f,550.0f },arialFont,RED );
 		}
 	}
 private:
@@ -129,5 +131,6 @@ private:
 	Ship ship;
 	ShieldMeter meter;
 	Font timesFont;
+	Font arialFont;
 	LapDisplay lapDisplay;
 };

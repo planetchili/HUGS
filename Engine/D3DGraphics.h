@@ -63,6 +63,10 @@ public:
 	{
 		sysBuffer.DrawString( string,rect,font,c,a );
 	}
+	inline void CopySurface( const Surface& src )
+	{
+		sysBuffer.Copy( src );
+	}
 	void BeginFrame();
 	void EndFrame();
 	virtual void Draw( Drawable& obj ) override

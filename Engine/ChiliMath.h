@@ -29,9 +29,25 @@ inline T sq( T val )
 	return val * val;
 }
 
-
 template <typename T> 
-T sgn( T val )
+inline T sgn( T val )
 {
 	return (T)( (T)0 <= val ) - ( val < (T)0 );
+}
+
+template <typename T>
+inline T wrapzero( T val,T upper )
+{
+	const T modded = fmod( val,upper );
+	return modded >= ( T )0.0 ? 
+		modded :
+		upper - modded;
+}
+
+template<>
+inline int wrapzero( int val,int upper )
+{
+	return val >= 0 ?
+		val % upper :
+		upper - ( -val ) % upper;
 }

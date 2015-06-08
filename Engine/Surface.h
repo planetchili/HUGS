@@ -69,6 +69,23 @@ public:
 		assert( y < height );
 		buffer[y * pitch + x] = c;
 	}
+	inline void PutPixelAlpha( unsigned int x,unsigned int y,Color c )
+	{
+		assert( x >= 0 );
+		assert( y >= 0 );
+		assert( x < width );
+		assert( y < height );
+		// load source pixel
+		const Color d = GetPixel( x,y );
+
+		// blend channels
+		const unsigned char rsltRed = ( c.r * c.x + d.r * ( 255 - c.x ) ) / 255;
+		const unsigned char rsltGreen = ( c.g * c.x + d.g * ( 255 - c.x ) ) / 255;
+		const unsigned char rsltBlue = ( c.b * c.x + d.b * ( 255 - c.x ) ) / 255;
+
+		// pack channels back into pixel and fire pixel onto surface
+		buffer[y * pitch + x] = { rsltRed,rsltGreen,rsltBlue };
+	}
 	inline Color GetPixel( unsigned int x,unsigned int y ) const
 	{
 		assert( x >= 0 );
@@ -161,6 +178,22 @@ public:
 			CLSID bmpID;
 			GetEncoderClsid( L"image/bmp",&bmpID );
 			bitmap.Save( filename.c_str(),&bmpID,NULL );
+		}
+	}
+	void Copy( const Surface& src )
+	{
+		assert( width == src.width );
+		assert( height == src.height );
+		if( pitch == src.pitch )
+		{
+			memcpy( buffer,src.buffer,pitch * height * sizeof( Color ) );
+		}
+		else
+		{
+			for( unsigned int y = 0; y < height; y++ )
+			{
+				memcpy( &buffer[pitch * y],&( src.buffer )[pitch * y],sizeof( Color )* width );
+			}
 		}
 	}
 private:

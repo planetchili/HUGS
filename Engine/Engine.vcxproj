@@ -124,6 +124,7 @@
     <ClInclude Include="Surface.h" />
     <ClInclude Include="TexturedQuad.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="TitleScreen.h" />
     <ClInclude Include="TrackRegion.h" />
     <ClInclude Include="TrackRegionManager.h" />
     <ClInclude Include="TriangleStrip.h" />

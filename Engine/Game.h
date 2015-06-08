@@ -33,7 +33,7 @@
 #include "Observer.h"
 #include "BlackHole.h"
 #include "LapDisplay.h"
-#include "GameScreen.h"
+#include "TitleScreen.h"
 
 class Game : public ScreenContainer
 {
