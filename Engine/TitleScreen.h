@@ -16,14 +16,10 @@ private:
 		Brush( TitleScreen& parent )
 			:
 			parent( parent ),
-			gen( parent.rd() ),
-			dis6( 0,5 ),
 			disRot( 0.0f,stdRotation )
 		{}
 		void Step()
 		{
-			MutateColor();
-
 			vel = vel.Rotation( disRot( gen ) );
 			pos += vel;
 			pos.x = wrapzero( pos.x,float( parent.funk.GetWidth() ) );
@@ -45,9 +41,13 @@ private:
 				}
 			}
 		}
-	private:
-		void MutateColor()
+		static void SeedColor( unsigned long seed )
 		{
+			gen.seed( seed );
+		}
+		static void MutateColor()
+		{
+			std::uniform_int_distribution<unsigned int> dis6( 0,5 );
 			switch( dis6( gen ) )
 			{
 			case 0:
@@ -71,14 +71,13 @@ private:
 			}
 		}
 	private:
+		static Color c;
+		static std::mt19937 gen;
 		TitleScreen& parent;
 		const float stdRotation = PI / 10.0f;
 		const float brushRadius = 8.0f;
-		Color c = { 48,0,0,0 };
 		Vec2 vel = { 5.0f,0.0f };
 		Vec2 pos = { 0.0f,350.0f };
-		std::mt19937 gen;
-		std::uniform_int_distribution<unsigned int> dis6;
 		std::normal_distribution<float> disRot;
 	};
 public:
@@ -91,6 +90,7 @@ public:
 		gfx( gfx ),
 		funk( D3DGraphics::SCREENWIDTH,D3DGraphics::SCREENHEIGHT )
 	{
+		Brush::SeedColor( rd() );
 		brushes.reserve( nBrushes );
 		for( int i = 0; i < nBrushes; i++ )
 		{
@@ -99,6 +99,7 @@ public:
 	}
 	virtual void Update( float dt ) override
 	{
+		Brush::MutateColor();
 		for( Brush& b : brushes )
 		{
 			b.Step();
