@@ -28,6 +28,24 @@
     <Filter Include="Media">
       <UniqueIdentifier>{ce547343-38db-41f0-a783-8b32c11ad766}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Screens">
+      <UniqueIdentifier>{168b0354-c8d9-4fd0-9b0c-7258562294f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics">
+      <UniqueIdentifier>{242aa3ae-f61b-4440-b033-ee2e81e8d7ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UI">
+      <UniqueIdentifier>{99eb9f68-0b30-4455-94a5-252f1f423c92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Physics">
+      <UniqueIdentifier>{83a46e1c-56f9-45c0-9a0d-a3479deada97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Entities">
+      <UniqueIdentifier>{a14ae0e5-82fb-48ac-afa0-f3384ec7b248}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Struct/Algor">
+      <UniqueIdentifier>{78c43863-5eb5-4435-94d1-06e2f0122626}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -66,9 +84,6 @@
     <ClInclude Include="Vec2.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
-    <ClInclude Include="PolyClosed.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="dxflib\dl_attributes.h">
       <Filter>Header Files\dxflib</Filter>
     </ClInclude>
@@ -99,38 +114,11 @@
     <ClInclude Include="dxflib\dl_writer_ascii.h">
       <Filter>Header Files\dxflib</Filter>
     </ClInclude>
-    <ClInclude Include="Drawable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawTarget.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Viewport.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Ship.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Map.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CollidableCircle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Mat3.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
     <ClInclude Include="Vertex.h">
       <Filter>Header Files\Framework</Filter>
-    </ClInclude>
-    <ClInclude Include="ShieldMeter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Observer.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Font.h">
       <Filter>Header Files\Framework</Filter>
@@ -141,41 +129,71 @@
     <ClInclude Include="Surface.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
-    <ClInclude Include="PolyClosedRebounding.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrackRegion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TrackRegionManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicalCircle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BlackHole.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TexturedQuad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LapDisplay.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TriangleStrip.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Screen.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="CountScreen.h">
+      <Filter>Header Files\Screens</Filter>
     </ClInclude>
     <ClInclude Include="GameScreen.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Screens</Filter>
+    </ClInclude>
+    <ClInclude Include="Screen.h">
+      <Filter>Header Files\Screens</Filter>
     </ClInclude>
     <ClInclude Include="TitleScreen.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Screens</Filter>
     </ClInclude>
-    <ClInclude Include="CountScreen.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="TexturedQuad.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="TriangleStrip.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Viewport.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawable.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawTarget.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ShieldMeter.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="LapDisplay.h">
+      <Filter>Header Files\UI</Filter>
+    </ClInclude>
+    <ClInclude Include="PolyClosed.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PolyClosedRebounding.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackRegion.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="TrackRegionManager.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicalCircle.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="CollidableCircle.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="BlackHole.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Map.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Ship.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Observer.h">
+      <Filter>Header Files\Struct/Algor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
