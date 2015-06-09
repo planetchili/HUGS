@@ -1,17 +1,9 @@
 #pragma once
 #include "Screen.h"
-#include "Camera.h"
-#include "Viewport.h"
-#include "Ship.h"
-#include "Map.h"
-#include "ShieldMeter.h"
-#include "Observer.h"
-#include "BlackHole.h"
-#include "LapDisplay.h"
-#include "Timer.h"
 #include "Keyboard.h"
 #include "GameScreen.h"
 #include "ChiliMath.h"
+#include "CountScreen.h"
 #include <random>
 #include <vector>
 
@@ -90,11 +82,9 @@ private:
 		std::normal_distribution<float> disRot;
 	};
 public:
-	TitleScreen( D3DGraphics& gfx,KeyboardClient& kbd,ScreenContainer& ctr )
+	TitleScreen( D3DGraphics& gfx,KeyboardClient& kbd,ScreenContainer* ctr )
 		:
 		Screen( ctr ),
-		port( gfx,{ 0,D3DGraphics::SCREENHEIGHT - 1,0,D3DGraphics::SCREENWIDTH - 1 } ),
-		cam( port,port.GetWidth(),port.GetHeight() ),
 		timesFont( L"Times New Roman",100 ),
 		arialFont( L"Arial",30 ),
 		kbd( kbd ),
@@ -126,14 +116,13 @@ public:
 
 		if( key.GetCode() == VK_RETURN && key.IsPress() )
 		{
-			ChangeScreen( std::make_unique< GameScreen >( gfx,kbd,parent ) );
+			ChangeScreen( std::make_unique< CountScreen >(
+				std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
 		}
 	}
 private:
 	D3DGraphics& gfx;
 	KeyboardClient& kbd;
-	Viewport port;
-	Camera cam;
 	Font timesFont;
 	Font arialFont;
 	Surface funk;

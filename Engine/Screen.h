@@ -12,7 +12,7 @@ protected:
 class Screen
 {
 public:
-	Screen( ScreenContainer& parent )
+	Screen( ScreenContainer* parent )
 		:
 		parent( parent )
 	{}
@@ -23,10 +23,14 @@ public:
 	{
 		if( onDeck )
 		{
-			parent.pScreen = std::move( onDeck );
+			parent->pScreen = std::move( onDeck );
 		}
 	}
 protected:
+	void SetOtherParent( Screen& other,ScreenContainer* parent ) const
+	{
+		other.parent = parent;
+	}
 	void ChangeScreen( std::unique_ptr< Screen > pNewScreen )
 	{
 		if( !onDeck )
@@ -35,7 +39,7 @@ protected:
 		}
 	}
 protected:
-	ScreenContainer& parent;
+	ScreenContainer* parent;
 private:
 	std::unique_ptr< Screen > onDeck;
 };

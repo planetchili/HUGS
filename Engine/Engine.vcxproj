@@ -88,6 +88,7 @@
     <ClInclude Include="ChiliMath.h" />
     <ClInclude Include="CollidableCircle.h" />
     <ClInclude Include="Colors.h" />
+    <ClInclude Include="CountScreen.h" />
     <ClInclude Include="D3DGraphics.h" />
     <ClInclude Include="Drawable.h" />
     <ClInclude Include="DrawTarget.h" />

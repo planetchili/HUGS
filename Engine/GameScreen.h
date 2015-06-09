@@ -10,6 +10,7 @@
 #include "LapDisplay.h"
 #include "Timer.h"
 #include "Keyboard.h"
+#include "CountScreen.h"
 
 class GameScreen : public Screen
 {
@@ -29,7 +30,7 @@ private:
 		bool isDead = false;
 	} deathListener;
 public:
-	GameScreen( D3DGraphics& gfx,KeyboardClient& kbd,ScreenContainer& ctr )
+	GameScreen( D3DGraphics& gfx,KeyboardClient& kbd,ScreenContainer* ctr )
 		:
 		Screen( ctr ),
 		map( "tracktest.dxf" ),
@@ -80,7 +81,8 @@ public:
 		{
 			if( key.GetCode() == VK_RETURN && key.IsPress() )
 			{
-				ChangeScreen( std::make_unique< GameScreen >( gfx,kbd,parent ) );
+				ChangeScreen( std::make_unique< CountScreen >(
+					std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
 			}
 		}
 		else
