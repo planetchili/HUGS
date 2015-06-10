@@ -38,16 +38,6 @@ Game::~Game()
 
 void Game::Go()
 {
-	UpdateModel();
-
-	gfx.BeginFrame();
-	ComposeFrame();
-	gfx.EndFrame();
-	pScreen->EndFrame();
-}
-
-void Game::UpdateModel( )
-{
 #if NDEBUG
 	const float dt = timer.GetTimeSec();
 	timer.StartWatch();
@@ -55,8 +45,23 @@ void Game::UpdateModel( )
 	const float dt = 1.0f / 60.0f;
 #endif
 
-	pScreen->HandleInput();
-	pScreen->Update( dt );
+	UpdateModel( dt );
+	gfx.BeginFrame();
+	ComposeFrame();
+	gfx.EndFrame();
+}
+
+void Game::UpdateModel( float dt )
+{
+	try
+	{
+		pScreen->HandleInput();
+		pScreen->Update( dt );
+	}
+	catch( Screen::Change )
+	{
+		UpdateModel( dt );
+	}
 }
 
 void Game::ComposeFrame()

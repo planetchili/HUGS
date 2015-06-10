@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "D3DGraphics.h"
+#include <exception>
 
 class ScreenContainer
 {
@@ -12,6 +13,9 @@ protected:
 class Screen
 {
 public:
+	class Change : public std::exception
+	{};
+public:
 	Screen( ScreenContainer* parent )
 		:
 		parent( parent )
@@ -19,27 +23,16 @@ public:
 	virtual void HandleInput() = 0;
 	virtual void Update( float dt ) = 0;
 	virtual void Draw( D3DGraphics& gfx ) = 0;
-	void EndFrame()
-	{
-		if( onDeck )
-		{
-			parent->pScreen = std::move( onDeck );
-		}
-	}
 protected:
-	void SetOtherParent( Screen& other,ScreenContainer* parent ) const
+	void SetOtherParent( Screen& other,ScreenContainer* newParent ) const
 	{
 		other.parent = parent;
 	}
 	void ChangeScreen( std::unique_ptr< Screen > pNewScreen )
 	{
-		if( !onDeck )
-		{
-			onDeck = std::move( pNewScreen );
-		}
+		parent->pScreen = std::move( pNewScreen );
+		throw Change();
 	}
 protected:
 	ScreenContainer* parent;
-private:
-	std::unique_ptr< Screen > onDeck;
 };

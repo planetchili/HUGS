@@ -29,10 +29,7 @@ public:
 	}
 	virtual void Draw( D3DGraphics& gfx ) override
 	{
-		if( child )
-		{
-			child->Draw( gfx );
-		}
+		child->Draw( gfx );
 		gfx.DrawString( std::to_wstring( int( time ) ),{ 450.0f,350.0f },timesFont,RED );
 	}
 	virtual void HandleInput() override
