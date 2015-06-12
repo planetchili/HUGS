@@ -4,6 +4,7 @@
 #include "GameScreen.h"
 #include "ChiliMath.h"
 #include "CountScreen.h"
+#include "Menu.h"
 #include <random>
 #include <vector>
 
@@ -80,6 +81,61 @@ private:
 		Vec2 pos = { 0.0f,350.0f };
 		std::normal_distribution<float> disRot;
 	};
+	class StartMenu : public Menu
+	{
+	private:
+		class ExitButton : public Button
+		{
+		public:
+			ExitButton( StartMenu& m )
+				:
+				Button( m,L"Exit" ),
+				m( m )
+			{
+			}
+		private:
+			virtual void OnPress() override
+			{
+				m.OnExit();
+			}
+		private:
+			StartMenu& m;
+		};
+		class StartButton : public Button
+		{
+		public:
+			StartButton( StartMenu& m )
+				:
+				Button( m,L"New Game" ),
+				screen( m.parent )
+			{}
+		private:
+			virtual void OnPress() override
+			{
+				screen.NewGame();
+			}
+		private:
+			TitleScreen& screen;
+		};
+	public:
+		StartMenu( TitleScreen& parent )
+			:
+			Menu( { 512,560 },400,15,40,{ 148,32,32,64 },
+			L"Arial",BLACK,{ 128,128,255 },{ 52,52,72 },2 ),
+			parent( parent )
+		{
+			AddItem( std::make_unique<StartButton>( *this ) );
+			AddItem( std::make_unique<ExitButton>( *this ) );
+			Finalize();
+		}
+	private:
+		virtual void OnExit() override
+		{
+			parent.pMenu.release();
+		}
+	private:
+		TitleScreen& parent;
+	};
 public:
 	TitleScreen( D3DGraphics& gfx,KeyboardClient& kbd,ScreenContainer* ctr )
 		:
@@ -109,17 +165,33 @@ public:
 	{
 		gfx.CopySurface( funk );
 		gfx.DrawString( L"H.U.G.S.",{ 250.0f,300.0f },timesFont,BLACK );
-		gfx.DrawString( L"PRESS ENTER",{ 400.0f,500.0f },arialFont,BLACK );
+		if( pMenu )
+		{
+			pMenu->Draw( gfx );
+		}
+		else
+		{
+			gfx.DrawString( L"PRESS ENTER",{ 380.0f,500.0f },arialFont,BLACK );
+		}
 	}
 	virtual void HandleInput() override
 	{
 		const KeyEvent key = kbd.ReadKey();
 
-		if( key.GetCode() == VK_RETURN && key.IsPress() )
+		if( pMenu )
 		{
-			ChangeScreen( std::make_unique< CountScreen >(
-				std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
+			pMenu->HandleInput( key );
 		}
+		else if( key.GetCode() == VK_RETURN && key.IsPress() )
+		{
+			pMenu = std::make_unique<StartMenu>( *this );
+		}
+	}
+private:
+	void NewGame()
+	{
+		ChangeScreen( std::make_unique< CountScreen >(
+			std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
 	}
 private:
 	D3DGraphics& gfx;
@@ -130,4 +202,5 @@ private:
 	std::random_device rd;
 	std::vector< Brush > brushes;
 	const int nBrushes = 50;
+	std::unique_ptr<StartMenu> pMenu;
 };

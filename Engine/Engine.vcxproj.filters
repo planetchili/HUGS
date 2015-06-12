@@ -72,9 +72,6 @@
     <ClInclude Include="Rect.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Header Files\Framework</Filter>
-    </ClInclude>
     <ClInclude Include="Sound.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
@@ -194,6 +191,12 @@
     </ClInclude>
     <ClInclude Include="Observer.h">
       <Filter>Header Files\Struct/Algor</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Menu.h">
+      <Filter>Header Files\UI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -93,38 +93,15 @@ void D3DGraphics::EndFrame()
 	assert( !FAILED( result ) );
 }
 
-void D3DGraphics::PutPixel( int x,int y,Color c )
-{
-	sysBuffer.PutPixel( x,y,c );
-}
-
-void D3DGraphics::PutPixelAlpha( int x,int y,Color c )
-{
-	// load source pixel
-	const Color d = sysBuffer.GetPixel( x,y );
-
-	// blend channels
-	const unsigned char rsltRed = ( c.r * c.x + d.r * ( 255 - c.x ) ) / 255;
-	const unsigned char rsltGreen = ( c.g * c.x + d.g * ( 255 - c.x ) ) / 255;
-	const unsigned char rsltBlue = ( c.b * c.x + d.b * ( 255 - c.x ) ) / 255;
-
-	// pack channels back into pixel and fire pixel onto backbuffer
-	sysBuffer.PutPixel( x,y,{ rsltRed,rsltGreen,rsltBlue } );
-}
-
-Color D3DGraphics::GetPixel( int x,int y ) const
-{
-	return sysBuffer.GetPixel( x,y );
-}
-
 // inclusive (can never decide which is better)
-void D3DGraphics::DrawRectangle( int left,int right,int top,int bottom,Color c )
+void D3DGraphics::DrawRectangle( int left,int right,int top,int bottom,Color c,
+	void( D3DGraphics::*pPixelFcn )( int,int,Color ) )
 {
 	for( int x = left; x <= right; x++ )
 	{
 		for( int y = top; y <= bottom; y++ )
 		{
-			PutPixel( x,y,c );
+			(this->*pPixelFcn)( x,y,c );
 		}
 	}
 }

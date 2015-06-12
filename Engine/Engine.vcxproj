@@ -111,6 +111,7 @@
     <ClInclude Include="LapDisplay.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Mat3.h" />
+    <ClInclude Include="Menu.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Observer.h" />
     <ClInclude Include="PhysicalCircle.h" />

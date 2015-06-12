@@ -33,15 +33,57 @@ class D3DGraphics : public DrawTarget
 public:
 	D3DGraphics( HWND hWnd );
 	~D3DGraphics();
-	void PutPixel( int x,int y,Color c );
-	void PutPixelAlpha( int x,int y,Color c );
-	Color GetPixel( int x,int y ) const;
+	void BeginFrame();
+	void EndFrame();
+	inline virtual void Draw( Drawable& obj ) override
+	{
+		obj.Rasterize( *this );
+	}
+	inline void PutPixel( int x,int y,Color c )
+	{
+		sysBuffer.PutPixel( x,y,c );
+	}
+	inline void PutPixelAlpha( int x,int y,Color c )
+	{
+		sysBuffer.PutPixelAlpha( x,y,c );
+	}
+	inline Color GetPixel( int x,int y ) const
+	{
+		return sysBuffer.GetPixel( x,y );
+	}
+	inline void CopySurface( const Surface& src )
+	{
+		sysBuffer.Copy( src );
+	}
+	
+	template< typename T >
+	inline void DrawRectangleAlpha( const _Rect<T>& rect,Color c )
+	{
+		DrawRectangle( (int)rect.left,(int)rect.right,(int)rect.top,(int)rect.bottom,c,
+			&D3DGraphics::PutPixelAlpha );
+	}
+	template< typename T >
+	inline void DrawRectangleAlpha( _Vec2< T > topLeft,_Vec2< T > bottomRight,Color c )
+	{
+		DrawRectangle( (int)topLeft.x,(int)bottomRight.x,(int)topLeft.y,(int)bottomRight.y,c,
+			&D3DGraphics::PutPixelAlpha );
+	}
+	inline void DrawRectangleAlpha( int left,int right,int top,int bottom,Color c )
+	{
+		DrawRectangle( left,right,top,bottom,c,&D3DGraphics::PutPixelAlpha );
+	}
+	template< typename T >
+	inline void DrawRectangle( const _Rect<T>& rect,Color c )
+	{
+		DrawRectangle( (int)rect.left,(int)rect.right,(int)rect.top,(int)rect.bottom,c );
+	}
 	template< typename T >
 	inline void DrawRectangle( _Vec2< T > topLeft,_Vec2< T > bottomRight,Color c )
 	{
 		DrawRectangle( (int)topLeft.x,(int)bottomRight.x,(int)topLeft.y,(int)bottomRight.y,c );
 	}
-	void DrawRectangle( int left,int right,int top,int bottom,Color c );
+	void DrawRectangle( int left,int right,int top,int bottom,Color c,void( D3DGraphics::* )( int,int,Color ) = &D3DGraphics::PutPixel );
+	
 	template< typename T >
 	inline void DrawLine( _Vec2< T > pt1,_Vec2< T > pt2,Color c )
 	{
@@ -49,12 +91,14 @@ public:
 	}
 	void DrawLine( int x1,int y1,int x2,int y2,Color c );
 	void DrawLineClip( Vec2 p0,Vec2 p1,Color color,const RectF& clip );
+	
 	template< typename T >
 	inline void DrawCircle( _Vec2< T > center,int radius,Color c )
 	{
 		DrawCircle( (int)center.x,(int)center.y,radius,c );
 	}
 	void DrawCircle( int centerX,int centerY,int radius,Color c );
+	
 	inline void DrawString( const std::wstring& string,Vec2 pt,const Font& font,Color c = WHITE )
 	{
 		sysBuffer.DrawString( string,pt,font,c );
@@ -63,18 +107,10 @@ public:
 	{
 		sysBuffer.DrawString( string,rect,font,c,a );
 	}
-	inline void CopySurface( const Surface& src )
-	{
-		sysBuffer.Copy( src );
-	}
-	void BeginFrame();
-	void EndFrame();
-	virtual void Draw( Drawable& obj ) override
-	{
-		obj.Rasterize( *this );
-	}
+	
 	void DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,const RectI& clip,Color c );
 	void DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
+
 public:
 	static const unsigned int	SCREENWIDTH =	1024;
 	static const unsigned int	SCREENHEIGHT =	768;

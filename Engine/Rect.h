@@ -23,27 +23,27 @@
 #include "Vec2.h"
 
 template < typename T >
-class Rect
+class _Rect
 {
 public:
-	inline	Rect() {}
-	inline	Rect( T top,T bottom,T left,T right )
+	inline	_Rect() {}
+	inline	_Rect( T top,T bottom,T left,T right )
 		:
 	top( top ),
 	bottom( bottom ),
 	left( left ),
 	right( right )
 	{}
-	inline	Rect( const Rect& rect )
+	inline	_Rect( const _Rect& rect )
 		:
 	top( rect.top ),
 	bottom( rect.bottom ),
 	left( rect.left ),
 	right( rect.right )
 	{}
-	inline	Rect( _Vec2<T> p0,_Vec2<T> p1 )
+	inline	_Rect( _Vec2<T> p0,_Vec2<T> p1 )
 		:
-		Rect( min( p0.y,p1.y ),
+		_Rect( min( p0.y,p1.y ),
 			max( p0.y,p1.y ),
 			min( p0.x,p1.x ),
 			max( p0.x,p1.x ) )
@@ -60,11 +60,11 @@ public:
 		right += dx;
 	}
 	template < typename T2 >
-	inline	operator Rect< T2 >() const
+	inline	operator _Rect< T2 >() const
 	{
 		return { (T2)top,(T2)bottom,(T2)left,(T2)right };
 	}
-	inline	void ClipTo( const Rect& rect )
+	inline	void ClipTo( const _Rect& rect )
 	{
 		top = max( top,rect.top );
 		bottom = min( bottom,rect.bottom );
@@ -79,7 +79,7 @@ public:
 	{
 		return bottom - top;
 	}
-	inline	bool Overlaps( const Rect& rect ) const
+	inline	bool Overlaps( const _Rect& rect ) const
 	{
 		return top < rect.bottom && bottom > rect.top && 
 			left < rect.right && right > rect.left;
@@ -97,5 +97,5 @@ public:
 	T right;
 };
 
-typedef Rect< int > RectI;
-typedef Rect< float > RectF;
+typedef _Rect< int > RectI;
+typedef _Rect< float > RectF;

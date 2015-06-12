@@ -84,7 +84,7 @@ public:
 		const unsigned char rsltBlue = ( c.b * c.x + d.b * ( 255 - c.x ) ) / 255;
 
 		// pack channels back into pixel and fire pixel onto surface
-		buffer[y * pitch + x] = { rsltRed,rsltGreen,rsltBlue };
+		PutPixel( x,y,{ rsltRed,rsltGreen,rsltBlue } );
 	}
 	inline Color GetPixel( unsigned int x,unsigned int y ) const
 	{
