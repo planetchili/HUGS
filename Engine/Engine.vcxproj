@@ -90,6 +90,7 @@
     <ClInclude Include="Colors.h" />
     <ClInclude Include="CountScreen.h" />
     <ClInclude Include="D3DGraphics.h" />
+    <ClInclude Include="Dinput.h" />
     <ClInclude Include="Drawable.h" />
     <ClInclude Include="DrawTarget.h" />
     <ClInclude Include="dxflib\dl_attributes.h" />
