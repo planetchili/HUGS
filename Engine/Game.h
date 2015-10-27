@@ -21,8 +21,7 @@
 #pragma once
 
 #include "D3DGraphics.h"
-#include "Keyboard.h"
-#include "Mouse.h"
+#include "InputSystem.h"
 #include "Timer.h"
 #include "FrameTimer.h"
 #include "Camera.h"
@@ -46,7 +45,6 @@ private:
 	void UpdateModel( float dt );
 private:
 	D3DGraphics gfx;
-	KeyboardClient kbd;
-	MouseClient mouse;
+	InputSystem input;
 	Timer timer;
 };
