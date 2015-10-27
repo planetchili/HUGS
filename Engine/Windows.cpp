@@ -158,21 +158,22 @@ int WINAPI wWinMain( HINSTANCE hInst,HINSTANCE,LPWSTR,INT )
 
 	Game theGame( hWnd,kServ,mServ );
 	
-    MSG msg;
-    ZeroMemory( &msg,sizeof( msg ) );
-    while( msg.message != WM_QUIT )
-    {
-        if( PeekMessage( &msg,NULL,0,0,PM_REMOVE ) )
-        {
-            TranslateMessage( &msg );
-            DispatchMessage( &msg );
-        }
-        //else
+	MSG msg;
+	ZeroMemory( &msg,sizeof( msg ) );
+	while( true )
+	{
+		while( PeekMessage( &msg,NULL,0,0,PM_REMOVE ) )
 		{
-			theGame.Go();
-		}
-    }
+			if( msg.message == WM_QUIT )
+			{
+				UnregisterClass( L"Chili DirectX Framework Window",wc.hInstance );
+				return 0;
+			}
 
-    UnregisterClass( L"Chili DirectX Framework Window",wc.hInstance );
-    return 0;
+			TranslateMessage( &msg );
+			DispatchMessage( &msg );
+		}
+
+		theGame.Go();
+	}
 }
