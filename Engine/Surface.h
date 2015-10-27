@@ -224,9 +224,11 @@ public:
 		:
 		Surface( width,height ),
 		bitmap( width,height,pitch * sizeof( Color ),
-		PixelFormat32bppARGB,(byte*)buffer ),
+		PixelFormat32bppRGB,(byte*)buffer ),
 		g( &bitmap )
-	{}
+	{
+		g.SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
+	}
 	void DrawString( const std::wstring& string,Vec2 pt,const Font& font,Color c )
 	{
 		Gdiplus::Color textColor( c.r,c.g,c.b );
