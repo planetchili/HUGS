@@ -74,15 +74,15 @@ unsigned char KeyboardClient::ReadChar()
 	}
 }
 
-void KeyboardClient::ExtractEvents( std::deque<KeyEvent>& out,const std::set<unsigned char>& filter )
+void KeyboardClient::ExtractEvents( KeyboardFilter& f )
 {
 	const auto i = std::remove_if( server.keybuffer.begin(),server.keybuffer.end(),
-		[&out,&filter]( const KeyEvent& e ) -> bool
+		[&f]( const KeyEvent& e ) -> bool
 	{
-		const auto end = filter.end();
-		if( filter.find( e.GetCode() ) != end )
+		const auto end = f.filterKeys.end();
+		if( f.filterKeys.find( e.GetCode() ) != end )
 		{
-			out.push_back( e );
+			f.buffer.push_back( e );
 			return true;
 		}
 		return false;

@@ -62,6 +62,29 @@ public:
 
 class KeyboardServer;
 
+class KeyboardFilter
+{
+	friend class KeyboardClient;
+public:
+	KeyboardFilter( std::initializer_list<unsigned int> keys )
+		:
+		filterKeys( keys )
+	{}
+	bool Empty() const
+	{
+		return buffer.empty();
+	}
+	KeyEvent GetEvent()
+	{
+		const KeyEvent e = buffer.front();
+		buffer.pop_front();
+		return e;
+	}
+private:
+	std::set<unsigned int> filterKeys;
+	std::deque<KeyEvent> buffer;
+};
+
 class KeyboardClient
 {
 public:
@@ -76,7 +99,7 @@ public:
 	void FlushKeyBuffer();
 	void FlushCharBuffer();
 	void FlushBuffers();
-	void ExtractEvents( std::deque<KeyEvent>& out,const std::set<unsigned char>& filter );
+	void ExtractEvents( KeyboardFilter& filter );
 private:
 	KeyboardServer& server;
 };
