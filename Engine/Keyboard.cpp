@@ -34,7 +34,7 @@ KeyEvent KeyboardClient::ReadKey()
 	if( server.keybuffer.size() > 0 )
 	{
 		KeyEvent e = server.keybuffer.front();
-		server.keybuffer.pop();
+		server.keybuffer.pop_front();
 		return e;
 	}
 	else
@@ -65,13 +65,29 @@ unsigned char KeyboardClient::ReadChar()
 	if( server.charbuffer.size() > 0 )
 	{
 		unsigned char charcode = server.charbuffer.front();
-		server.charbuffer.pop();
+		server.charbuffer.pop_front();
 		return charcode;
 	}
 	else
 	{
 		return 0;
 	}
+}
+
+void KeyboardClient::ExtractEvents( std::deque<KeyEvent>& out,const std::set<unsigned char>& filter )
+{
+	const auto i = std::remove_if( server.keybuffer.begin(),server.keybuffer.end(),
+		[&out,&filter]( const KeyEvent& e ) -> bool
+	{
+		const auto end = filter.end();
+		if( filter.find( e.GetCode() ) != end )
+		{
+			out.push_back( e );
+			return true;
+		}
+		return false;
+	} );
+	server.keybuffer.erase( i,server.keybuffer.end() );
 }
 
 unsigned char KeyboardClient::PeekChar() const
@@ -95,7 +111,7 @@ void KeyboardClient::FlushKeyBuffer()
 {
 	while( !server.keybuffer.empty() )
 	{
-		server.keybuffer.pop();
+		server.keybuffer.pop_front();
 	}
 }
 
@@ -103,7 +119,7 @@ void KeyboardClient::FlushCharBuffer()
 {
 	while( !server.charbuffer.empty() )
 	{
-		server.charbuffer.pop();
+		server.charbuffer.pop_front();
 	}
 }
 
@@ -125,29 +141,29 @@ void KeyboardServer::OnKeyPressed( unsigned char keycode )
 {
 	keystates[ keycode ] = true;
 	
-	keybuffer.push( KeyEvent( KeyEvent::Press,keycode ) );
+	keybuffer.push_back( KeyEvent( KeyEvent::Press,keycode ) );
 	if( keybuffer.size() > bufferSize )
 	{
-		keybuffer.pop();
+		keybuffer.pop_front();
 	}
 }
 
 void KeyboardServer::OnKeyReleased( unsigned char keycode )
 {
 	keystates[ keycode ] = false;
-	keybuffer.push( KeyEvent( KeyEvent::Release,keycode ) );
+	keybuffer.push_back( KeyEvent( KeyEvent::Release,keycode ) );
 	if( keybuffer.size() > bufferSize )
 	{
-		keybuffer.pop();
+		keybuffer.pop_front();
 	}
 }
 
 void KeyboardServer::OnChar( unsigned char character )
 {
-	charbuffer.push( character );
+	charbuffer.push_back( character );
 	if( charbuffer.size() > bufferSize )
 	{
-		charbuffer.pop();
+		charbuffer.pop_front();
 	}
 }
 

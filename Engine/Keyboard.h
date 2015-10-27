@@ -20,7 +20,9 @@
  ******************************************************************************************/
 #pragma once
 #include <Windows.h>
-#include <queue>
+#include <algorithm>
+#include <deque>
+#include <set>
 
 class KeyEvent
 {
@@ -74,6 +76,7 @@ public:
 	void FlushKeyBuffer();
 	void FlushCharBuffer();
 	void FlushBuffers();
+	void ExtractEvents( std::deque<KeyEvent>& out,const std::set<unsigned char>& filter );
 private:
 	KeyboardServer& server;
 };
@@ -90,6 +93,6 @@ private:
 	static const int nKeys = 256;
 	static const int bufferSize = 4;
 	bool keystates[ nKeys ];
-	std::queue<KeyEvent> keybuffer;
-	std::queue<unsigned char> charbuffer;
+	std::deque<KeyEvent> keybuffer;
+	std::deque<unsigned char> charbuffer;
 };
