@@ -11,6 +11,7 @@
 #include "Timer.h"
 #include "Keyboard.h"
 #include "CountScreen.h"
+#include "ShipControllerKeyboard.h"
 
 class GameScreen : public Screen
 {
@@ -42,7 +43,8 @@ public:
 		arialFont( L"Arial",20 ),
 		lapDisplay( ship,{ 860.0f,15.0f } ),
 		kbd( kbd ),
-		gfx( gfx )
+		gfx( gfx ),
+		kbdCtrl( ship,kbd )
 	{
 		ship.AddObserver( deathListener );
 	}
@@ -75,52 +77,19 @@ public:
 	}
 	virtual void HandleInput() override
 	{
-		const KeyEvent key = kbd.ReadKey();
-
 		if( deathListener.IsDead() )
 		{
-			if( key.GetCode() == VK_RETURN && key.IsPress() )
+			while( !kbd.KeyEmpty() )
 			{
-				ChangeScreen( std::make_unique< CountScreen >(
-					std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
+				const KeyEvent key = kbd.ReadKey();
+				if( key.GetCode() == VK_RETURN && key.IsPress() )
+				{
+					ChangeScreen( std::make_unique< CountScreen >(
+						std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
+				}
 			}
 		}
-		else
-		{
-			switch( key.GetCode() )
-			{
-			case VK_LEFT:
-				if( key.IsPress() )
-				{
-					ship.Spin( -1.0f );
-				}
-				else
-				{
-					ship.StopSpinning( -1.0f );
-				}
-				break;
-			case VK_RIGHT:
-				if( key.IsPress() )
-				{
-					ship.Spin( 1.0f );
-				}
-				else
-				{
-					ship.StopSpinning( 1.0f );
-				}
-				break;
-			case VK_SPACE:
-				if( key.IsPress() )
-				{
-					ship.Thrust();
-				}
-				else
-				{
-					ship.StopThrusting();
-				}
-				break;
-			}
-		}
+		kbdCtrl.Process();
 	}
 private:
 	D3DGraphics& gfx;
@@ -133,4 +102,5 @@ private:
 	Font timesFont;
 	Font arialFont;
 	LapDisplay lapDisplay;
+	ShipControllerKeyboard kbdCtrl;
 };

@@ -124,6 +124,9 @@
     <ClInclude Include="Screen.h" />
     <ClInclude Include="ShieldMeter.h" />
     <ClInclude Include="Ship.h" />
+    <ClInclude Include="ShipController.h" />
+    <ClInclude Include="ShipControllerGamepad.h" />
+    <ClInclude Include="ShipControllerKeyboard.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="Surface.h" />
     <ClInclude Include="TexturedQuad.h" />
