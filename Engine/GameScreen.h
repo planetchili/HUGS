@@ -9,9 +9,9 @@
 #include "BlackHole.h"
 #include "LapDisplay.h"
 #include "Timer.h"
-#include "Keyboard.h"
 #include "CountScreen.h"
 #include "ShipControllerKeyboard.h"
+#include "InputSystem.h"
 
 class GameScreen : public Screen
 {
@@ -31,7 +31,7 @@ private:
 		bool isDead = false;
 	} deathListener;
 public:
-	GameScreen( D3DGraphics& gfx,KeyboardClient& kbd,ScreenContainer* ctr )
+	GameScreen( D3DGraphics& gfx,InputSystem& input,ScreenContainer* ctr )
 		:
 		Screen( ctr ),
 		map( "tracktest.dxf" ),
@@ -42,9 +42,9 @@ public:
 		timesFont( L"Times New Roman",60 ),
 		arialFont( L"Arial",20 ),
 		lapDisplay( ship,{ 860.0f,15.0f } ),
-		kbd( kbd ),
+		input( input ),
 		gfx( gfx ),
-		kbdCtrl( ship,kbd )
+		kbdCtrl( ship,input.kbd )
 	{
 		ship.AddObserver( deathListener );
 	}
@@ -79,13 +79,13 @@ public:
 	{
 		if( deathListener.IsDead() )
 		{
-			while( !kbd.KeyEmpty() )
+			while( !input.kbd.KeyEmpty() )
 			{
-				const KeyEvent key = kbd.ReadKey();
+				const KeyEvent key = input.kbd.ReadKey();
 				if( key.GetCode() == VK_RETURN && key.IsPress() )
 				{
 					ChangeScreen( std::make_unique< CountScreen >(
-						std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
+						std::make_unique< GameScreen >( gfx,input,nullptr ),parent ) );
 				}
 			}
 		}
@@ -93,7 +93,7 @@ public:
 	}
 private:
 	D3DGraphics& gfx;
-	KeyboardClient& kbd;
+	InputSystem& input;
 	Viewport port;
 	Camera cam;
 	Map map;

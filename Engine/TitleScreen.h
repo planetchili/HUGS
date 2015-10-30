@@ -1,6 +1,6 @@
 #pragma once
 #include "Screen.h"
-#include "Keyboard.h"
+#include "InputSystem.h"
 #include "GameScreen.h"
 #include "ChiliMath.h"
 #include "CountScreen.h"
@@ -137,12 +137,12 @@ private:
 		TitleScreen& parent;
 	};
 public:
-	TitleScreen( D3DGraphics& gfx,KeyboardClient& kbd,ScreenContainer* ctr )
+	TitleScreen( D3DGraphics& gfx,InputSystem& input,ScreenContainer* ctr )
 		:
 		Screen( ctr ),
 		timesFont( L"Times New Roman",100 ),
 		arialFont( L"Arial",30 ),
-		kbd( kbd ),
+		input( input ),
 		gfx( gfx ),
 		funk( D3DGraphics::SCREENWIDTH,D3DGraphics::SCREENHEIGHT )
 	{
@@ -176,7 +176,7 @@ public:
 	}
 	virtual void HandleInput() override
 	{
-		const KeyEvent key = kbd.ReadKey();
+		const KeyEvent key = input.kbd.ReadKey();
 
 		if( pMenu )
 		{
@@ -191,11 +191,11 @@ private:
 	void NewGame()
 	{
 		ChangeScreen( std::make_unique< CountScreen >(
-			std::make_unique< GameScreen >( gfx,kbd,nullptr ),parent ) );
+			std::make_unique< GameScreen >( gfx,input,nullptr ),parent ) );
 	}
 private:
 	D3DGraphics& gfx;
-	KeyboardClient& kbd;
+	InputSystem& input;
 	Font timesFont;
 	Font arialFont;
 	Surface funk;
