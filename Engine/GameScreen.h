@@ -11,6 +11,7 @@
 #include "Timer.h"
 #include "CountScreen.h"
 #include "ShipControllerKeyboard.h"
+#include "ShipControllerGamepad.h"
 #include "InputSystem.h"
 
 class GameScreen : public Screen
@@ -44,7 +45,8 @@ public:
 		lapDisplay( ship,{ 860.0f,15.0f } ),
 		input( input ),
 		gfx( gfx ),
-		kbdCtrl( ship,input.kbd )
+		kbdCtrl( ship,input.kbd ),
+		padCtrl( ship,input.di.GetPad() )
 	{
 		ship.AddObserver( deathListener );
 	}
@@ -89,7 +91,11 @@ public:
 				}
 			}
 		}
-		kbdCtrl.Process();
+		else
+		{
+			padCtrl.Process();
+			kbdCtrl.Process();
+		}
 	}
 private:
 	D3DGraphics& gfx;
@@ -103,4 +109,5 @@ private:
 	Font arialFont;
 	LapDisplay lapDisplay;
 	ShipControllerKeyboard kbdCtrl;
+	ShipControllerGamepad padCtrl;
 };

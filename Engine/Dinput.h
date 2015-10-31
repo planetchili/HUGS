@@ -185,27 +185,35 @@ public:
 				events.emplace( data[i].dwOfs - offsetof( DIJOYSTATE2,rgbButtons[0] ),
 					(data[i].dwData & 0x80) == 0x80 );
 			}
-			else if( data[i].dwOfs == offsetof( DIJOYSTATE2,rgbButtons[0] ) )
+			else if( data[i].dwOfs == offsetof( DIJOYSTATE2,rgdwPOV ) )
 			{
 				Vec2 pos;
 				switch( data[i].dwData )
 				{
 				case 0:
 					pos = { 0.0f,-1000.f };
+					break;
 				case 4500:
 					pos = { 1000.0f,-1000.f };
+					break;
 				case 9000:
 					pos = { 1000.0f,0.f };
+					break;
 				case 13500:
 					pos = { 1000.0f,1000.f };
+					break;
 				case 18000:
 					pos = { 0.0f,1000.f };
+					break;
 				case 22500:
 					pos = { -1000.0,1000.f };
+					break;
 				case 27000:
 					pos = { -1000.0,0.f };
+					break;
 				case 31500:
 					pos = { -1000.0,-1000.f };
+					break;
 				default:
 					pos = { 0.0f,0.0f };
 				}

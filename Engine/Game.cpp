@@ -52,6 +52,8 @@ void Game::Go()
 
 void Game::UpdateModel( float dt )
 {
+	input.di.GetPad().Update();
+
 	try
 	{
 		pScreen->HandleInput();
