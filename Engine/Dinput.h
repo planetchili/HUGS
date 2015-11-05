@@ -11,6 +11,8 @@
 #include <array>
 #include <assert.h>
 #include <queue>
+#include <set>
+
 
 class Gamepad
 {
@@ -26,24 +28,27 @@ public:
 	public:
 		enum Type
 		{
-			Button,
-			Axis,
-			Stick,
-			Invalid
+			Button = 0,
+			Axis = 1,
+			Stick = 2,
+			Invalid = 3
 		};
 	public:
+		// stick event
 		Event( int index,Vec2 pos )
 			:
 			index( index ),
 			pos( pos ),
 			type( Stick )
 		{}
+		// axis event
 		Event( float val )
 			:
 			index( -1 ),
 			val( val ),
 			type( Axis )
 		{}
+		// button event
 		Event( int index,bool pressed )
 			:
 			index( index ),
@@ -84,10 +89,14 @@ public:
 		{
 			return type;
 		}
+		unsigned int GetHash() const
+		{
+			return (index << 2) | type;
+		}
 	private:
-		const Type type;
-		const int index;
-		const union
+		Type type;
+		int index;
+		union
 		{
 			struct
 			{
@@ -96,6 +105,34 @@ public:
 			float val;
 			bool pressed;
 		};
+	};
+	class Filter
+	{
+		friend Gamepad;
+	public:
+		Filter( std::initializer_list<unsigned int> keys )
+			:
+			filterEvents( keys )
+		{}
+		Filter()
+		{}
+		bool Empty() const
+		{
+			return buffer.empty();
+		}
+		void AddCondition( const Event& e )
+		{
+			filterEvents.insert( e.GetHash() );
+		}
+		Event GetEvent()
+		{
+			const Event e( buffer.front() );
+			buffer.pop_front();
+			return e;
+		}
+	private:
+		std::set<unsigned int> filterEvents;
+		std::deque<Event> buffer;
 	};
 public:
 	Gamepad( IDirectInput8W* pInput,HWND hWnd,const GUID& guid )
@@ -182,7 +219,7 @@ public:
 			if( data[i].dwOfs >= offsetof( DIJOYSTATE2,rgbButtons[0] ) &&
 				data[i].dwOfs <= offsetof( DIJOYSTATE2,rgbButtons[127] ) )
 			{
-				events.emplace( data[i].dwOfs - offsetof( DIJOYSTATE2,rgbButtons[0] ),
+				events.emplace_back( data[i].dwOfs - offsetof( DIJOYSTATE2,rgbButtons[0] ),
 					(data[i].dwData & 0x80) == 0x80 );
 			}
 			else if( data[i].dwOfs == offsetof( DIJOYSTATE2,rgdwPOV ) )
@@ -217,37 +254,52 @@ public:
 				default:
 					pos = { 0.0f,0.0f };
 				}
-				events.emplace( Dpad,pos );
+				events.emplace_back( Dpad,pos );
 			}
 			else if( data[i].dwOfs == offsetof( DIJOYSTATE2,lX ) ||
 				data[i].dwOfs == offsetof( DIJOYSTATE2,lY ) )
 			{
-				events.emplace( Analog1,Vec2 { float( state.lX ),float( state.lY ) } );
+				events.emplace_back( Analog1,Vec2 { float( state.lX ),float( state.lY ) } );
 			}
 			else if( data[i].dwOfs == offsetof( DIJOYSTATE2,lRx ) ||
 				data[i].dwOfs == offsetof( DIJOYSTATE2,lRy ) )
 			{
-				events.emplace( Analog2,Vec2 { float( state.lRx ),float( state.lRy ) } );
+				events.emplace_back( Analog2,Vec2 { float( state.lRx ),float( state.lRy ) } );
 			}
 			else if( data[i].dwOfs == offsetof( DIJOYSTATE2,lZ ) )
 			{
-				events.emplace( float( data[i].dwData ) );
+				events.emplace_back( float( data[i].dwData ) );
 			}
 			if( events.size() > maxEvents )
 			{
-				events.pop();
+				events.pop_back();
 			}
 		}
 	}
 	Event ReadEvent()
 	{
 		Event e = events.front();
-		events.pop();
+		events.pop_back();
 		return e;
 	}
 	Event PeekEvent() const
 	{
 		return events.front();
+	}
+	void ExtractEvents( Filter& f )
+	{
+		const auto i = std::remove_if( events.begin(),events.end(),
+			[&f]( const Event& e ) -> bool
+		{
+			const auto end = f.filterEvents.end();
+			if( f.filterEvents.find( e.GetHash() ) != end )
+			{
+				f.buffer.push_back( e );
+				return true;
+			}
+			return false;
+		} );
+		events.erase( i,events.end() );
 	}
 	bool IsEmpty() const
 	{
@@ -286,7 +338,7 @@ private:
 	const unsigned int maxEvents = 64;
 	DIJOYSTATE2 state;
 	IDirectInputDevice8W* pDev = nullptr;
-	std::queue<Event> events;
+	std::deque<Event> events;
 };
 
 class DirectInput

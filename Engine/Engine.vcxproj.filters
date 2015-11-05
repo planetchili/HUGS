@@ -213,6 +213,15 @@
     <ClInclude Include="ShipControllerGamepad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PauseController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PauseControllerKeyboard.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PauseControllerGamepad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
