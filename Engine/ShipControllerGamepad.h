@@ -10,7 +10,7 @@ public:
 		ShipController( ship ),
 		pad( pad )	
 	{
-		filter.AddCondition( Gamepad::Event( Gamepad::Dpad,{ 0.0f,0.0f } ) );
+		filter.AddCondition( Gamepad::Event( Gamepad::Analog1,{ 0.0f,0.0f } ) );
 		filter.AddCondition( Gamepad::Event( thrustIndex,false ) );
 	}
 	virtual void Process() override
@@ -19,20 +19,12 @@ public:
 		while( !filter.Empty() )
 		{
 			const auto e = filter.GetEvent();
-			if( e.GetType() == e.Stick && e.GetIndex() == Gamepad::Dpad )
+			if( e.GetType() == e.Stick && e.GetIndex() == Gamepad::Analog1 )
 			{
-				if( e.GetStickPos().x < 0.0f )
+				Vec2 dir = e.GetStickPos();
+				if( dir != Vec2 { 0.0f,0.0f } )
 				{
-					ship.Spin( -1.0f );
-				}
-				else if( e.GetStickPos().x > 0.0f )
-				{
-					ship.Spin( 1.0f );
-				}
-				else
-				{
-					ship.StopSpinning( 1.0f );
-					ship.StopSpinning( -1.0f );
+					ship.Spin( dir.Normalize() );
 				}
 			}
 			else if( e.GetType() == e.Button && e.GetIndex() == thrustIndex )
@@ -49,7 +41,7 @@ public:
 		}
 	}
 private:
-	const int thrustIndex = 0;
+	const int thrustIndex = 1;
 	Gamepad& pad;
 	Gamepad::Filter filter;
 };

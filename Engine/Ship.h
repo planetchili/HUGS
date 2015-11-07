@@ -19,7 +19,8 @@ public:
 			:
 			parent( parent )
 		{
-			Transform( Mat3::Translation( parent.pos ) * Mat3::Rotation( parent.angle ) );
+			Transform( Mat3::Translation( parent.pos ) * 
+				Mat3::Rotation( atan2( parent.dirNormal.y,parent.dirNormal.x ) + PI / 2.0f ) );
 		}
 		virtual void Rasterize( D3DGraphics& gfx ) const override
 		{
@@ -146,32 +147,10 @@ public:
 	}
 	virtual void Update( float dt ) override
 	{
-		// angular (1st order then 0th order)
-		// deccel faster than accel
-   		if( angAccelDir == 0.0f )
-		{
-			if( abs( angVel ) <= angAccel * dt )
-			{
-				angVel = 0.0f;
-			}
-			else
-			{
-				angVel -= copysign( angAccel,angVel ) * dt;
-			}
-		}
-		angVel += angAccel * angAccelDir * dt;
-		if( abs( angVel ) > maxAngVel )
-		{
-			angVel = copysign( maxAngVel,angVel );
-		}
-		angle += angVel * dt;
-		// clamp angle to within 2pi
-		angle = fmodf( angle,2.0f * PI );
-
 		// thrust force
 		if( thrusting )
 		{
-			ApplyForce( Vec2 { 0.0f,-1.0f }.Rotation( angle ) * thrustForce );
+			ApplyForce( dirNormal * thrustForce );
 		}
 
 		timer.Update( dt );
@@ -197,16 +176,9 @@ public:
 	{
 		thrusting = false;
 	}
-	void Spin( float dir )
+	void Spin( Vec2 n )
 	{
-		angAccelDir = copysign( 1.0f,dir );
-	}
-	void StopSpinning( float dir )
-	{
-		if( angAccelDir == copysign( 1.0f,dir ) )
-		{
-			angAccelDir = 0.0f;
-		}
+		dirNormal = n;
 	}
 	virtual void Rebound( Vec2 normal ) override
 	{
@@ -248,9 +220,5 @@ private:
 	bool thrusting = false;
 
 	// angular
-	float angle = 0.0f;
-	float angVel = 0.0f;
-	const float maxAngVel = 2.5f * PI;
-	const float angAccel = 0.004f * 60.0f * 60.0f;
-	float angAccelDir = 0.0f;
+	Vec2 dirNormal = { 1.0f,0.0f };
 };
