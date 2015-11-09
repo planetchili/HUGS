@@ -7,28 +7,8 @@ SoundSystem& SoundSystem::Get()
 	return instance;
 }
 
-SoundSystem::~SoundSystem()
-{
-	for( auto& a : activeChannelPtrs )
-	{
-		a.reset();
-	}
-	for( auto& a : idleChannelPtrs )
-	{
-		a.reset();
-	}
-	if( pEngine )
-	{
-		pEngine->Release();
-		pEngine = nullptr;
-	}
-	pMaster = nullptr;
-	CoUninitialize();
-}
-
 SoundSystem::SoundSystem()
 {
-	CoInitializeEx( NULL,COINIT_MULTITHREADED );
 	format.cbSize = 24932;
 	format.wFormatTag = 1;
 	format.nChannels = 2;

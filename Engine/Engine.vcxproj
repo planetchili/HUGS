@@ -91,6 +91,7 @@
     <ClInclude Include="ChiliWindows.h" />
     <ClInclude Include="CollidableCircle.h" />
     <ClInclude Include="Colors.h" />
+    <ClInclude Include="ComManager.h" />
     <ClInclude Include="CountScreen.h" />
     <ClInclude Include="D3DGraphics.h" />
     <ClInclude Include="Dinput.h" />

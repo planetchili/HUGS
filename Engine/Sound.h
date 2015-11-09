@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <algorithm>
 #include <vector>
+#include "ComManager.h"
+#include <wrl\client.h>
 
 class SoundSystem
 {
@@ -93,7 +95,6 @@ public:
 			activeChannelPtrs.back()->Play( s );
 		}
 	}
-	~SoundSystem();
 private:
 	SoundSystem();
 	void DeactivateChannel( Channel& channel )
@@ -107,10 +108,11 @@ private:
 		activeChannelPtrs.erase( i );
 	}
 private:
-	const int nChannels = 64;
-	IXAudio2* pEngine = nullptr;
+	ComManager comMan;
+	Microsoft::WRL::ComPtr<IXAudio2> pEngine;
 	IXAudio2MasteringVoice* pMaster = nullptr;
 	WAVEFORMATEX format;
+	const int nChannels = 64;
 	std::vector<std::unique_ptr<Channel>> idleChannelPtrs;
 	std::vector<std::unique_ptr<Channel>> activeChannelPtrs;
 };

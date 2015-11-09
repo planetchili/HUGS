@@ -225,6 +225,9 @@
     <ClInclude Include="ChiliWindows.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
+    <ClInclude Include="ComManager.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
