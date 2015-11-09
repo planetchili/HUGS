@@ -27,7 +27,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	:
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer ),
-	s( L"cartoon.wav" )
+	s( L"buttspin.wav" )
 {
 	pScreen = std::make_unique< TitleScreen >( gfx,input,this );
 }
@@ -54,15 +54,6 @@ void Game::Go()
 void Game::UpdateModel( float dt )
 {
 	input.di.GetPad().Update();
-
-	s.Play();
-	s.Play();
-	s.Play();
-	s.Play();
-	s.Play();
-	s.Play();
-	s.Play();
-	s.Play();
 
 	try
 	{

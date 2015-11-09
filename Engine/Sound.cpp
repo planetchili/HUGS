@@ -9,6 +9,7 @@ SoundSystem& SoundSystem::Get()
 
 SoundSystem::SoundSystem()
 {
+	LoadLibrary( L"setupapi.dll" );
 	format.wFormatTag = WAVE_FORMAT_PCM;
 	format.nChannels = 2;
 	format.nSamplesPerSec = 44100;

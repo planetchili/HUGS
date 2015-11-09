@@ -9,6 +9,8 @@
 #include <unordered_set>
 #include <algorithm>
 #include <vector>
+#include <mutex>
+#include <string>
 #include "ComManager.h"
 #include <wrl\client.h>
 
@@ -89,6 +91,7 @@ public:
 	}
 	void PlaySound( class Sound& s )
 	{
+		std::lock_guard<std::mutex> lock( mutex );
 		if( idleChannelPtrs.size() > 0 )
 		{
 			activeChannelPtrs.push_back( std::move( idleChannelPtrs.back() ) );
@@ -100,6 +103,7 @@ private:
 	SoundSystem();
 	void DeactivateChannel( Channel& channel )
 	{
+		std::lock_guard<std::mutex> lock( mutex );
 		auto i = std::find_if( activeChannelPtrs.begin(),activeChannelPtrs.end(),
 			[&channel]( const std::unique_ptr<Channel>& pChan ) -> bool
 		{
@@ -113,7 +117,8 @@ private:
 	Microsoft::WRL::ComPtr<IXAudio2> pEngine;
 	IXAudio2MasteringVoice* pMaster = nullptr;
 	WAVEFORMATEX format;
-	const int nChannels = 256;
+	const int nChannels = 64;
+	std::mutex mutex;
 	std::vector<std::unique_ptr<Channel>> idleChannelPtrs;
 	std::vector<std::unique_ptr<Channel>> activeChannelPtrs;
 };
@@ -231,25 +236,33 @@ public:
 	}
 	~Sound()
 	{
-		for( auto pChannel : activeChannelPtrs )
 		{
-			// dangerous (iterator could be invalidated)
-			pChannel->Stop();
+			std::lock_guard<std::mutex> lock( mutex );
+			for( auto pChannel : activeChannelPtrs )
+			{
+				pChannel->Stop();
+			}
 		}
-		while( activeChannelPtrs.size() > 0 );
+		while( activeChannelPtrs.size() > 0 )
+		{
+			Sleep( 1 );
+		}
 	}
 private:
 	void RemoveChannel( SoundSystem::Channel& channel )
 	{
+		std::lock_guard<std::mutex> lock( mutex );
 		activeChannelPtrs.erase( std::find( 
 			activeChannelPtrs.begin(),activeChannelPtrs.end(),&channel ) );
 	}
 	void AddChannel( SoundSystem::Channel& channel )
 	{
+		std::lock_guard<std::mutex> lock( mutex );
 		activeChannelPtrs.push_back( &channel );
 	}
 private:
 	UINT32 nBytes = 0;
 	std::unique_ptr<BYTE[]> pData;
+	std::mutex mutex;
 	std::vector<SoundSystem::Channel*> activeChannelPtrs;
 };
