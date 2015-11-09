@@ -18,7 +18,7 @@
  *	You should have received a copy of the GNU General Public License					  *
  *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
  ******************************************************************************************/
-#include <Windows.h>
+#include "ChiliWindows.h"
 #include <wchar.h>
 #include "D3DGraphics.h"
 #include "Game.h"

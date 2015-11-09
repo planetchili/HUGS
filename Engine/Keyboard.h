@@ -19,7 +19,7 @@
  *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
  ******************************************************************************************/
 #pragma once
-#include <Windows.h>
+#include "ChiliWindows.h"
 #include <algorithm>
 #include <deque>
 #include <set>

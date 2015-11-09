@@ -1,5 +1,5 @@
 #pragma once
-#include <Windows.h>
+#include "ChiliWindows.h"
 #include <gdiplus.h>
 
 class GdiPlusManager

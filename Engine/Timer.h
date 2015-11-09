@@ -20,7 +20,7 @@
  ******************************************************************************************/
 #pragma once
 
-#include <windows.h>
+#include "ChiliWindows.h"
 
 class Timer
 {

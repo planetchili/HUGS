@@ -1,74 +1,252 @@
-/****************************************************************************************** 
- *	Chili DirectX Framework Version 14.03.22											  *	
- *	Sound.h																				  *
- *	Copyright 2014 PlanetChili.net <http://www.planetchili.net>							  *
- *  Based on code obtained from http://www.rastertek.com								  *
- *																						  *
- *	This file is part of The Chili DirectX Framework.									  *
- *																						  *
- *	The Chili DirectX Framework is free software: you can redistribute it and/or modify	  *
- *	it under the terms of the GNU General Public License as published by				  *
- *	the Free Software Foundation, either version 3 of the License, or					  *
- *	(at your option) any later version.													  *
- *																						  *
- *	The Chili DirectX Framework is distributed in the hope that it will be useful,		  *
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of						  *
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the						  *
- *	GNU General Public License for more details.										  *
- *																						  *
- *	You should have received a copy of the GNU General Public License					  *
- *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
- ******************************************************************************************/
 #pragma once
+#include "ChiliWindows.h"
+// need to specify DXSDK over WinSDK (do not want to target win8)
+// added $(DXSDK_DIR)\include
+#include "C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include\xaudio2.h"
+#include <memory>
+#include <stdexcept>
+#include <fstream>
+#include <unordered_set>
+#include <algorithm>
+#include <vector>
 
-#include <windows.h>
-#include <mmsystem.h>
-#include <dsound.h>
-#include <stdio.h>
-
-class DSound;
+class SoundSystem
+{
+public:
+	class Error : public std::runtime_error
+	{
+	public:
+		Error( std::string s )
+			:
+			runtime_error( std::string( "SoundSystem::Error: " ) + s )
+		{}
+	};
+	class FileError : public Error
+	{
+	public:
+		FileError( std::string s )
+			:
+			Error( std::string( "SoundSystem::FileError: " ) + s )
+		{}
+	};
+public:
+	class Channel
+	{
+	private:
+		class VoiceCallback : public IXAudio2VoiceCallback
+		{
+		public:
+			void STDMETHODCALLTYPE OnStreamEnd() override
+			{}
+			void STDMETHODCALLTYPE OnVoiceProcessingPassEnd() override
+			{}
+			void STDMETHODCALLTYPE OnVoiceProcessingPassStart( UINT32 SamplesRequired ) override
+			{}
+			void STDMETHODCALLTYPE OnBufferEnd( void* pBufferContext ) override;
+			void STDMETHODCALLTYPE OnBufferStart( void* pBufferContext ) override
+			{}
+			void STDMETHODCALLTYPE OnLoopEnd( void* pBufferContext ) override
+			{}
+			void STDMETHODCALLTYPE OnVoiceError( void* pBufferContext,HRESULT Error ) override
+			{}
+		};
+	public:
+		Channel( SoundSystem& sys )
+		{
+			static VoiceCallback vcb;
+			ZeroMemory( &xaBuffer,sizeof( xaBuffer ) );
+			xaBuffer.pContext = this;
+			sys.pEngine->CreateSourceVoice(	&pSource,&sys.format,0u,2.0f,&vcb );
+		}
+		~Channel()
+		{
+			assert( !pSound );
+			if( pSource )
+			{
+				pSource->DestroyVoice();
+				pSource = nullptr;
+			}
+		}
+		void Play( class Sound& s );
+		void Stop()
+		{
+			assert( pSource && pSound );
+			pSource->Stop();
+			pSource->FlushSourceBuffers();
+		}
+	private:
+		XAUDIO2_BUFFER xaBuffer;
+		IXAudio2SourceVoice* pSource = nullptr;
+		class Sound* pSound = nullptr;
+	};
+public:
+	static SoundSystem& Get();
+	static WAVEFORMATEX& GetFormat()
+	{
+		return Get().format;
+	}
+	void PlaySound( class Sound& s )
+	{
+		if( idleChannelPtrs.size() > 0 )
+		{
+			activeChannelPtrs.push_back( std::move( idleChannelPtrs.back() ) );
+			activeChannelPtrs.back()->Play( s );
+		}
+	}
+	~SoundSystem();
+private:
+	SoundSystem();
+	void DeactivateChannel( Channel& channel )
+	{
+		auto i = std::find_if( activeChannelPtrs.begin(),activeChannelPtrs.end(),
+			[&channel]( const std::unique_ptr<Channel>& pChan ) -> bool
+		{
+			return &channel == pChan.get();
+		} );
+		idleChannelPtrs.push_back( std::move( *i ) );
+		activeChannelPtrs.erase( i );
+	}
+private:
+	const int nChannels = 64;
+	IXAudio2* pEngine = nullptr;
+	IXAudio2MasteringVoice* pMaster = nullptr;
+	WAVEFORMATEX format;
+	std::vector<std::unique_ptr<Channel>> idleChannelPtrs;
+	std::vector<std::unique_ptr<Channel>> activeChannelPtrs;
+};
 
 class Sound
 {
-	friend DSound;
+	friend SoundSystem::Channel;
 public:
-	Sound( const Sound& base );
-	Sound();
-	~Sound();
-	const Sound& operator=( const Sound& rhs );
-	void Play( int attenuation = DSBVOLUME_MAX );
-private:
-	Sound( IDirectSoundBuffer8* pSecondaryBuffer );
-private:
-	IDirectSoundBuffer8* pBuffer;
-};
-
-class DSound
-{
-private:
-	struct WaveHeaderType
+	Sound( const std::wstring& fileName )
 	{
-		char chunkId[4];
-		unsigned long chunkSize;
-		char format[4];
-		char subChunkId[4];
-		unsigned long subChunkSize;
-		unsigned short audioFormat;
-		unsigned short numChannels;
-		unsigned long sampleRate;
-		unsigned long bytesPerSecond;
-		unsigned short blockAlign;
-		unsigned short bitsPerSample;
-		char dataChunkId[4];
-		unsigned long dataSize;
-	};
-public:
-	DSound( HWND hWnd );
-	~DSound();
-	Sound CreateSound( char* wavFileName );
+		unsigned int fileSize = 0;
+		std::unique_ptr<BYTE[]> pFileIn;
+		{
+			std::ifstream file( fileName,std::ios_base::binary );
+
+			{
+				int fourcc;
+				file.read( reinterpret_cast<char*>( &fourcc ),4 );
+				if( fourcc != 'FFIR' )
+				{
+					throw SoundSystem::FileError( "bad fourCC" );
+				}
+			}
+
+			file.read( reinterpret_cast<char*>( &fileSize ),4 );
+			if( fileSize <= 16 )
+			{
+				throw SoundSystem::FileError( "file too small" );
+			}
+
+			file.seekg( 0,std::ios::beg );
+			pFileIn = std::make_unique<BYTE[]>( fileSize );
+			file.read( reinterpret_cast<char*>( pFileIn.get() ),fileSize );
+		}
+		
+		if( *reinterpret_cast<const int*>( &pFileIn[8] ) != 'EVAW' )
+		{
+			throw SoundSystem::FileError( "format not WAVE" );
+		}
+
+		//look for 'fmt ' chunk id
+		WAVEFORMATEX format;
+		bool bFilledFormat = false;
+		for( unsigned int i = 12; i < fileSize; )
+		{
+			if( *reinterpret_cast<const int*>( &pFileIn[i] ) == ' tmf' )
+			{
+				memcpy( &format,&pFileIn[i + 8],sizeof( format ) );
+				bFilledFormat = true;
+				break;
+			}
+			// chunk size + size entry size + chunk id entry size + word padding
+			i += ( *reinterpret_cast<const int*>( &pFileIn[i + 4] ) + 9 ) & 0xFFFFFFFE;
+		}
+		if( !bFilledFormat )
+		{
+			throw SoundSystem::FileError( "fmt chunk not found" );
+		}
+
+		// compare format with sound system format
+		{
+			const WAVEFORMATEX sysFormat = SoundSystem::GetFormat();
+
+			if( format.nChannels != sysFormat.nChannels )
+			{
+				throw SoundSystem::FileError( "bad wave format (nChannels)" );
+			}
+			else if( format.wBitsPerSample != sysFormat.wBitsPerSample )
+			{
+				throw SoundSystem::FileError( "bad wave format (wBitsPerSample)" );
+			}
+			else if( format.nSamplesPerSec != sysFormat.nSamplesPerSec )
+			{
+				throw SoundSystem::FileError( "bad wave format (nSamplesPerSec)" );
+			}
+			else if( format.wFormatTag != sysFormat.wFormatTag )
+			{
+				throw SoundSystem::FileError( "bad wave format (wFormatTag)" );
+			}
+			else if( format.nBlockAlign != sysFormat.nBlockAlign )
+			{
+				throw SoundSystem::FileError( "bad wave format (nBlockAlign)" );
+			}
+			else if( format.nAvgBytesPerSec != sysFormat.nAvgBytesPerSec )
+			{
+				throw SoundSystem::FileError( "bad wave format (nAvgBytesPerSec)" );
+			}
+		}
+
+		//look for 'data' chunk id
+		bool bFilledData = false;
+		for( unsigned int i = 12; i < fileSize; )
+		{
+			const int chunkSize = *reinterpret_cast<const int*>( &pFileIn[i + 4] );
+			if( *reinterpret_cast<const int*>( &pFileIn[i] ) == 'atad' )
+			{
+				pData = std::make_unique<BYTE[]>( chunkSize );
+				nBytes = chunkSize;
+				memcpy( pData.get(),&pFileIn[i + 8],nBytes );
+
+				bFilledData = true;
+				break;
+			}
+			// chunk size + size entry size + chunk id entry size + word padding
+			i += ( chunkSize + 9 ) & 0xFFFFFFFE;
+		}
+		if( !bFilledData )
+		{
+			throw SoundSystem::FileError( "data chunk not found" );
+		}
+	}
+	void Play()
+	{
+		SoundSystem::Get().PlaySound( *this );
+	}
+	~Sound()
+	{
+		for( auto pChannel : activeChannelPtrs )
+		{
+			// dangerous (iterator could be invalidated)
+			pChannel->Stop();
+		}
+		while( activeChannelPtrs.size() > 0 );
+	}
 private:
-	DSound();
-private:	
-	IDirectSound8* pDirectSound;
-	IDirectSoundBuffer* pPrimaryBuffer;
+	void RemoveChannel( SoundSystem::Channel& channel )
+	{
+		activeChannelPtrs.erase( std::find( 
+			activeChannelPtrs.begin(),activeChannelPtrs.end(),&channel ) );
+	}
+	void AddChannel( SoundSystem::Channel& channel )
+	{
+		activeChannelPtrs.push_back( &channel );
+	}
+private:
+	UINT32 nBytes = 0;
+	std::unique_ptr<BYTE[]> pData;
+	std::vector<SoundSystem::Channel*> activeChannelPtrs;
 };

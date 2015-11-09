@@ -222,6 +222,9 @@
     <ClInclude Include="PauseControllerGamepad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ChiliWindows.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -234,9 +237,6 @@
       <Filter>Source Files\Framework</Filter>
     </ClCompile>
     <ClCompile Include="Mouse.cpp">
-      <Filter>Source Files\Framework</Filter>
-    </ClCompile>
-    <ClCompile Include="Sound.cpp">
       <Filter>Source Files\Framework</Filter>
     </ClCompile>
     <ClCompile Include="Timer.cpp">
@@ -261,6 +261,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TitleScreen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sound.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
