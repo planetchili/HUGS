@@ -24,6 +24,7 @@ SoundSystem::SoundSystem()
 	}
 }
 
+// chili doesn't trust that this callback won't fuck you up (multithreaded race condition)
 void SoundSystem::Channel::VoiceCallback::OnBufferEnd( void* pBufferContext )
 {
 	Channel& chan = *(Channel*)pBufferContext;

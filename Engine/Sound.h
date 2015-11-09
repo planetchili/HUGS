@@ -92,6 +92,7 @@ public:
 		if( idleChannelPtrs.size() > 0 )
 		{
 			activeChannelPtrs.push_back( std::move( idleChannelPtrs.back() ) );
+			idleChannelPtrs.pop_back();
 			activeChannelPtrs.back()->Play( s );
 		}
 	}
