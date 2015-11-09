@@ -9,13 +9,13 @@ SoundSystem& SoundSystem::Get()
 
 SoundSystem::SoundSystem()
 {
-	format.cbSize = 24932;
-	format.wFormatTag = 1;
+	format.wFormatTag = WAVE_FORMAT_PCM;
 	format.nChannels = 2;
 	format.nSamplesPerSec = 44100;
 	format.nAvgBytesPerSec = 176400;
 	format.nBlockAlign = 4;
 	format.wBitsPerSample = 16;
+	format.cbSize = 0;
 	XAudio2Create( &pEngine );
 	pEngine->CreateMasteringVoice( &pMaster );
 	for( int i = 0; i < nChannels; i++ )
