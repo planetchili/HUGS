@@ -294,4 +294,9 @@
       <Filter>Media</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="cartoon.wav">
+      <Filter>Media</Filter>
+    </Media>
+  </ItemGroup>
 </Project>
