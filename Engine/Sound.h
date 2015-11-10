@@ -244,10 +244,14 @@ public:
 				pChannel->Stop();
 			}
 		}
-		while( activeChannelPtrs.size() > 0 ) // technically not well-formed (simultaneous read-write)
+
+		bool allChannelsDeactivated = false;
+		do
 		{
-			std::atomic_thread_fence( std::memory_order_consume );
+			std::lock_guard<std::mutex> lock( mutex );
+			allChannelsDeactivated = activeChannelPtrs.size() == 0;
 		}
+		while( !allChannelsDeactivated );
 	}
 private:
 	void RemoveChannel( SoundSystem::Channel& channel )
