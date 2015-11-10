@@ -9,7 +9,6 @@ SoundSystem& SoundSystem::Get()
 
 SoundSystem::SoundSystem()
 {
-	LoadLibrary( L"setupapi.dll" );
 	format.wFormatTag = WAVE_FORMAT_PCM;
 	format.nChannels = 2;
 	format.nSamplesPerSec = 44100;
@@ -25,19 +24,20 @@ SoundSystem::SoundSystem()
 	}
 }
 
-// chili doesn't trust that this callback won't fuck you up (multithreaded race condition)
 void SoundSystem::Channel::VoiceCallback::OnBufferEnd( void* pBufferContext )
 {
 	Channel& chan = *(Channel*)pBufferContext;
+	chan.Stop();
 	chan.pSound->RemoveChannel( chan );
 	chan.pSound = nullptr;
 	SoundSystem::Get().DeactivateChannel( chan );
 }
 
-void SoundSystem::Channel::Play( Sound& s )
+void SoundSystem::Channel::PlaySoundBuffer( Sound& s )
 {
 	assert( pSource && !pSound );
 	s.AddChannel( *this );
+	// callback thread not running yet, so no sync necessary for pSound
 	pSound = &s;
 	xaBuffer.pAudioData = s.pData.get();
 	xaBuffer.AudioBytes = s.nBytes;

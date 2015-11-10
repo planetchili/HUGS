@@ -30,6 +30,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	s( L"buttspin.wav" )
 {
 	pScreen = std::make_unique< TitleScreen >( gfx,input,this );
+	s.Play();
 }
 
 Game::~Game()

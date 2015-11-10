@@ -6,11 +6,9 @@
 #include <memory>
 #include <stdexcept>
 #include <fstream>
-#include <unordered_set>
 #include <algorithm>
 #include <vector>
 #include <mutex>
-#include <string>
 #include "ComManager.h"
 #include <wrl\client.h>
 
@@ -71,7 +69,7 @@ public:
 				pSource = nullptr;
 			}
 		}
-		void Play( class Sound& s );
+		void PlaySoundBuffer( class Sound& s );
 		void Stop()
 		{
 			assert( pSource && pSound );
@@ -81,6 +79,8 @@ public:
 	private:
 		XAUDIO2_BUFFER xaBuffer;
 		IXAudio2SourceVoice* pSource = nullptr;
+		// does this need to be synchronized?
+		// (no--no overlap of callback thread and main thread here)
 		class Sound* pSound = nullptr;
 	};
 public:
@@ -89,14 +89,14 @@ public:
 	{
 		return Get().format;
 	}
-	void PlaySound( class Sound& s )
+	void PlaySoundBuffer( class Sound& s )
 	{
 		std::lock_guard<std::mutex> lock( mutex );
 		if( idleChannelPtrs.size() > 0 )
 		{
 			activeChannelPtrs.push_back( std::move( idleChannelPtrs.back() ) );
 			idleChannelPtrs.pop_back();
-			activeChannelPtrs.back()->Play( s );
+			activeChannelPtrs.back()->PlaySoundBuffer( s );
 		}
 	}
 private:
@@ -232,7 +232,7 @@ public:
 	}
 	void Play()
 	{
-		SoundSystem::Get().PlaySound( *this );
+		SoundSystem::Get().PlaySoundBuffer( *this );
 	}
 	~Sound()
 	{
@@ -243,10 +243,7 @@ public:
 				pChannel->Stop();
 			}
 		}
-		while( activeChannelPtrs.size() > 0 )
-		{
-			Sleep( 1 );
-		}
+		while( activeChannelPtrs.size() > 0 );
 	}
 private:
 	void RemoveChannel( SoundSystem::Channel& channel )
