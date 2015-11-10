@@ -20,6 +20,7 @@
  ******************************************************************************************/
 #include "ChiliWindows.h"
 #include <wchar.h>
+#include <exception>
 #include "D3DGraphics.h"
 #include "Game.h"
 #include "resource.h"
@@ -156,24 +157,33 @@ int WINAPI wWinMain( HINSTANCE hInst,HINSTANCE,LPWSTR,INT )
     ShowWindow( hWnd,SW_SHOWDEFAULT );
     UpdateWindow( hWnd );
 
-	Game theGame( hWnd,kServ,mServ );
-	
-	MSG msg;
-	ZeroMemory( &msg,sizeof( msg ) );
-	while( true )
+	try
 	{
-		while( PeekMessage( &msg,NULL,0,0,PM_REMOVE ) )
+		Game theGame( hWnd,kServ,mServ );
+
+		MSG msg;
+		ZeroMemory( &msg,sizeof( msg ) );
+		while( true )
 		{
-			if( msg.message == WM_QUIT )
+			while( PeekMessage( &msg,NULL,0,0,PM_REMOVE ) )
 			{
-				UnregisterClass( L"Chili DirectX Framework Window",wc.hInstance );
-				return 0;
+				if( msg.message == WM_QUIT )
+				{
+					UnregisterClass( L"Chili DirectX Framework Window",wc.hInstance );
+					return 0;
+				}
+
+				TranslateMessage( &msg );
+				DispatchMessage( &msg );
 			}
 
-			TranslateMessage( &msg );
-			DispatchMessage( &msg );
+			theGame.Go();
 		}
-
-		theGame.Go();
+	}
+	catch( std::exception e )
+	{
+		MessageBoxA( hWnd,e.what(),"std::exception",MB_OK );
+		UnregisterClass( L"Chili DirectX Framework Window",wc.hInstance );
+		return 0;
 	}
 }
