@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <mutex>
+#include <atomic>
 #include "ComManager.h"
 #include <wrl\client.h>
 
@@ -243,7 +244,10 @@ public:
 				pChannel->Stop();
 			}
 		}
-		while( activeChannelPtrs.size() > 0 );
+		while( activeChannelPtrs.size() > 0 ) // technically not well-formed (simultaneous read-write)
+		{
+			std::atomic_thread_fence( std::memory_order_consume );
+		}
 	}
 private:
 	void RemoveChannel( SoundSystem::Channel& channel )
