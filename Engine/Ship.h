@@ -8,6 +8,7 @@
 #include "Observer.h"
 #include "TrackRegionManager.h"
 #include "TexturedQuad.h"
+#include "Sound.h"
 
 class Ship : public PhysicalCircle, public Observable
 {
@@ -139,7 +140,8 @@ public:
 		PhysicalCircle( 50.0f,1.0f,0.001f,pos ),
 		seq( tMan ),
 		shipQuad( filename,0.27f,{ 0.0f,6.0f } ),
-		timer( seq )
+		timer( seq ),
+		collisionSound( L"clsn1.wav" )
 	{}
 	Drawable GetDrawable() const
 	{
@@ -182,6 +184,7 @@ public:
 	}
 	virtual void Rebound( Vec2 normal ) override
 	{
+		collisionSound.Play();
 		if( shieldLevel > 0.0f )
 		{
 			shieldLevel = max( 0.0f,
@@ -203,6 +206,9 @@ public:
 	}
 
 private:
+	// sfx
+	Sound collisionSound;
+
 	// rules stuff
 	TrackSequencer seq;
 	LapTimer timer;

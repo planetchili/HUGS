@@ -179,7 +179,7 @@
     <None Include="tracktest.dxf" />
   </ItemGroup>
   <ItemGroup>
-    <Media Include="cartoon.wav" />
+    <Media Include="clsn1.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

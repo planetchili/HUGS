@@ -33,7 +33,6 @@
 #include "BlackHole.h"
 #include "LapDisplay.h"
 #include "TitleScreen.h"
-#include "Sound.h"
 
 class Game : public ScreenContainer
 {
@@ -48,5 +47,4 @@ private:
 	D3DGraphics gfx;
 	InputSystem input;
 	Timer timer;
-	Sound s;
 };

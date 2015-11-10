@@ -295,7 +295,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Media Include="cartoon.wav">
+    <Media Include="clsn1.wav">
       <Filter>Media</Filter>
     </Media>
   </ItemGroup>
