@@ -157,7 +157,8 @@ public:
 				}
 
 				file.read( reinterpret_cast<char*>( &fileSize ),4 );
-				if( fileSize <= 16 )
+				fileSize += 8; // entry doesn't include the fourcc or itself
+				if( fileSize <= 44 )
 				{
 					throw SoundSystem::FileError( "file too small" );
 				}
