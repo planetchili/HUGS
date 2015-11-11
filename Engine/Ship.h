@@ -141,7 +141,7 @@ public:
 		seq( tMan ),
 		shipQuad( filename,0.27f,{ 0.0f,6.0f } ),
 		timer( seq ),
-		collisionSound( L"clsn1.wav",0.037f,std::random_device()() )
+		collisionSound( { L"clsn1.wav",L"clsn2.wav",L"clsn3.wav" },0.037f,std::random_device()( ) )
 	{}
 	Drawable GetDrawable() const
 	{

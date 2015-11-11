@@ -61,6 +61,7 @@ public:
 			xaBuffer.pContext = this;
 			sys.pEngine->CreateSourceVoice(	&pSource,&sys.format,0u,2.0f,&vcb );
 		}
+		Channel( const Channel& ) = delete;
 		~Channel()
 		{
 			assert( !pSound );
@@ -85,6 +86,7 @@ public:
 		class Sound* pSound = nullptr;
 	};
 public:
+	SoundSystem( const SoundSystem& ) = delete;
 	static SoundSystem& Get();
 	static WAVEFORMATEX& GetFormat()
 	{
@@ -253,6 +255,13 @@ public:
 			throw SoundSystem::FileError( e.what() );
 		}
 	}
+	Sound( const Sound& ) = delete;
+	Sound( Sound&& donor )
+		:
+		nBytes( donor.nBytes ),
+		pData( std::move( donor.pData ) ),
+		activeChannelPtrs( std::move( donor.activeChannelPtrs ) )
+	{}
 	void Play( float freqMod = 1.0f )
 	{
 		SoundSystem::Get().PlaySoundBuffer( *this,freqMod );
