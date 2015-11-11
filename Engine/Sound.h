@@ -70,7 +70,7 @@ public:
 				pSource = nullptr;
 			}
 		}
-		void PlaySoundBuffer( class Sound& s );
+		void PlaySoundBuffer( class Sound& s,float freqMod = 1.0f );
 		void Stop()
 		{
 			assert( pSource && pSound );
@@ -90,14 +90,14 @@ public:
 	{
 		return Get().format;
 	}
-	void PlaySoundBuffer( class Sound& s )
+	void PlaySoundBuffer( class Sound& s,float freqMod = 1.0f )
 	{
 		std::lock_guard<std::mutex> lock( mutex );
 		if( idleChannelPtrs.size() > 0 )
 		{
 			activeChannelPtrs.push_back( std::move( idleChannelPtrs.back() ) );
 			idleChannelPtrs.pop_back();
-			activeChannelPtrs.back()->PlaySoundBuffer( s );
+			activeChannelPtrs.back()->PlaySoundBuffer( s,freqMod );
 		}
 	}
 private:
@@ -253,9 +253,9 @@ public:
 			throw SoundSystem::FileError( e.what() );
 		}
 	}
-	void Play()
+	void Play( float freqMod = 1.0f )
 	{
-		SoundSystem::Get().PlaySoundBuffer( *this );
+		SoundSystem::Get().PlaySoundBuffer( *this,freqMod );
 	}
 	~Sound()
 	{

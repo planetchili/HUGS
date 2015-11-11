@@ -33,7 +33,7 @@ void SoundSystem::Channel::VoiceCallback::OnBufferEnd( void* pBufferContext )
 	SoundSystem::Get().DeactivateChannel( chan );
 }
 
-void SoundSystem::Channel::PlaySoundBuffer( Sound& s )
+void SoundSystem::Channel::PlaySoundBuffer( Sound& s,float freqMod )
 {
 	assert( pSource && !pSound );
 	s.AddChannel( *this );
@@ -42,5 +42,6 @@ void SoundSystem::Channel::PlaySoundBuffer( Sound& s )
 	xaBuffer.pAudioData = s.pData.get();
 	xaBuffer.AudioBytes = s.nBytes;
 	pSource->SubmitSourceBuffer( &xaBuffer,nullptr );
+	pSource->SetFrequencyRatio( freqMod );
 	pSource->Start();
 }

@@ -44,6 +44,9 @@ private:
 	void ComposeFrame();
 	void UpdateModel( float dt );
 private:
+	float freqMod = 1.0f;
+	const float fModChangeFactor = 1.02f;
+	Sound s;
 	D3DGraphics gfx;
 	InputSystem input;
 	Timer timer;
