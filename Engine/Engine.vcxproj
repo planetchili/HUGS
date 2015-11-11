@@ -175,12 +175,13 @@
     <Image Include="USS Turgidity.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="MapInOut.dxf" />
     <None Include="shiptry.dxf" />
     <None Include="tracktest.dxf" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="clsn1.wav" />
+    <Media Include="clsn2.wav" />
+    <Media Include="clsn3.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -18,9 +18,9 @@ public:
 			sounds.emplace_back( f );
 		}
 	}
-	void Play()
+	void Play( float vol )
 	{
-		sounds[soundDist( rng )].Play( freqDist( rng ) );
+		sounds[soundDist( rng )].Play( freqDist( rng ),vol );
 	}
 private:
 	std::mt19937 rng;

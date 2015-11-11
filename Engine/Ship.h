@@ -184,11 +184,18 @@ public:
 	}
 	virtual void Rebound( Vec2 normal ) override
 	{
-		collisionSound.Play();
+		const float velVolumeMax = 800.0f;
+		const float volMin = 0.1f;
+
+		const float velIncident = ( -vel * normal );
+		const float volume = min( 1.0f,
+			( 1.0f - volMin ) * ( velIncident / velVolumeMax ) + volMin );
+
+		collisionSound.Play( volume );
+
 		if( shieldLevel > 0.0f )
 		{
-			shieldLevel = max( 0.0f,
-				shieldLevel - ( -vel * normal ) * kDamage );
+			shieldLevel = max( 0.0f,shieldLevel - velIncident * kDamage );
 		}
 		else
 		{

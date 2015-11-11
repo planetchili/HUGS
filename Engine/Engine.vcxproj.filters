@@ -287,9 +287,6 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MapInOut.dxf">
-      <Filter>Media</Filter>
-    </None>
     <None Include="shiptry.dxf">
       <Filter>Media</Filter>
     </None>
@@ -299,6 +296,12 @@
   </ItemGroup>
   <ItemGroup>
     <Media Include="clsn1.wav">
+      <Filter>Media</Filter>
+    </Media>
+    <Media Include="clsn2.wav">
+      <Filter>Media</Filter>
+    </Media>
+    <Media Include="clsn3.wav">
       <Filter>Media</Filter>
     </Media>
   </ItemGroup>
