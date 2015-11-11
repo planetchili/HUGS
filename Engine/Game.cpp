@@ -26,8 +26,7 @@
 Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	:
 	gfx( hWnd ),
-	input( hWnd,mServer,kServer ),
-	s( L"clsn1.wav" )
+	input( hWnd,mServer,kServer )
 {
 	pScreen = std::make_unique< TitleScreen >( gfx,input,this );
 }
@@ -54,23 +53,6 @@ void Game::Go()
 void Game::UpdateModel( float dt )
 {
 	input.di.GetPad().Update();
-
-	while( !input.mouse.MouseEmpty() )
-	{
-		auto e = input.mouse.ReadMouse();
-		switch( e.GetType() )
-		{
-		case e.LPress:
-			s.Play( freqMod );
-			break;
-		case e.WheelUp:
-			freqMod *= fModChangeFactor;
-			break;
-		case e.WheelDown:
-			freqMod /= fModChangeFactor;
-			break;
-		}
-	}
 
 	try
 	{

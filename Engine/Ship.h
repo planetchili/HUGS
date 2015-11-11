@@ -8,7 +8,7 @@
 #include "Observer.h"
 #include "TrackRegionManager.h"
 #include "TexturedQuad.h"
-#include "Sound.h"
+#include "SoundEffect.h"
 
 class Ship : public PhysicalCircle, public Observable
 {
@@ -141,7 +141,7 @@ public:
 		seq( tMan ),
 		shipQuad( filename,0.27f,{ 0.0f,6.0f } ),
 		timer( seq ),
-		collisionSound( L"clsn1.wav" )
+		collisionSound( L"clsn1.wav",0.037f,std::random_device()() )
 	{}
 	Drawable GetDrawable() const
 	{
@@ -207,7 +207,7 @@ public:
 
 private:
 	// sfx
-	Sound collisionSound;
+	SoundEffect collisionSound;
 
 	// rules stuff
 	TrackSequencer seq;
