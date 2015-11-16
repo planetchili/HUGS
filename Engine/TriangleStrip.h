@@ -15,9 +15,10 @@ public:
 	class Drawable : public ::Drawable
 	{
 	public:
-		Drawable( const TriangleStrip& parent )
+		Drawable( const TriangleStrip& parent,Color c )
 			:
-			parent( parent )
+			parent( parent ),
+			c( c )
 		{}
 		virtual void Rasterize( D3DGraphics& gfx ) const override
 		{
@@ -25,28 +26,26 @@ public:
 			for( auto i = parent.vertices.begin(),end = parent.vertices.end() - 2;
 				i != end; i++ )
 			{
-				gfx.DrawTriangle( trans * *i,trans * *( i + 1 ),trans * *(i + 2),clipI,parent.color );
+				gfx.DrawTriangle( trans * *i,trans * *( i + 1 ),trans * *(i + 2),clipI,c );
 			}
 		}
 	private:
+		const Color c;
 		const TriangleStrip& parent;
 	};
 public:
-	TriangleStrip( std::initializer_list< Vec2 > vList,Color color = WHITE )
+	TriangleStrip( std::initializer_list< Vec2 > vList )
 		:
-		vertices( vList ),
-		color( color )
+		vertices( vList )
 	{}
-	TriangleStrip( std::vector< const Vec2 >&& movable,Color color = WHITE )
+	TriangleStrip( std::vector< const Vec2 >&& movable )
 		:
-		vertices( movable ),
-		color( color )
+		vertices( movable )
 	{}
-	Drawable GetDrawable() const
+	Drawable GetDrawable( Color c = WHITE ) const
 	{
-		return Drawable( *this );
+		return Drawable( *this,c );
 	}
 private:
-	Color color;
 	std::vector< const Vec2 > vertices;
 };
