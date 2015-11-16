@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <queue>
 #include <set>
+#include <wrl\client.h>
 
 
 class Gamepad
@@ -153,11 +154,9 @@ public:
 	}
 	~Gamepad()
 	{
-		if( pDev != nullptr )
+		if( pDev )
 		{
 			pDev->Unacquire();
-			pDev->Release();
-			pDev = nullptr;
 		}
 	}
 	Vec2 GetStickData( int index = 0 ) const
@@ -270,7 +269,7 @@ public:
 			{
 				events.emplace_back( float( data[i].dwData ) );
 			}
-			if( events.size() > maxEvents )
+			while( events.size() > maxEvents )
 			{
 				events.pop_back();
 			}
@@ -337,7 +336,7 @@ private:
 private:
 	const unsigned int maxEvents = 64;
 	DIJOYSTATE2 state;
-	IDirectInputDevice8W* pDev = nullptr;
+	Microsoft::WRL::ComPtr<IDirectInputDevice8W> pDev;
 	std::deque<Event> events;
 };
 
@@ -354,14 +353,6 @@ public:
 		pInput->EnumDevices( DI8DEVCLASS_GAMECTRL,DeviceEnumCallback,
 			(VOID*)this,DIEDFL_ATTACHEDONLY );
 	}
-	~DirectInput()
-	{
-		if( pInput != nullptr )
-		{
-			pInput->Release();
-			pInput = nullptr;
-		}
-	}
 	Gamepad& GetPad()
 	{
 		return *pPad;
@@ -371,11 +362,11 @@ private:
 		DeviceEnumCallback( const DIDEVICEINSTANCE* instance,VOID* context )
 	{
 		DirectInput* pInput = static_cast<DirectInput*>( context );
-		pInput->pPad = std::make_unique<Gamepad>( pInput->pInput,pInput->hWnd,instance->guidInstance );
+		pInput->pPad = std::make_unique<Gamepad>( pInput->pInput.Get(),pInput->hWnd,instance->guidInstance );
 		return DIENUM_STOP;
 	}
 private:
 	const HWND hWnd;
 	std::unique_ptr<Gamepad> pPad;
-	IDirectInput8W* pInput = nullptr;
+	Microsoft::WRL::ComPtr<IDirectInput8W> pInput;
 };
