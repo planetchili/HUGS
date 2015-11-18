@@ -21,10 +21,10 @@
 #pragma once
 #include <math.h>
 
-#define PI (float)M_PI
+#define PI 3.14159265f
 
 template <typename T>
-inline T sq( T val )
+inline auto sq(T val) -> decltype( val * val )
 {
 	return val * val;
 }
@@ -33,6 +33,11 @@ template <typename T>
 inline T sgn( T val )
 {
 	return (T)( (T)0 <= val ) - ( val < (T)0 );
+}
+
+template <class T> T gaussian( T x,T o )
+{
+	return ( ( T )1.0 / sqrt( ( T )2.0 * PI * sq( o ) ) ) * exp( -sq( x ) / ( ( T )2.0 * sq( o ) ) );
 }
 
 template <typename T>

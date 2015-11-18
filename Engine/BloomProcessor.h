@@ -1,5 +1,6 @@
 #pragma once
 #include "Surface.h"
+#include "ChiliMath.h"
 
 class BloomProcessor
 {
@@ -7,8 +8,26 @@ public:
 	BloomProcessor( const Surface& input )
 		:
 		input( input ),
-		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 )
-	{}
+		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
+		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 )
+	{
+		float kernelFloat[diameter];
+		for( int x = 0; x < diameter; x++ )
+		{
+			kernelFloat[x] = gaussian( std::fabs( float( x - GetKernelCenter() ) ),float( diameter / 6.0f ) );
+		}
+		for( int x = 0; x < diameter; x++ )
+		{
+			kernel[x] = unsigned char( 255 * ( kernelFloat[x]
+				/ kernelFloat[GetKernelCenter()] ) );
+		}
+		for( int x = 0; x < diameter; x++ )
+		{
+			sumKernel += kernel[x];
+		}
+		hBuffer.Clear( BLACK );
+		vBuffer.Clear( BLACK );
+	}
 	void DownsizePass()
 	{
 		const Color* const pInputBuffer = input.GetBufferConst();
@@ -61,16 +80,58 @@ public:
 			}
 		}
 	}
+	void HorizontalPass()
+	{
+		const size_t centerKernel = GetKernelCenter();
+		const size_t width = hBuffer.GetWidth();
+		const size_t height = hBuffer.GetHeight();
+
+		for( size_t y = 0u; y < height; y++ )
+		{
+			for( size_t x = 0u; x < width - diameter; x++ )
+			{
+				unsigned int r = 0;
+				unsigned int g = 0;
+				unsigned int b = 0;
+				const Color* const pBuffer = &hBuffer.GetBufferConst()[y * width + x];
+				for( size_t i = 0; i < diameter; i++ )
+				{
+					const Color c = pBuffer[i];
+					const unsigned int coef = kernel[i];
+					r += c.r * coef;
+					g += c.g * coef;
+					b += c.b * coef;
+				}
+				vBuffer.GetBuffer()[y * width + x + centerKernel] =
+				{
+					unsigned char( r / sumKernel ),
+					unsigned char( g / sumKernel ),
+					unsigned char( b / sumKernel )
+				};
+			}
+		}
+	}
 	void Go()
 	{
 		DownsizePass();
+		HorizontalPass();
 		if( ++count % 20 == 0 )
 		{
-			hBuffer.Save( L"frame" + std::to_wstring( count ) + L".bmp" );
+			hBuffer.Save( L"h_frame" + std::to_wstring( count ) + L".bmp" );
+			vBuffer.Save( L"v_frame" + std::to_wstring( count ) + L".bmp" );
 		}
 	}
 private:
+	static unsigned int GetKernelCenter()
+	{
+		return ( diameter - 1 ) / 2;
+	}
+private:
 	unsigned int count = 1u;
+	static const unsigned int diameter = 16u;
+	unsigned char kernel[diameter];
+	unsigned int sumKernel = 0u;
 	const Surface& input;
 	Surface hBuffer;
+	Surface vBuffer;
 };
