@@ -29,7 +29,8 @@ D3DGraphics::D3DGraphics( HWND hWnd )
 pDirect3D( NULL ),
 pDevice( NULL ),
 pBackBuffer( NULL ),
-sysBuffer( SCREENWIDTH,SCREENHEIGHT )
+sysBuffer( SCREENWIDTH,SCREENHEIGHT ),
+processor( sysBuffer )
 {
 	HRESULT result;
 	
@@ -80,6 +81,8 @@ void D3DGraphics::EndFrame()
 {
 	HRESULT result;
 	D3DLOCKED_RECT backRect;
+
+	processor.Go();
 
 	result = pBackBuffer->LockRect( &backRect,NULL,NULL );
 	assert( !FAILED( result ) );

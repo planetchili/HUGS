@@ -27,6 +27,7 @@
 #include "DrawTarget.h"
 #include "Vertex.h"
 #include "Surface.h"
+#include "BloomProcessor.h"
 
 class D3DGraphics : public DrawTarget
 {
@@ -125,4 +126,5 @@ private:
 	IDirect3DDevice9*	pDevice;
 	IDirect3DSurface9*	pBackBuffer;
 	TextSurface			sysBuffer;
+	BloomProcessor		processor;
 };

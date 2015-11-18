@@ -87,6 +87,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BlackHole.h" />
+    <ClInclude Include="BloomProcessor.h" />
     <ClInclude Include="ChiliMath.h" />
     <ClInclude Include="ChiliWindows.h" />
     <ClInclude Include="CollidableCircle.h" />

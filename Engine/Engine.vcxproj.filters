@@ -46,6 +46,9 @@
     <Filter Include="Header Files\Struct/Algor">
       <UniqueIdentifier>{78c43863-5eb5-4435-94d1-06e2f0122626}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Control">
+      <UniqueIdentifier>{ebb8b68b-698b-4d13-a04a-21b22cb006a2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -204,24 +207,6 @@
     <ClInclude Include="InputSystem.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
-    <ClInclude Include="ShipController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShipControllerKeyboard.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ShipControllerGamepad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PauseController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PauseControllerKeyboard.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PauseControllerGamepad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ChiliWindows.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
@@ -229,6 +214,27 @@
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
     <ClInclude Include="SoundEffect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PauseController.h">
+      <Filter>Header Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="PauseControllerGamepad.h">
+      <Filter>Header Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="PauseControllerKeyboard.h">
+      <Filter>Header Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="ShipController.h">
+      <Filter>Header Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="ShipControllerGamepad.h">
+      <Filter>Header Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="ShipControllerKeyboard.h">
+      <Filter>Header Files\Control</Filter>
+    </ClInclude>
+    <ClInclude Include="BloomProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
