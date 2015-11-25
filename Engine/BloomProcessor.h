@@ -111,14 +111,53 @@ public:
 			}
 		}
 	}
+	void VerticalPass()
+	{
+		const size_t centerKernel = GetKernelCenter();
+		const size_t width = vBuffer.GetWidth();
+		const size_t height = vBuffer.GetHeight();
+		const size_t rowDistance = &vBuffer.GetBufferConst()[width] 
+			- vBuffer.GetBufferConst();
+
+		for( size_t x = 0u; x < width; x++ )
+		{
+			for( size_t y = 0u; y < height - diameter; y++ )
+			{
+				unsigned int r = 0;
+				unsigned int g = 0;
+				unsigned int b = 0;
+				const Color* pBuffer = &vBuffer.GetBufferConst()[y * width + x];
+				for( size_t i = 0; i < diameter; i++,
+					pBuffer += rowDistance )
+				{
+					const Color c = *pBuffer;
+					const unsigned int coef = kernel[i];
+					r += c.r * coef;
+					g += c.g * coef;
+					b += c.b * coef;
+				}
+				hBuffer.GetBuffer()[( y + centerKernel ) * width + x] =
+				{
+					unsigned char( r / sumKernel ),
+					unsigned char( g / sumKernel ),
+					unsigned char( b / sumKernel )
+				};
+			}
+		}
+	}
 	void Go()
 	{
 		DownsizePass();
-		HorizontalPass();
 		if( ++count % 20 == 0 )
 		{
-			hBuffer.Save( L"h_frame" + std::to_wstring( count ) + L".bmp" );
-			vBuffer.Save( L"v_frame" + std::to_wstring( count ) + L".bmp" );
+			hBuffer.Save( L"frame_down" + std::to_wstring( count ) + L".bmp" );
+		}
+		HorizontalPass();
+		VerticalPass();
+		if( count % 20 == 0 )
+		{
+			vBuffer.Save( L"frame_horz" + std::to_wstring( count ) + L".bmp" );
+			hBuffer.Save( L"frame_vert" + std::to_wstring( count ) + L".bmp" );
 		}
 	}
 private:
