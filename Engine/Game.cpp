@@ -28,7 +28,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer )
 {
-	pScreen = std::make_unique< TitleScreen >( gfx,input,this );
+	pScreen = std::make_unique< GameScreen >( gfx,input,this );
 }
 
 Game::~Game()

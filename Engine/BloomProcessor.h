@@ -5,7 +5,7 @@
 class BloomProcessor
 {
 public:
-	BloomProcessor( const Surface& input )
+	BloomProcessor( Surface& input )
 		:
 		input( input ),
 		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
@@ -145,6 +145,153 @@ public:
 			}
 		}
 	}
+	void UpsizeBlendPass()
+	{
+		Color* const pOutputBuffer = input.GetBuffer();
+		const Color* const pInputBuffer = hBuffer.GetBufferConst();
+		const size_t inWidth = hBuffer.GetWidth();
+		const size_t inHeight = hBuffer.GetHeight();
+		const size_t outWidth = input.GetWidth();
+		const size_t outHeight = input.GetHeight();
+
+		for( size_t y = 0u; y < outHeight; y += 4u )
+		{
+			const size_t baseY = y / 4;
+			for( size_t x = 0u; x < outWidth; x += 4u )
+			{
+				const size_t baseX = x / 4;
+				const Color p0 = pInputBuffer[baseY * inWidth + baseX];
+				const Color p1 = pInputBuffer[baseY * inWidth + baseX + 1];
+				const Color p2 = pInputBuffer[( baseY + 1 ) * inWidth + baseX];
+				const Color p3 = pInputBuffer[( baseY + 1 ) * inWidth + baseX + 1];
+				const Color d0 = pOutputBuffer[y * outWidth + x];
+				const Color d1 = pOutputBuffer[y * outWidth + x + 1];
+				const Color d2 = pOutputBuffer[y * outWidth + x + 2];
+				const Color d3 = pOutputBuffer[y * outWidth + x + 3];
+				const Color d4 = pOutputBuffer[( y + 1 ) * outWidth + x];
+				const Color d5 = pOutputBuffer[( y + 1 ) * outWidth + x + 1];
+				const Color d6 = pOutputBuffer[( y + 1 ) * outWidth + x + 2];
+				const Color d7 = pOutputBuffer[( y + 1 ) * outWidth + x + 3];
+				const Color d8 = pOutputBuffer[( y + 2 ) * outWidth + x];
+				const Color d9 = pOutputBuffer[( y + 2 ) * outWidth + x + 1];
+				const Color d10 = pOutputBuffer[( y + 2 ) * outWidth + x + 2];
+				const Color d11 = pOutputBuffer[( y + 2 ) * outWidth + x + 3];
+				const Color d12 = pOutputBuffer[( y + 3 ) * outWidth + x];
+				const Color d13 = pOutputBuffer[( y + 3 ) * outWidth + x + 1];
+				const Color d14 = pOutputBuffer[( y + 3 ) * outWidth + x + 2];
+				const Color d15 = pOutputBuffer[( y + 3 ) * outWidth + x + 3];
+
+
+				unsigned int lr1 = p0.r * 224 + p2.r * 32;
+				unsigned int lg1 = p0.g * 224 + p2.g * 32;
+				unsigned int lb1 = p0.b * 224 + p2.b * 32;
+				unsigned int rr1 = p1.r * 224 + p3.r * 32;
+				unsigned int rg1 = p1.g * 224 + p3.g * 32;
+				unsigned int rb1 = p1.b * 224 + p3.b * 32;
+
+				pOutputBuffer[y * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224 + rr1 * 32 ) / 65536 + d0.r,255 ) ),
+				unsigned char( min( ( lg1 * 224 + rg1 * 32 ) / 65536 + d0.g,255 ) ),
+				unsigned char( min( ( lb1 * 224 + rb1 * 32 ) / 65536 + d0.b,255 ) ) };
+
+				pOutputBuffer[y * outWidth + x + 1] =
+				{ unsigned char( min( ( lr1 * 160 + rr1 * 96 ) / 65536 + d1.r,255 ) ),
+				unsigned char( min( ( lg1 * 160 + rg1 * 96 ) / 65536 + d1.g,255 ) ),
+				unsigned char( min( ( lb1 * 160 + rb1 * 96 ) / 65536 + d1.b,255 ) ) };
+
+				pOutputBuffer[y * outWidth + x + 2] =
+				{ unsigned char( min( ( lr1 * 96 + rr1 * 160 ) / 65536 + d2.r,255 ) ),
+				unsigned char( min( ( lg1 * 96 + rg1 * 160 ) / 65536 + d2.g,255 ) ),
+				unsigned char( min( ( lb1 * 96 + rb1 * 160 ) / 65536 + d2.b,255 ) ) };
+
+				pOutputBuffer[y * outWidth + x + 3] =
+				{ unsigned char( min( ( lr1 * 32 + rr1 * 224 ) / 65536 + d3.r,255 ) ),
+				unsigned char( min( ( lg1 * 32 + rg1 * 224 ) / 65536 + d3.g,255 ) ),
+				unsigned char( min( ( lb1 * 32 + rb1 * 224 ) / 65536 + d3.b,255 ) ) };
+
+				lr1 = p0.r * 160 + p2.r * 96;
+				lg1 = p0.g * 160 + p2.g * 96;
+				lb1 = p0.b * 160 + p2.b * 96;
+				rr1 = p1.r * 160 + p3.r * 96;
+				rg1 = p1.g * 160 + p3.g * 96;
+				rb1 = p1.b * 160 + p3.b * 96;
+
+				pOutputBuffer[( y + 1 ) * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224 + rr1 * 32 ) / 65536 + d4.r,255 ) ),
+				unsigned char( min( ( lg1 * 224 + rg1 * 32 ) / 65536 + d4.g,255 ) ),
+				unsigned char( min( ( lb1 * 224 + rb1 * 32 ) / 65536 + d4.b,255 ) ) };
+
+				pOutputBuffer[( y + 1 ) * outWidth + x + 1] =
+				{ unsigned char( min( ( lr1 * 160 + rr1 * 96 ) / 65536 + d5.r,255 ) ),
+				unsigned char( min( ( lg1 * 160 + rg1 * 96 ) / 65536 + d5.g,255 ) ),
+				unsigned char( min( ( lb1 * 160 + rb1 * 96 ) / 65536 + d5.b,255 ) ) };
+
+				pOutputBuffer[( y + 1 ) * outWidth + x + 2] =
+				{ unsigned char( min( ( lr1 * 96 + rr1 * 160 ) / 65536 + d6.r,255 ) ),
+				unsigned char( min( ( lg1 * 96 + rg1 * 160 ) / 65536 + d6.g,255 ) ),
+				unsigned char( min( ( lb1 * 96 + rb1 * 160 ) / 65536 + d6.b,255 ) ) };
+
+				pOutputBuffer[( y + 1 ) * outWidth + x + 3] =
+				{ unsigned char( min( ( lr1 * 32 + rr1 * 224 ) / 65536 + d7.r,255 ) ),
+				unsigned char( min( ( lg1 * 32 + rg1 * 224 ) / 65536 + d7.g,255 ) ),
+				unsigned char( min( ( lb1 * 32 + rb1 * 224 ) / 65536 + d7.b,255 ) ) };
+
+				lr1 = p0.r * 96 + p2.r * 160;
+				lg1 = p0.g * 96 + p2.g * 160;
+				lb1 = p0.b * 96 + p2.b * 160;
+				rr1 = p1.r * 96 + p3.r * 160;
+				rg1 = p1.g * 96 + p3.g * 160;
+				rb1 = p1.b * 96 + p3.b * 160;
+
+				pOutputBuffer[( y + 2 ) * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224 + rr1 * 32 ) / 65536 + d8.r,255 ) ),
+				unsigned char( min( ( lg1 * 224 + rg1 * 32 ) / 65536 + d8.g,255 ) ),
+				unsigned char( min( ( lb1 * 224 + rb1 * 32 ) / 65536 + d8.b,255 ) ) };
+
+				pOutputBuffer[( y + 2 ) * outWidth + x + 1] =
+				{ unsigned char( min( ( lr1 * 160 + rr1 * 96 ) / 65536 + d9.r,255 ) ),
+				unsigned char( min( ( lg1 * 160 + rg1 * 96 ) / 65536 + d9.g,255 ) ),
+				unsigned char( min( ( lb1 * 160 + rb1 * 96 ) / 65536 + d9.b,255 ) ) };
+
+				pOutputBuffer[( y + 2 ) * outWidth + x + 2] =
+				{ unsigned char( min( ( lr1 * 96 + rr1 * 160 ) / 65536 + d10.r,255 ) ),
+				unsigned char( min( ( lg1 * 96 + rg1 * 160 ) / 65536 + d10.g,255 ) ),
+				unsigned char( min( ( lb1 * 96 + rb1 * 160 ) / 65536 + d10.b,255 ) ) };
+
+				pOutputBuffer[( y + 2 ) * outWidth + x + 3] =
+				{ unsigned char( min( ( lr1 * 32 + rr1 * 224 ) / 65536 + d11.r,255 ) ),
+				unsigned char( min( ( lg1 * 32 + rg1 * 224 ) / 65536 + d11.g,255 ) ),
+				unsigned char( min( ( lb1 * 32 + rb1 * 224 ) / 65536 + d11.b,255 ) ) };
+
+				lr1 = p0.r * 32 + p2.r * 224;
+				lg1 = p0.g * 32 + p2.g * 224;
+				lb1 = p0.b * 32 + p2.b * 224;
+				rr1 = p1.r * 32 + p3.r * 224;
+				rg1 = p1.g * 32 + p3.g * 224;
+				rb1 = p1.b * 32 + p3.b * 224;
+
+				pOutputBuffer[( y + 3 ) * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224 + rr1 * 32 ) / 65536 + d12.r,255 ) ),
+				unsigned char( min( ( lg1 * 224 + rg1 * 32 ) / 65536 + d12.g,255 ) ),
+				unsigned char( min( ( lb1 * 224 + rb1 * 32 ) / 65536 + d12.b,255 ) ) };
+
+				pOutputBuffer[( y + 3 ) * outWidth + x + 1] =
+				{ unsigned char( min( ( lr1 * 160 + rr1 * 96 ) / 65536 + d13.r,255 ) ),
+				unsigned char( min( ( lg1 * 160 + rg1 * 96 ) / 65536 + d13.g,255 ) ),
+				unsigned char( min( ( lb1 * 160 + rb1 * 96 ) / 65536 + d13.b,255 ) ) };
+
+				pOutputBuffer[( y + 3 ) * outWidth + x + 2] =
+				{ unsigned char( min( ( lr1 * 96 + rr1 * 160 ) / 65536 + d14.r,255 ) ),
+				unsigned char( min( ( lg1 * 96 + rg1 * 160 ) / 65536 + d14.g,255 ) ),
+				unsigned char( min( ( lb1 * 96 + rb1 * 160 ) / 65536 + d14.b,255 ) ) };
+
+				pOutputBuffer[( y + 3 ) * outWidth + x + 3] =
+				{ unsigned char( min( ( lr1 * 32 + rr1 * 224 ) / 65536 + d15.r,255 ) ),
+				unsigned char( min( ( lg1 * 32 + rg1 * 224 ) / 65536 + d15.g,255 ) ),
+				unsigned char( min( ( lb1 * 32 + rb1 * 224 ) / 65536 + d15.b,255 ) ) };
+			}
+		}
+	}
 	void Go()
 	{
 		DownsizePass();
@@ -159,6 +306,7 @@ public:
 			vBuffer.Save( L"frame_horz" + std::to_wstring( count ) + L".bmp" );
 			hBuffer.Save( L"frame_vert" + std::to_wstring( count ) + L".bmp" );
 		}
+		UpsizeBlendPass();
 	}
 private:
 	static unsigned int GetKernelCenter()
@@ -170,7 +318,7 @@ private:
 	static const unsigned int diameter = 16u;
 	unsigned char kernel[diameter];
 	unsigned int sumKernel = 0u;
-	const Surface& input;
+	Surface& input;
 	Surface hBuffer;
 	Surface vBuffer;
 };
