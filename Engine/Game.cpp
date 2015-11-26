@@ -28,7 +28,6 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer )
 {
-	pScreen = std::make_unique< GameScreen >( gfx,input,this );
 }
 
 Game::~Game()
@@ -52,20 +51,18 @@ void Game::Go()
 
 void Game::UpdateModel( float dt )
 {
-	input.di.GetPad().Update();
-
-	try
-	{
-		pScreen->HandleInput();
-		pScreen->Update( dt );
-	}
-	catch( Screen::Change )
-	{
-		UpdateModel( dt );
-	}
 }
 
 void Game::ComposeFrame()
 {
-	pScreen->Draw( gfx );
+	gfx.DrawRectangle( RectI { 200,215,200,215 },WHITE );
 }
+
+//todo:
+//fix bloom translation
+//fix width/height in d3dgraphics and dependencies
+//fix drawrect inclusive/exclusive bullshit
+//implement fringe system
+//convert all graphics to use viewport
+//reduce bloom processor to work only on relevent regions (vertical besides the upscale)
+//fix/improve bloom processor upscale code to work edges and look pretty

@@ -296,18 +296,24 @@ public:
 	void Go()
 	{
 		DownsizePass();
-		if( ++count % 20 == 0 )
+		if( count % 100 == 0 )
 		{
-			hBuffer.Save( L"frame_down" + std::to_wstring( count ) + L".bmp" );
+			input.Save( L"frame_a_init" + std::to_wstring( count ) + L".bmp" );
+			hBuffer.Save( L"frame_b_down" + std::to_wstring( count ) + L".bmp" );
 		}
 		HorizontalPass();
 		VerticalPass();
-		if( count % 20 == 0 )
+		if( count % 100 == 0 )
 		{
-			vBuffer.Save( L"frame_horz" + std::to_wstring( count ) + L".bmp" );
-			hBuffer.Save( L"frame_vert" + std::to_wstring( count ) + L".bmp" );
+			vBuffer.Save( L"frame_c_horz" + std::to_wstring( count ) + L".bmp" );
+			hBuffer.Save( L"frame_d_vert" + std::to_wstring( count ) + L".bmp" );
 		}
 		UpsizeBlendPass();
+		if( count % 100 == 0 )
+		{
+			input.Save( L"frame_e_finl" + std::to_wstring( count ) + L".bmp" );
+		}
+		count++;
 	}
 private:
 	static unsigned int GetKernelCenter()
@@ -315,7 +321,7 @@ private:
 		return ( diameter - 1 ) / 2;
 	}
 private:
-	unsigned int count = 1u;
+	unsigned int count = 0u;
 	static const unsigned int diameter = 16u;
 	unsigned char kernel[diameter];
 	unsigned int sumKernel = 0u;
