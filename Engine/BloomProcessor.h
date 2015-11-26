@@ -14,7 +14,8 @@ public:
 		float kernelFloat[diameter];
 		for( int x = 0; x < diameter; x++ )
 		{
-			kernelFloat[x] = gaussian( std::fabs( float( x - GetKernelCenter() ) ),float( diameter / 6.0f ) );
+			kernelFloat[x] = gaussian( std::fabs( float( x - int( GetKernelCenter() ) ) ),
+				float( diameter / 6.0f ) );
 		}
 		for( int x = 0; x < diameter; x++ )
 		{
