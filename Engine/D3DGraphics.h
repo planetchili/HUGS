@@ -29,13 +29,25 @@
 #include "Surface.h"
 #include "BloomProcessor.h"
 
+#define DEFAULT_VIEW_WIDTH 1024u
+#define DEFAULT_VIEW_HEIGHT 768u
+
 class D3DGraphics : public DrawTarget
 {
 public:
-	D3DGraphics( HWND hWnd );
+	D3DGraphics( HWND hWnd,unsigned int viewWidth = DEFAULT_VIEW_WIDTH,
+		unsigned int viewHeight = DEFAULT_VIEW_HEIGHT );
 	~D3DGraphics();
 	void BeginFrame();
 	void EndFrame();
+	inline unsigned int GetWidth() const
+	{
+		return sysBuffer.GetWidth();
+	}
+	inline unsigned int GetHeight() const
+	{
+		return sysBuffer.GetHeight();
+	}
 	inline virtual void Draw( Drawable& obj ) override
 	{
 		obj.Rasterize( *this );
@@ -112,9 +124,6 @@ public:
 	void DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,const RectI& clip,Color c );
 	void DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
 
-public:
-	static const unsigned int	SCREENWIDTH =	1024;
-	static const unsigned int	SCREENHEIGHT =	768;
 private:
 	void DrawFlatTopTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
 	void DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );

@@ -28,6 +28,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer )
 {
+	pScreen = std::make_unique<TitleScreen>( gfx,input,this );
 }
 
 Game::~Game()
@@ -51,15 +52,25 @@ void Game::Go()
 
 void Game::UpdateModel( float dt )
 {
+	input.di.GetPad().Update();
+
+	try
+	{
+		pScreen->HandleInput();
+		pScreen->Update( dt );
+	}
+	catch( Screen::Change )
+	{
+		UpdateModel( dt );
+	}
 }
 
 void Game::ComposeFrame()
 {
-	gfx.DrawRectangle( RectI { 200,215,200,215 },WHITE );
+	pScreen->Draw( gfx );
 }
 
 //todo:
-//fix width/height in d3dgraphics and dependencies
 //fix drawrect inclusive/exclusive bullshit
 //implement fringe system
 //convert all graphics to use viewport

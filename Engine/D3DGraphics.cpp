@@ -24,12 +24,12 @@
 #include <functional>
 #pragma comment( lib,"d3d9.lib" )
 
-D3DGraphics::D3DGraphics( HWND hWnd )
+D3DGraphics::D3DGraphics( HWND hWnd,unsigned int viewWidth,unsigned int viewHeight )
 	:
 pDirect3D( NULL ),
 pDevice( NULL ),
 pBackBuffer( NULL ),
-sysBuffer( SCREENWIDTH,SCREENHEIGHT ),
+sysBuffer( viewWidth,viewHeight ),
 processor( sysBuffer )
 {
 	HRESULT result;

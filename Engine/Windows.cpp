@@ -57,7 +57,9 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 		{
 			int x = (short)LOWORD( lParam );
 			int y = (short)HIWORD( lParam );
-			if( x > 0 && x < D3DGraphics::SCREENWIDTH && y > 0 && y < D3DGraphics::SCREENHEIGHT )
+			RECT clientRect;
+			GetClientRect( hWnd,&clientRect );
+			if( x > 0 && x < clientRect.right && y > 0 && y < clientRect.bottom )
 			{
 				mServ.OnMouseMove( x,y );
 				if( !mServ.IsInWindow() )
@@ -71,9 +73,9 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 				if( wParam & (MK_LBUTTON | MK_RBUTTON) )
 				{
 					x = max( 0,x );
-					x = min( D3DGraphics::SCREENWIDTH - 1,x );
+					x = min( clientRect.right - 1,x );
 					y = max( 0,y );
-					y = min( D3DGraphics::SCREENHEIGHT - 1,y );
+					y = min( clientRect.bottom - 1,y );
 					mServ.OnMouseMove( x,y );
 				}
 				else
@@ -146,9 +148,9 @@ int WINAPI wWinMain( HINSTANCE hInst,HINSTANCE,LPWSTR,INT )
 	
 	RECT wr;
 	wr.left = 650;
-	wr.right = D3DGraphics::SCREENWIDTH + wr.left;
+	wr.right = DEFAULT_VIEW_WIDTH + wr.left;
 	wr.top = 150;
-	wr.bottom = D3DGraphics::SCREENHEIGHT + wr.top;
+	wr.bottom = DEFAULT_VIEW_HEIGHT + wr.top;
 	AdjustWindowRect( &wr,WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,FALSE );
     HWND hWnd = CreateWindowW( L"Chili DirectX Framework Window",L"Chili DirectX Framework",
                               WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU,wr.left,wr.top,wr.right-wr.left,wr.bottom-wr.top,

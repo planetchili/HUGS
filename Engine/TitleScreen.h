@@ -144,7 +144,7 @@ public:
 		arialFont( L"Arial",30 ),
 		input( input ),
 		gfx( gfx ),
-		funk( D3DGraphics::SCREENWIDTH,D3DGraphics::SCREENHEIGHT )
+		funk( gfx.GetWidth(),gfx.GetHeight() )
 	{
 		Brush::SeedColor( rd() );
 		brushes.reserve( nBrushes );
