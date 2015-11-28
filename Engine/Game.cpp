@@ -59,7 +59,6 @@ void Game::ComposeFrame()
 }
 
 //todo:
-//fix bloom translation
 //fix width/height in d3dgraphics and dependencies
 //fix drawrect inclusive/exclusive bullshit
 //implement fringe system
