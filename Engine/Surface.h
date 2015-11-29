@@ -54,11 +54,22 @@ public:
 	{
 		memset( buffer,fillValue,pitch * height * sizeof( Color ) );
 	}
-	inline void Present( const unsigned int pitch,BYTE* const buffer ) const
+	inline void Present( const size_t backBufferPitch,BYTE* const backBuffer ) const
 	{
+		const size_t rowWidthBytes = sizeof( Color ) * width;
 		for( unsigned int y = 0; y < height; y++ )
 		{
-			memcpy( &buffer[pitch * y],&(this->buffer)[this->pitch * y],sizeof(Color)* width );
+			memcpy( &backBuffer[backBufferPitch * y],&buffer[pitch * y],rowWidthBytes );
+		}
+	}
+	inline void PresentRegion( const RectI& region,const size_t backBufferPitch,
+		BYTE* const backBuffer ) const
+	{
+		const size_t rowWidthBytes = sizeof( Color ) * ( region.right - region.left );
+		for( unsigned int y = unsigned int( region.top ); y < unsigned int( region.bottom ); y++ )
+		{
+			memcpy( &backBuffer[backBufferPitch * ( y - region.top )],
+				&buffer[pitch * y + region.left],rowWidthBytes );
 		}
 	}
 	inline void PutPixel( unsigned int x,unsigned int y,Color c )

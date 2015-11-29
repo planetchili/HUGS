@@ -29,7 +29,9 @@ D3DGraphics::D3DGraphics( HWND hWnd,unsigned int viewWidth,unsigned int viewHeig
 pDirect3D( NULL ),
 pDevice( NULL ),
 pBackBuffer( NULL ),
-sysBuffer( viewWidth,viewHeight ),
+sysBuffer( 
+	viewWidth  + BloomProcessor::GetFringeSize() * 2u,
+	viewHeight + BloomProcessor::GetFringeSize() * 2u ),
 processor( sysBuffer )
 {
 	HRESULT result;
@@ -87,7 +89,7 @@ void D3DGraphics::EndFrame()
 	result = pBackBuffer->LockRect( &backRect,NULL,NULL );
 	assert( !FAILED( result ) );
 
-	sysBuffer.Present( backRect.Pitch,(BYTE*)backRect.pBits );
+	sysBuffer.PresentRegion( GetViewRegion(),backRect.Pitch,(BYTE*)backRect.pBits );
 
 	result = pBackBuffer->UnlockRect( );
 	assert( !FAILED( result ) );

@@ -48,6 +48,15 @@ public:
 	{
 		return sysBuffer.GetHeight();
 	}
+	inline RectI GetViewRegion() const
+	{
+		return RectI { 
+			int( BloomProcessor::GetFringeSize() ),
+			int( GetHeight() - BloomProcessor::GetFringeSize() ),
+			int( BloomProcessor::GetFringeSize() ),
+			int( GetWidth() - BloomProcessor::GetFringeSize() )
+		};
+	}
 	inline virtual void Draw( Drawable& obj ) override
 	{
 		obj.Rasterize( *this );

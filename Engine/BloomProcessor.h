@@ -117,8 +117,6 @@ public:
 		const size_t centerKernel = GetKernelCenter();
 		const size_t width = vBuffer.GetWidth();
 		const size_t height = vBuffer.GetHeight();
-		const size_t rowDistance = &vBuffer.GetBufferConst()[width] 
-			- vBuffer.GetBufferConst();
 
 		for( size_t x = 0u; x < width; x++ )
 		{
@@ -129,7 +127,7 @@ public:
 				unsigned int b = 0;
 				const Color* pBuffer = &vBuffer.GetBufferConst()[y * width + x];
 				for( size_t i = 0; i < diameter; i++,
-					pBuffer += rowDistance )
+					pBuffer += width )
 				{
 					const Color c = *pBuffer;
 					const unsigned int coef = kernel[i];
@@ -314,6 +312,10 @@ public:
 			input.Save( L"frame_e_finl" + std::to_wstring( count ) + L".bmp" );
 		}
 		count++;
+	}
+	static unsigned int GetFringeSize()
+	{
+		return (diameter / 2u) * 4u;
 	}
 private:
 	static unsigned int GetKernelCenter()

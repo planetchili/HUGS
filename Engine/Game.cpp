@@ -67,7 +67,9 @@ void Game::UpdateModel( float dt )
 
 void Game::ComposeFrame()
 {
-	pScreen->Draw( gfx );
+	//pScreen->Draw( gfx );
+	gfx.DrawRectangle( RectI { 0,int( gfx.GetHeight() ),100,200 },WHITE );
+	gfx.DrawRectangle( RectI { 100,200,0,int( gfx.GetWidth() ) },WHITE );
 }
 
 //todo:
