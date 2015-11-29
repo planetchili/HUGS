@@ -77,3 +77,7 @@ void Game::ComposeFrame()
 //convert all graphics to use viewport
 //reduce bloom processor to work only on relevent regions (vertical besides the upscale)
 //fix/improve bloom processor upscale code to work edges and look pretty
+
+//weird problems:
+// why +1 fixes gaussian blur assymetry?
+// vertial lines upscale blur but not horizontal? (solved: vertical blur data doesn't exist on edges)

@@ -89,7 +89,7 @@ public:
 
 		for( size_t y = 0u; y < height; y++ )
 		{
-			for( size_t x = 0u; x < width - diameter; x++ )
+			for( size_t x = 0u; x < width - diameter + 1; x++ )
 			{
 				unsigned int r = 0;
 				unsigned int g = 0;
@@ -120,7 +120,7 @@ public:
 
 		for( size_t x = 0u; x < width; x++ )
 		{
-			for( size_t y = 0u; y < height - diameter; y++ )
+			for( size_t y = 0u; y < height - diameter + 1; y++ )
 			{
 				unsigned int r = 0;
 				unsigned int g = 0;
