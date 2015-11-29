@@ -71,7 +71,6 @@ void Game::ComposeFrame()
 }
 
 //todo:
-//fix drawrect inclusive/exclusive bullshit
 //implement fringe system
 //convert all graphics to use viewport
 //reduce bloom processor to work only on relevent regions (vertical besides the upscale)

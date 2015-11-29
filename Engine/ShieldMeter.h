@@ -20,18 +20,18 @@ private:
 			const int meterWidth = int( ( ( parent.region.right - parent.region.left ) -
 				( 2 * parent.borderWidth + 2 * parent.spaceWidth ) ) * parent.ship.GetShieldPercent() );
 			gfx.DrawRectangle( parent.region.left,parent.region.right,
-				parent.region.top,parent.region.top + (parent.borderWidth - 1),
+				parent.region.top,parent.region.top + parent.borderWidth,
 				parent.borderColor );
-			gfx.DrawRectangle( parent.region.left,parent.region.left + (parent.borderWidth - 1),
+			gfx.DrawRectangle( parent.region.left,parent.region.left + parent.borderWidth,
 				parent.region.top + parent.borderWidth,
 				parent.region.bottom - parent.borderWidth,parent.borderColor );
 			gfx.DrawRectangle( parent.region.right - parent.borderWidth,parent.region.right,
 				parent.region.top + parent.borderWidth,parent.region.bottom - parent.borderWidth,
 				parent.borderColor );
 			gfx.DrawRectangle( parent.region.left,parent.region.right,
-				parent.region.bottom - (parent.borderWidth - 1),parent.region.bottom,parent.borderColor );
+				parent.region.bottom - parent.borderWidth,parent.region.bottom,parent.borderColor );
 			gfx.DrawRectangle( parent.region.left + parent.borderWidth + parent.spaceWidth,
-				parent.region.left + parent.borderWidth + parent.spaceWidth + meterWidth - 1,
+				parent.region.left + parent.borderWidth + parent.spaceWidth + meterWidth,
 				parent.region.top + parent.borderWidth + parent.spaceWidth,
 				parent.region.bottom - ( parent.borderWidth + parent.spaceWidth ),meterColor );
 		}

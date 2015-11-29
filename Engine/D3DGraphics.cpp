@@ -96,13 +96,12 @@ void D3DGraphics::EndFrame()
 	assert( !FAILED( result ) );
 }
 
-// inclusive (can never decide which is better)
 void D3DGraphics::DrawRectangle( int left,int right,int top,int bottom,Color c,
 	void( D3DGraphics::*pPixelFcn )( int,int,Color ) )
 {
-	for( int x = left; x <= right; x++ )
+	for( int x = left; x < right; x++ )
 	{
-		for( int y = top; y <= bottom; y++ )
+		for( int y = top; y < bottom; y++ )
 		{
 			(this->*pPixelFcn)( x,y,c );
 		}
