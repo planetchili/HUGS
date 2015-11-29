@@ -67,16 +67,16 @@ void Game::UpdateModel( float dt )
 
 void Game::ComposeFrame()
 {
-	//pScreen->Draw( gfx );
-	gfx.DrawRectangle( RectI { 0,int( gfx.GetHeight() ),100,200 },WHITE );
-	gfx.DrawRectangle( RectI { 100,200,0,int( gfx.GetWidth() ) },WHITE );
+	pScreen->Draw( gfx );
 }
 
 //todo:
-//implement fringe system
 //convert all graphics to use viewport
 //reduce bloom processor to work only on relevent regions (vertical besides the upscale)
 //fix/improve bloom processor upscale code to work edges and look pretty
+//overdrive bloom effect
+//selective bloom channel usage
+//text bloom problem
 
 //weird problems:
 // why +1 fixes gaussian blur assymetry?
