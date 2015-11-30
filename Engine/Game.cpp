@@ -71,7 +71,6 @@ void Game::ComposeFrame()
 }
 
 //todo:
-//reduce bloom processor to work only on relevent regions (vertical besides the upscale)
 //fix/improve bloom processor upscale code to work edges and look pretty
 //overdrive bloom effect
 //selective bloom channel usage

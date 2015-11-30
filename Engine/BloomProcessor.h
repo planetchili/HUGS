@@ -117,8 +117,9 @@ public:
 		const size_t centerKernel = GetKernelCenter();
 		const size_t width = vBuffer.GetWidth();
 		const size_t height = vBuffer.GetHeight();
+		const size_t fringe = diameter / 2u;
 
-		for( size_t x = 0u; x < width; x++ )
+		for( size_t x = fringe; x < width - fringe; x++ )
 		{
 			for( size_t y = 0u; y < height - diameter + 1; y++ )
 			{
@@ -150,13 +151,15 @@ public:
 		const Color* const pInputBuffer = hBuffer.GetBufferConst();
 		const size_t inWidth = hBuffer.GetWidth();
 		const size_t inHeight = hBuffer.GetHeight();
+		const size_t fringe = GetFringeSize();
 		const size_t outWidth = input.GetWidth();
-		const size_t outHeight = input.GetHeight();
+		const size_t outRight = outWidth - fringe;
+		const size_t outBottom = input.GetHeight() - fringe;
 
-		for( size_t y = 2u; y < outHeight - 2u; y += 4u )
+		for( size_t y = fringe + 2u; y < outBottom - 2u; y += 4u )
 		{
 			const size_t baseY = ( y - 2u ) / 4u;
-			for( size_t x = 2u; x < outWidth - 2u; x += 4u )
+			for( size_t x = fringe + 2u; x < outRight - 2u; x += 4u )
 			{
 				const size_t baseX = ( x - 2u ) / 4u;
 				const Color p0 = pInputBuffer[baseY * inWidth + baseX];
