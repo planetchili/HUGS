@@ -5,27 +5,29 @@
 class Viewport : public DrawTarget
 {
 public:
-	Viewport( DrawTarget& next,const RectF& rect )
+	Viewport( DrawTarget& next,const RectF& clipRect,const RectF& viewRect )
 		:
 		next( next ),
-		clip( rect )
+		clip( clipRect ),
+		view( viewRect )
 	{}
 	virtual void Draw( Drawable& obj ) override
 	{
-		obj.Transform( Mat3::Translation( { (float)clip.left,(float)clip.top } ) );
+		obj.Transform( Mat3::Translation( { (float)view.left,(float)view.top } ) );
 		obj.Clip( clip );
 		next.Draw( obj );
 	}
 	float GetWidth() const
 	{
-		return clip.GetWidth();
+		return view.GetWidth();
 	}
 	float GetHeight() const
 	{
-		return clip.GetHeight();
+		return view.GetHeight();
 	}
 
 private:
 	DrawTarget& next;
 	RectF clip;
+	RectF view;
 };
