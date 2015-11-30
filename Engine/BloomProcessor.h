@@ -152,12 +152,19 @@ public:
 		const size_t inFringe = diameter / 2u;
 		const size_t inWidth = hBuffer.GetWidth();
 		const size_t inHeight = hBuffer.GetHeight();
+		const size_t inBottom = inHeight - inFringe;
 		const size_t inTopLeft = ( inWidth + 1u ) * inFringe;
+		const size_t inTopRight = inWidth * ( inFringe + 1u ) - inFringe - 1u;
+		const size_t inBottomLeft = inWidth * ( inBottom - 1u ) + inFringe;
+		const size_t inBottomRight = inWidth * inBottom - inFringe - 1u;
 		const size_t outFringe = GetFringeSize();
 		const size_t outWidth = input.GetWidth();
 		const size_t outRight = outWidth - outFringe;
 		const size_t outBottom = input.GetHeight() - outFringe;
 		const size_t outTopLeft = ( outWidth + 1u ) * outFringe;
+		const size_t outTopRight = outWidth * ( outFringe + 1u ) - outFringe - 1u;
+		const size_t outBottomLeft = outWidth * ( outBottom - 1u ) + outFringe;
+		const size_t outBottomRight = outWidth * outBottom - outFringe - 1u;
 
 		auto AddSaturate = []( Color* pOut,unsigned int inr,unsigned int ing,unsigned int inb )
 		{
@@ -176,9 +183,20 @@ public:
 				const unsigned int g = pInputBuffer[inTopLeft].g;
 				const unsigned int b = pInputBuffer[inTopLeft].b;
 				AddSaturate( &pOutputBuffer[outTopLeft],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopLeft + 1],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + 1u],r,g,b );
 				AddSaturate( &pOutputBuffer[outTopLeft + outWidth],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopLeft + outWidth + 1],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + outWidth + 1u],r,g,b );
+			}
+
+			// top right block
+			{
+				const unsigned int r = pInputBuffer[inTopRight].r;
+				const unsigned int g = pInputBuffer[inTopRight].g;
+				const unsigned int b = pInputBuffer[inTopRight].b;
+				AddSaturate( &pOutputBuffer[outTopRight - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopRight],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopRight + outWidth - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopRight + outWidth],r,g,b );
 			}
 		}
 
@@ -317,6 +335,31 @@ public:
 				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d15.r,255u ) ),
 				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d15.g,255u ) ),
 				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d15.b,255u ) ) };
+			}
+		}
+
+		// bottom two rows
+		{
+			// bottom left block
+			{
+				const unsigned int r = pInputBuffer[inBottomLeft].r;
+				const unsigned int g = pInputBuffer[inBottomLeft].g;
+				const unsigned int b = pInputBuffer[inBottomLeft].b;
+				AddSaturate( &pOutputBuffer[outBottomLeft - outWidth],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomLeft - outWidth + 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomLeft],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomLeft + 1u],r,g,b );
+			}
+
+			// bottom right block
+			{
+				const unsigned int r = pInputBuffer[inBottomRight].r;
+				const unsigned int g = pInputBuffer[inBottomRight].g;
+				const unsigned int b = pInputBuffer[inBottomRight].b;
+				AddSaturate( &pOutputBuffer[outBottomRight - outWidth - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomRight - outWidth],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomRight - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomRight],r,g,b );
 			}
 		}
 	}

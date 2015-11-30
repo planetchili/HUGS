@@ -67,13 +67,18 @@ void Game::UpdateModel( float dt )
 
 void Game::ComposeFrame()
 {
-	pScreen->Draw( gfx );
+	//pScreen->Draw( gfx );
+	auto r = gfx.GetViewRegion();
+	gfx.DrawRectangle( r.right - 20,r.right,r.top,r.top + 20,GRAY );
+	gfx.DrawRectangle( r.left,r.left + 20,r.top,r.top + 20,GRAY );
+	gfx.DrawRectangle( r.right - 20,r.right,r.bottom - 20,r.bottom,GRAY );
+	gfx.DrawRectangle( r.left,r.left + 20,r.bottom - 20,r.bottom,GRAY );
 }
 
 //todo:
 //fix/improve bloom processor upscale code to work edges and look pretty
-//overdrive bloom effect
 //selective bloom channel usage
+//overdrive bloom effect
 //text bloom problem
 
 //weird problems:
