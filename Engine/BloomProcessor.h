@@ -149,17 +149,43 @@ public:
 	{
 		Color* const pOutputBuffer = input.GetBuffer();
 		const Color* const pInputBuffer = hBuffer.GetBufferConst();
+		const size_t inFringe = diameter / 2u;
 		const size_t inWidth = hBuffer.GetWidth();
 		const size_t inHeight = hBuffer.GetHeight();
-		const size_t fringe = GetFringeSize();
+		const size_t inTopLeft = ( inWidth + 1u ) * inFringe;
+		const size_t outFringe = GetFringeSize();
 		const size_t outWidth = input.GetWidth();
-		const size_t outRight = outWidth - fringe;
-		const size_t outBottom = input.GetHeight() - fringe;
+		const size_t outRight = outWidth - outFringe;
+		const size_t outBottom = input.GetHeight() - outFringe;
+		const size_t outTopLeft = ( outWidth + 1u ) * outFringe;
 
-		for( size_t y = fringe + 2u; y < outBottom - 2u; y += 4u )
+		auto AddSaturate = []( Color* pOut,unsigned int inr,unsigned int ing,unsigned int inb )
+		{
+			*pOut = { 
+				unsigned char( min( inr + pOut->r,255u ) ),
+				unsigned char( min( ing + pOut->g,255u ) ),
+				unsigned char( min( inb + pOut->b,255u ) )
+			};
+		};
+
+		// top two rows
+		{
+			// top left block
+			{
+				const unsigned int r = pInputBuffer[inTopLeft].r;
+				const unsigned int g = pInputBuffer[inTopLeft].g;
+				const unsigned int b = pInputBuffer[inTopLeft].b;
+				AddSaturate( &pOutputBuffer[outTopLeft],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + 1],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + outWidth],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + outWidth + 1],r,g,b );
+			}
+		}
+
+		for( size_t y = outFringe + 2u; y < outBottom - 2u; y += 4u )
 		{
 			const size_t baseY = ( y - 2u ) / 4u;
-			for( size_t x = fringe + 2u; x < outRight - 2u; x += 4u )
+			for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
 			{
 				const size_t baseX = ( x - 2u ) / 4u;
 				const Color p0 = pInputBuffer[baseY * inWidth + baseX];
