@@ -14,26 +14,27 @@ private:
 		{}
 		virtual void Rasterize( D3DGraphics& gfx ) const override
 		{
+			const Vei2 offset = trans.ExtractTranslation();
 			const Color meterColor = 
 				{ 255,unsigned char( 255 * parent.ship.GetShieldPercent() ),
 				unsigned char( 255 * parent.ship.GetShieldPercent() ) };
 			const int meterWidth = int( ( ( parent.region.right - parent.region.left ) -
 				( 2 * parent.borderWidth + 2 * parent.spaceWidth ) ) * parent.ship.GetShieldPercent() );
-			gfx.DrawRectangle( parent.region.left,parent.region.right,
-				parent.region.top,parent.region.top + parent.borderWidth,
+			gfx.DrawRectangle( parent.region.left + offset.x,parent.region.right + offset.x,
+				parent.region.top + offset.y,parent.region.top + parent.borderWidth + offset.y,
 				parent.borderColor );
-			gfx.DrawRectangle( parent.region.left,parent.region.left + parent.borderWidth,
-				parent.region.top + parent.borderWidth,
-				parent.region.bottom - parent.borderWidth,parent.borderColor );
-			gfx.DrawRectangle( parent.region.right - parent.borderWidth,parent.region.right,
-				parent.region.top + parent.borderWidth,parent.region.bottom - parent.borderWidth,
+			gfx.DrawRectangle( parent.region.left + offset.x,parent.region.left + parent.borderWidth + offset.x,
+				parent.region.top + parent.borderWidth + offset.y,
+				parent.region.bottom - parent.borderWidth + offset.y,parent.borderColor );
+			gfx.DrawRectangle( parent.region.right - parent.borderWidth + offset.x,parent.region.right + offset.x,
+				parent.region.top + parent.borderWidth + offset.y,parent.region.bottom - parent.borderWidth + offset.y,
 				parent.borderColor );
-			gfx.DrawRectangle( parent.region.left,parent.region.right,
-				parent.region.bottom - parent.borderWidth,parent.region.bottom,parent.borderColor );
-			gfx.DrawRectangle( parent.region.left + parent.borderWidth + parent.spaceWidth,
-				parent.region.left + parent.borderWidth + parent.spaceWidth + meterWidth,
-				parent.region.top + parent.borderWidth + parent.spaceWidth,
-				parent.region.bottom - ( parent.borderWidth + parent.spaceWidth ),meterColor );
+			gfx.DrawRectangle( parent.region.left + offset.x,parent.region.right + offset.x,
+				parent.region.bottom - parent.borderWidth + offset.y,parent.region.bottom + offset.y,parent.borderColor );
+			gfx.DrawRectangle( parent.region.left + parent.borderWidth + parent.spaceWidth + offset.x,
+				parent.region.left + parent.borderWidth + parent.spaceWidth + meterWidth + offset.x,
+				parent.region.top + parent.borderWidth + parent.spaceWidth + offset.y,
+				parent.region.bottom - ( parent.borderWidth + parent.spaceWidth ) + offset.y,meterColor );
 		}
 	private:
 		const ShieldMeter& parent;

@@ -40,7 +40,7 @@ public:
 		port( gfx,{ 0.0f,float( gfx.GetHeight() - 1u ),0.0f,float( gfx.GetWidth() - 1u ) },
 			gfx.GetViewRegion() ),
 		cam( port,port.GetWidth(),port.GetHeight() ),
-		meter( { 20,45,20,int( gfx.GetWidth() / 4 ) },ship ),
+		meter( { 20,45,20,int( port.GetWidth() / 4.0f ) },ship ),
 		timesFont( L"Times New Roman",60 ),
 		arialFont( L"Arial",20 ),
 		lapDisplay( ship,{ 860.0f,15.0f } ),

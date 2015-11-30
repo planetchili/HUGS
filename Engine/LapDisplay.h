@@ -28,7 +28,8 @@ public:
 			readout << L"Lap " << lapNumber << L" (in progress): "
 				<< std::setprecision( 2 ) << parent.ship.Timer().GetCurrentLapTime();
 
-			gfx.DrawString( readout.str(),parent.pos,parent.font,parent.color );
+			const Vec2 offset = trans.ExtractTranslation();
+			gfx.DrawString( readout.str(),parent.pos + offset,parent.font,parent.color );
 		}
 	private:
 		const LapDisplay& parent;
