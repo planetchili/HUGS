@@ -204,29 +204,29 @@ public:
 					const unsigned int b1 = pIn[baseX + 1u].b;
 					{
 						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-						const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
-						const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+						const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
 						AddSaturate( &pOutUpper[x],r,g,b );
 						AddSaturate( &pOutLower[x],r,g,b );
 					}
 					{
 						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-						const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
-						const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+						const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
 						AddSaturate( &pOutUpper[x + 1u],r,g,b );
 						AddSaturate( &pOutLower[x + 1u],r,g,b );
 					}
 					{
 						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-						const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
-						const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+						const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
 						AddSaturate( &pOutUpper[x + 2u],r,g,b );
 						AddSaturate( &pOutLower[x + 2u],r,g,b );
 					}
 					{
 						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-						const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
-						const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+						const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
 						AddSaturate( &pOutUpper[x + 3u],r,g,b );
 						AddSaturate( &pOutLower[x + 3u],r,g,b );
 					}
@@ -260,29 +260,29 @@ public:
 				const unsigned int b1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].b;
 				{
 					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-					const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
-					const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+					const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
 					AddSaturate( &pOutputBuffer[y * outWidth + outFringe],r,g,b );
 					AddSaturate( &pOutputBuffer[y * outWidth + outFringe + 1u],r,g,b );
 				}
 				{
 					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-					const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
-					const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+					const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
 					AddSaturate( &pOutputBuffer[(y + 1u) * outWidth + outFringe],r,g,b );
 					AddSaturate( &pOutputBuffer[(y + 1u) * outWidth + outFringe + 1u],r,g,b );
 				}
 				{
 					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-					const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
-					const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+					const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
 					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe],r,g,b );
 					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe + 1u],r,g,b );
 				}
 				{
 					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-					const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
-					const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+					const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
 					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe],r,g,b );
 					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe + 1u],r,g,b );
 				}
@@ -433,29 +433,29 @@ public:
 				const unsigned int b1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].b;
 				{
 					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-					const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
-					const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+					const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
 					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 2u],r,g,b );
 					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 1u],r,g,b );
 				}
 				{
 					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-					const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
-					const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+					const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
 					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 2u],r,g,b );
 					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 1u],r,g,b );
 				}
 				{
 					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-					const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
-					const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+					const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
 					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 2u],r,g,b );
 					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 1u],r,g,b );
 				}
 				{
 					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-					const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
-					const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+					const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
 					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 2u],r,g,b );
 					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 1u],r,g,b );
 				}
@@ -491,29 +491,29 @@ public:
 					const unsigned int b1 = pIn[baseX + 1u].b;
 					{
 						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-						const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
-						const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+						const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
 						AddSaturate( &pOutUpper[x],r,g,b );
 						AddSaturate( &pOutLower[x],r,g,b );
 					}
 					{
 						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-						const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
-						const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+						const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
 						AddSaturate( &pOutUpper[x + 1u],r,g,b );
 						AddSaturate( &pOutLower[x + 1u],r,g,b );
 					}
 					{
 						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-						const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
-						const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+						const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
 						AddSaturate( &pOutUpper[x + 2u],r,g,b );
 						AddSaturate( &pOutLower[x + 2u],r,g,b );
 					}
 					{
 						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-						const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
-						const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+						const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
 						AddSaturate( &pOutUpper[x + 3u],r,g,b );
 						AddSaturate( &pOutLower[x + 3u],r,g,b );
 					}

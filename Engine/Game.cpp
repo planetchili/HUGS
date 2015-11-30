@@ -71,7 +71,6 @@ void Game::ComposeFrame()
 }
 
 //todo:
-//fix/improve bloom processor upscale code to work edges and look pretty
 //selective bloom channel usage
 //overdrive bloom effect
 //text bloom problem
