@@ -245,9 +245,50 @@ public:
 			}
 		}
 
+		// center rows
 		for( size_t y = outFringe + 2u; y < outBottom - 2u; y += 4u )
 		{
 			const size_t baseY = ( y - 2u ) / 4u;
+
+			// first two pixels
+			{
+				const unsigned int r0 = pInputBuffer[baseY * inWidth + inFringe].r;
+				const unsigned int g0 = pInputBuffer[baseY * inWidth + inFringe].g;
+				const unsigned int b0 = pInputBuffer[baseY * inWidth + inFringe].b;
+				const unsigned int r1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].r;
+				const unsigned int g1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].g;
+				const unsigned int b1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].b;
+				{
+					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+					AddSaturate( &pOutputBuffer[y * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[y * outWidth + outFringe + 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+					AddSaturate( &pOutputBuffer[(y + 1u) * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[(y + 1u) * outWidth + outFringe + 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe + 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe + 1u],r,g,b );
+				}
+			}
+
+			// center pixels
 			for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
 			{
 				const size_t baseX = ( x - 2u ) / 4u;
@@ -380,6 +421,44 @@ public:
 				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d15.r,255u ) ),
 				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d15.g,255u ) ),
 				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d15.b,255u ) ) };
+			}
+
+			// last two pixels
+			{
+				const unsigned int r0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].r;
+				const unsigned int g0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].g;
+				const unsigned int b0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].b;
+				const unsigned int r1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].r;
+				const unsigned int g1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].g;
+				const unsigned int b1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].b;
+				{
+					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 1u],r,g,b );
+				}
 			}
 		}
 
