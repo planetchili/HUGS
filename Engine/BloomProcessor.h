@@ -188,6 +188,51 @@ public:
 				AddSaturate( &pOutputBuffer[outTopLeft + outWidth + 1u],r,g,b );
 			}
 
+			// center
+			{
+				Color* const pOutUpper = &pOutputBuffer[outFringe * outWidth];
+				Color* const pOutLower = &pOutputBuffer[( outFringe + 1u ) * outWidth];
+				const Color* const pIn = &pInputBuffer[inFringe * inWidth];
+				for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
+				{
+					const size_t baseX = ( x - 2u ) / 4u;
+					const unsigned int r0 = pIn[baseX].r;
+					const unsigned int g0 = pIn[baseX].g;
+					const unsigned int b0 = pIn[baseX].b;
+					const unsigned int r1 = pIn[baseX + 1u].r;
+					const unsigned int g1 = pIn[baseX + 1u].g;
+					const unsigned int b1 = pIn[baseX + 1u].b;
+					{
+						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+						AddSaturate( &pOutUpper[x],r,g,b );
+						AddSaturate( &pOutLower[x],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+						AddSaturate( &pOutUpper[x + 1u],r,g,b );
+						AddSaturate( &pOutLower[x + 1u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+						AddSaturate( &pOutUpper[x + 2u],r,g,b );
+						AddSaturate( &pOutLower[x + 2u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+						AddSaturate( &pOutUpper[x + 3u],r,g,b );
+						AddSaturate( &pOutLower[x + 3u],r,g,b );
+					}
+				}
+			}
+
 			// top right block
 			{
 				const unsigned int r = pInputBuffer[inTopRight].r;
@@ -349,6 +394,51 @@ public:
 				AddSaturate( &pOutputBuffer[outBottomLeft - outWidth + 1u],r,g,b );
 				AddSaturate( &pOutputBuffer[outBottomLeft],r,g,b );
 				AddSaturate( &pOutputBuffer[outBottomLeft + 1u],r,g,b );
+			}
+
+			// center
+			{
+				Color* const pOutUpper = &pOutputBuffer[( outBottom - 2u ) * outWidth];
+				Color* const pOutLower = &pOutputBuffer[( outBottom - 1u ) * outWidth];
+				const Color* const pIn = &pInputBuffer[( inBottom - 1u ) * inWidth];
+				for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
+				{
+					const size_t baseX = ( x - 2u ) / 4u;
+					const unsigned int r0 = pIn[baseX].r;
+					const unsigned int g0 = pIn[baseX].g;
+					const unsigned int b0 = pIn[baseX].b;
+					const unsigned int r1 = pIn[baseX + 1u].r;
+					const unsigned int g1 = pIn[baseX + 1u].g;
+					const unsigned int b1 = pIn[baseX + 1u].b;
+					{
+						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int g = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int b = ( r0 * 224u + r1 * 32u ) / 256u;
+						AddSaturate( &pOutUpper[x],r,g,b );
+						AddSaturate( &pOutLower[x],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int g = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int b = ( r0 * 160u + r1 * 96u ) / 256u;
+						AddSaturate( &pOutUpper[x + 1u],r,g,b );
+						AddSaturate( &pOutLower[x + 1u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int g = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int b = ( r0 * 96u + r1 * 160u ) / 256u;
+						AddSaturate( &pOutUpper[x + 2u],r,g,b );
+						AddSaturate( &pOutLower[x + 2u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int g = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int b = ( r0 * 32u + r1 * 224u ) / 256u;
+						AddSaturate( &pOutUpper[x + 3u],r,g,b );
+						AddSaturate( &pOutLower[x + 3u],r,g,b );
+					}
+				}
 			}
 
 			// bottom right block
