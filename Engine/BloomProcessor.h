@@ -2,6 +2,8 @@
 #include "Surface.h"
 #include "ChiliMath.h"
 #include <immintrin.h>
+#include "FrameTimer.h"
+#include <fstream>
 
 #define BLOOM_PROCESSOR_USE_SSE
 
@@ -13,7 +15,8 @@ public:
 		:
 		input( input ),
 		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
-		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 )
+		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
+		log( L"bloomlog_sse.txt" )
 	{
 		float kernelFloat[diameter];
 		for( int x = 0; x < diameter; x++ )
@@ -561,7 +564,12 @@ public:
 	}
 	void Go()
 	{
+		timer.StartFrame();
 		DownsizePass();
+		if( timer.StopFrame() )
+		{
+			log << timer.GetAvg() << std::endl;
+		}
 		HorizontalPass();
 		VerticalPass();
 		UpsizeBlendPass();
@@ -583,6 +591,8 @@ private:
 	Surface& input;
 	Surface hBuffer;
 	Surface vBuffer;
+	FrameTimer timer;
+	std::wofstream log;
 };
 #else
 class BloomProcessor
@@ -592,7 +602,8 @@ public:
 		:
 		input( input ),
 		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
-		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 )
+		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
+		log( L"bloomlog_x86.txt" )
 	{
 		float kernelFloat[diameter];
 		for( int x = 0; x < diameter; x++ )
@@ -1118,7 +1129,12 @@ public:
 	}
 	void Go()
 	{
+		timer.StartFrame();
 		DownsizePass();
+		if( timer.StopFrame() )
+		{
+			log << timer.GetAvg() << std::endl;
+		}
 		HorizontalPass();
 		VerticalPass();
 		UpsizeBlendPass();
@@ -1140,5 +1156,7 @@ private:
 	Surface& input;
 	Surface hBuffer;
 	Surface vBuffer;
+	FrameTimer timer;
+	std::wofstream log;
 };
 #endif
