@@ -23,17 +23,7 @@
 #include "D3DGraphics.h"
 #include "InputSystem.h"
 #include "Timer.h"
-#include "FrameTimer.h"
-#include "Camera.h"
-#include "Viewport.h"
-#include "Ship.h"
-#include "Map.h"
-#include "ShieldMeter.h"
-#include "Observer.h"
-#include "BlackHole.h"
-#include "LapDisplay.h"
-#include "TitleScreen.h"
-#include <fstream>
+#include "Screen.h"
 
 class Game : public ScreenContainer
 {
@@ -48,6 +38,4 @@ private:
 	D3DGraphics gfx;
 	InputSystem input;
 	Timer timer;
-	FrameTimer bloomTimer;
-	std::wofstream bloomLog;
 };

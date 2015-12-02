@@ -19,12 +19,12 @@
  *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
  ******************************************************************************************/
 #include "Game.h"
+#include "TitleScreen.h"
 
 Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	:
 	gfx( hWnd ),
-	input( hWnd,mServer,kServer ),
-	bloomLog( L"bloom.txt" )
+	input( hWnd,mServer,kServer )
 {
 	pScreen = std::make_unique<TitleScreen>( gfx,input,this );
 }
@@ -66,18 +66,6 @@ void Game::UpdateModel( float dt )
 void Game::ComposeFrame()
 {
 	pScreen->DrawPreBloom( gfx );
-
-	bloomTimer.StartFrame();
 	gfx.ProcessBloom();
-	if( bloomTimer.StopFrame() )
-	{
-		bloomLog << L"avg[ " << bloomTimer.GetAvg() << L" ] min[ " << bloomTimer.GetMin()
-			<< L" ] max[ " << bloomTimer.GetMax() << L" ]" << std::endl;
-	}
-
 	pScreen->DrawPostBloom( gfx );
 }
-
-//weird problems:
-// why +1 fixes gaussian blur assymetry?
-// vertial lines upscale blur but not horizontal? (solved: vertical blur data doesn't exist on edges)
