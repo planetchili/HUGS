@@ -46,6 +46,10 @@ private:
 		{
 			gen.seed( seed );
 		}
+		static void SetColor( Color newColor )
+		{
+			c = newColor;
+		}
 		static void MutateColor()
 		{
 			std::uniform_int_distribution<unsigned int> dis6( 0,5 );
@@ -120,8 +124,8 @@ private:
 	public:
 		StartMenu( TitleScreen& parent )
 			:
-			Menu( { 512,560 },400,15,40,{ 148,32,32,64 },
-			L"Arial",BLACK,{ 128,128,255 },{ 52,52,72 },2 ),
+			Menu( { 512,560 },400,15,40,{ 210,18,18,30 },
+			L"Arial",BLACK,{ 80u,128,128,255 },{ 70u,52,52,72 },2 ),
 			parent( parent )
 		{
 			AddItem( std::make_unique<StartButton>( *this ) );
@@ -146,6 +150,11 @@ public:
 		gfx( gfx ),
 		funk( gfx.GetWidth(),gfx.GetHeight() )
 	{
+		std::uniform_int_distribution<unsigned int> cd( 0u,255u );
+		Brush::SetColor( Color { 186u,
+			unsigned char( cd( rd ) ),
+			unsigned char( cd( rd ) ),
+			unsigned char( cd( rd ) ) } );
 		Brush::SeedColor( rd() );
 		brushes.reserve( nBrushes );
 		for( int i = 0; i < nBrushes; i++ )
@@ -164,18 +173,18 @@ public:
 	virtual void DrawPreBloom( D3DGraphics& gfx ) override
 	{
 		gfx.CopySurface( funk );
-		gfx.DrawString( L"H.U.G.S.",{ 250.0f,300.0f },timesFont,BLACK );
 		if( pMenu )
 		{
 			pMenu->Draw( gfx );
 		}
-		else
-		{
-			gfx.DrawString( L"PRESS ENTER",{ 380.0f,500.0f },arialFont,BLACK );
-		}
 	}
 	virtual void DrawPostBloom( D3DGraphics& gfx ) override
 	{
+		gfx.DrawString( L"H.U.G.S.",{ 250.0f,300.0f },timesFont,BLACK );
+		if( !pMenu )
+		{
+			gfx.DrawString( L"PRESS ENTER",{ 380.0f,500.0f },arialFont,BLACK );
+		}
 	}
 	virtual void HandleInput() override
 	{

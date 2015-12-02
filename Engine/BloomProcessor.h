@@ -26,6 +26,7 @@ public:
 		{
 			sumKernel += kernel[x];
 		}
+		sumKernel = unsigned int( sumKernel / overdriveFactor );
 		hBuffer.Clear( BLACK );
 		vBuffer.Clear( BLACK );
 	}
@@ -105,9 +106,9 @@ public:
 				}
 				vBuffer.GetBuffer()[y * width + x + centerKernel] =
 				{
-					unsigned char( r / sumKernel ),
-					unsigned char( g / sumKernel ),
-					unsigned char( b / sumKernel )
+					unsigned char( min( r / sumKernel,255u ) ),
+					unsigned char( min( g / sumKernel,255u ) ),
+					unsigned char( min( b / sumKernel,255u ) )
 				};
 			}
 		}
@@ -138,9 +139,9 @@ public:
 				}
 				hBuffer.GetBuffer()[( y + centerKernel ) * width + x] =
 				{
-					unsigned char( r / sumKernel ),
-					unsigned char( g / sumKernel ),
-					unsigned char( b / sumKernel )
+					unsigned char( min( r / sumKernel,255u ) ),
+					unsigned char( min( g / sumKernel,255u ) ),
+					unsigned char( min( b / sumKernel,255u ) )
 				};
 			}
 		}
@@ -564,6 +565,7 @@ private:
 		return ( diameter - 1 ) / 2;
 	}
 private:
+	float overdriveFactor = 2.0f;
 	unsigned int count = 0u;
 	static const unsigned int diameter = 16u;
 	unsigned char kernel[diameter];

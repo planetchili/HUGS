@@ -93,9 +93,9 @@ private:
 			}
 
 			TriangleStrip::Drawable innerDrawable = 
-				parent.pInnerModel->GetDrawable( Color { WHITE,255u } );
+				parent.pInnerModel->GetDrawable( parent.wallColor );
 			TriangleStrip::Drawable outerDrawable = 
-				parent.pOuterModel->GetDrawable( Color { WHITE,255u } );
+				parent.pOuterModel->GetDrawable( parent.wallColor );
 			innerDrawable.Transform( trans );
 			outerDrawable.Transform( trans );
 			innerDrawable.Clip( clip );
@@ -142,6 +142,7 @@ public:
 	}
 
 private:
+	Color wallColor = { 175,165,70,220 };
 	TrackRegionManager tMan;
 	const float wallWidth = 40.0f;
 	Vec2 startPosition;

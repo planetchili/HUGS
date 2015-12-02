@@ -72,9 +72,6 @@ void Game::ComposeFrame()
 	pScreen->DrawPostBloom( gfx );
 }
 
-//todo:
-//overdrive bloom effect
-
 //weird problems:
 // why +1 fixes gaussian blur assymetry?
 // vertial lines upscale blur but not horizontal? (solved: vertical blur data doesn't exist on edges)
