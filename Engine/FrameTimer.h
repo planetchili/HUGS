@@ -40,7 +40,7 @@ public:
 	{		
 		timer.StartWatch();
 	}
-	void StopFrame()
+	bool StopFrame()
 	{
 		timer.StopWatch();
 		const float frameTime = timer.GetTimeMilli();
@@ -57,7 +57,9 @@ public:
 			timeMin = FLT_MAX;
 			timeMax = 0.0f;
 			frameCount = 0;
+			return true;
 		}
+		return false;
 	}
 	float GetAvg() const
 	{

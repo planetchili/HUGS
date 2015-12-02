@@ -33,6 +33,7 @@
 #include "BlackHole.h"
 #include "LapDisplay.h"
 #include "TitleScreen.h"
+#include <fstream>
 
 class Game : public ScreenContainer
 {
@@ -47,4 +48,6 @@ private:
 	D3DGraphics gfx;
 	InputSystem input;
 	Timer timer;
+	FrameTimer bloomTimer;
+	std::wofstream bloomLog;
 };

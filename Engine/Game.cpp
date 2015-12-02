@@ -19,14 +19,12 @@
  *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
  ******************************************************************************************/
 #include "Game.h"
-#include "Mat3.h"
-#include "TriangleStrip.h"
-#include <array>
 
 Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	:
 	gfx( hWnd ),
-	input( hWnd,mServer,kServer )
+	input( hWnd,mServer,kServer ),
+	bloomLog( L"bloom.txt" )
 {
 	pScreen = std::make_unique<TitleScreen>( gfx,input,this );
 }
@@ -68,7 +66,15 @@ void Game::UpdateModel( float dt )
 void Game::ComposeFrame()
 {
 	pScreen->DrawPreBloom( gfx );
+
+	bloomTimer.StartFrame();
 	gfx.ProcessBloom();
+	if( bloomTimer.StopFrame() )
+	{
+		bloomLog << L"avg[ " << bloomTimer.GetAvg() << L" ] min[ " << bloomTimer.GetMin()
+			<< L" ] max[ " << bloomTimer.GetMax() << L" ]" << std::endl;
+	}
+
 	pScreen->DrawPostBloom( gfx );
 }
 
