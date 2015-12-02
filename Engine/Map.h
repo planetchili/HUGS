@@ -92,8 +92,10 @@ private:
 				hd.Rasterize( gfx );
 			}
 
-			TriangleStrip::Drawable innerDrawable = parent.pInnerModel->GetDrawable();
-			TriangleStrip::Drawable outerDrawable = parent.pOuterModel->GetDrawable();
+			TriangleStrip::Drawable innerDrawable = 
+				parent.pInnerModel->GetDrawable( Color { WHITE,255u } );
+			TriangleStrip::Drawable outerDrawable = 
+				parent.pOuterModel->GetDrawable( Color { WHITE,255u } );
 			innerDrawable.Transform( trans );
 			outerDrawable.Transform( trans );
 			innerDrawable.Clip( clip );

@@ -422,10 +422,11 @@ void D3DGraphics::DrawFlatTopTriangleTex( Vertex v0,Vertex v1,Vertex v2,const Re
 
 		for (int x = xStart; x <= xEnd; x++, t += tScanStep)
 		{
-			const Color texel = tex.GetPixel(
+			Color texel = tex.GetPixel(
 				(unsigned int)(t.x + 0.5f), (unsigned int)(t.y + 0.5f));
-			if (texel.x == 255)
+			if (texel.x == 255u)
 			{
+				texel.x = 0u;
 				PutPixel(x, y, texel);
 			}			
 		}
@@ -469,10 +470,11 @@ void D3DGraphics::DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const
 
 		for (int x = xStart; x <= xEnd; x++, t += tScanStep)
 		{
-			const Color texel = tex.GetPixel(
+			Color texel = tex.GetPixel(
 				(unsigned int)(t.x + 0.5f), (unsigned int)(t.y + 0.5f));
-			if (texel.x == 255)
+			if (texel.x == 255u)
 			{
+				texel.x = 0u;
 				PutPixel(x, y, texel);
 			}
 		}

@@ -16,7 +16,7 @@ private:
 		{
 			const Vei2 offset = trans.ExtractTranslation();
 			const Color meterColor = 
-				{ 255,unsigned char( 255 * parent.ship.GetShieldPercent() ),
+				{ 0u,255u,unsigned char( 255 * parent.ship.GetShieldPercent() ),
 				unsigned char( 255 * parent.ship.GetShieldPercent() ) };
 			const int meterWidth = int( ( ( parent.region.right - parent.region.left ) -
 				( 2 * parent.borderWidth + 2 * parent.spaceWidth ) ) * parent.ship.GetShieldPercent() );
@@ -52,7 +52,7 @@ public:
 private:
 	const int borderWidth = 2;
 	const int spaceWidth = 5;
-	const Color borderColor = WHITE;
+	const Color borderColor = Color { WHITE,0u };
 	const RectI region;
 	const Ship& ship;
 };
