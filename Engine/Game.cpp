@@ -67,13 +67,13 @@ void Game::UpdateModel( float dt )
 
 void Game::ComposeFrame()
 {
-	pScreen->Draw( gfx );
+	pScreen->DrawPreBloom( gfx );
+	gfx.ProcessBloom();
+	pScreen->DrawPostBloom( gfx );
 }
 
 //todo:
-//selective bloom channel usage
 //overdrive bloom effect
-//text bloom problem
 
 //weird problems:
 // why +1 fixes gaussian blur assymetry?

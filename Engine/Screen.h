@@ -22,7 +22,8 @@ public:
 	{}
 	virtual void HandleInput() = 0;
 	virtual void Update( float dt ) = 0;
-	virtual void Draw( D3DGraphics& gfx ) = 0;
+	virtual void DrawPreBloom( D3DGraphics& gfx ) = 0;
+	virtual void DrawPostBloom( D3DGraphics& gfx ) = 0;
 protected:
 	void SetOtherParent( Screen& other,ScreenContainer* newParent ) const
 	{

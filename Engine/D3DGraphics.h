@@ -77,6 +77,10 @@ public:
 	{
 		sysBuffer.Copy( src );
 	}
+	inline void ProcessBloom()
+	{
+		processor.Go();
+	}
 	
 	template< typename T >
 	inline void DrawRectangleAlpha( const _Rect<T>& rect,Color c )

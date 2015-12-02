@@ -27,9 +27,13 @@ public:
 			ChangeScreen( std::move( child ) );
 		}
 	}
-	virtual void Draw( D3DGraphics& gfx ) override
+	virtual void DrawPreBloom( D3DGraphics& gfx ) override
 	{
-		child->Draw( gfx );
+		child->DrawPreBloom( gfx );
+	}
+	virtual void DrawPostBloom( D3DGraphics& gfx ) override
+	{
+		child->DrawPostBloom( gfx );
 		gfx.DrawString( std::to_wstring( int( time ) ),{ 450.0f,350.0f },timesFont,RED );
 	}
 	virtual void HandleInput() override

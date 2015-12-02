@@ -60,7 +60,7 @@ public:
 		}
 		map.Update( dt );
 	}
-	virtual void Draw( D3DGraphics& gfx ) override
+	virtual void DrawPreBloom( D3DGraphics& gfx ) override
 	{
 		if( !deathListener.IsDead() )
 		{
@@ -69,13 +69,16 @@ public:
 		}
 
 		cam.Draw( map.GetDrawable() );
+	}
+	virtual void DrawPostBloom( D3DGraphics& gfx ) override
+	{
 		port.Draw( meter.GetDrawable() );
 		port.Draw( lapDisplay.GetDrawable() );
 
 		if( deathListener.IsDead() )
 		{
 			gfx.DrawString( L"GAME\nOVER",{ 400.0f,300.0f },timesFont,GRAY );
-			gfx.DrawString( L"Press ENTER to RESTART",{375.0f,550.0f },arialFont,RED );
+			gfx.DrawString( L"Press ENTER to RESTART",{ 375.0f,550.0f },arialFont,RED );
 		}
 	}
 	virtual void HandleInput() override

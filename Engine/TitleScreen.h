@@ -161,7 +161,7 @@ public:
 			b.Step();
 		}
 	}
-	virtual void Draw( D3DGraphics& gfx ) override
+	virtual void DrawPreBloom( D3DGraphics& gfx ) override
 	{
 		gfx.CopySurface( funk );
 		gfx.DrawString( L"H.U.G.S.",{ 250.0f,300.0f },timesFont,BLACK );
@@ -173,6 +173,9 @@ public:
 		{
 			gfx.DrawString( L"PRESS ENTER",{ 380.0f,500.0f },arialFont,BLACK );
 		}
+	}
+	virtual void DrawPostBloom( D3DGraphics& gfx ) override
+	{
 	}
 	virtual void HandleInput() override
 	{
