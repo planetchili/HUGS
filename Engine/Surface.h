@@ -11,9 +11,10 @@
 class Surface
 {
 public:
+	// pitch is in PIXELS (4-byte units)
 	Surface( unsigned int width,unsigned int height,unsigned int pitch )
 		:
-		buffer( new Color[ pitch * height ] ),
+		buffer( (Color* const)_aligned_malloc( size_t( height * pitch * sizeof( Color ) ),16u ) ),
 		width( width ),
 		height( height ),
 		pitch( pitch )
@@ -46,7 +47,7 @@ public:
 	{
 		if( buffer != nullptr )
 		{
-			delete[] buffer;
+			_aligned_free( buffer );
 			const_cast<Color*>( buffer ) = nullptr;
 		}
 	}
@@ -225,6 +226,7 @@ protected:
 	Color* const buffer;
 	unsigned int width;
 	unsigned int height;
+	// this pitch value is the pitch in PIXELS (I know, kinda dumb but...)
 	unsigned int pitch;
 };
 
