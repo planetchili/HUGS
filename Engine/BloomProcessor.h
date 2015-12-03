@@ -42,11 +42,12 @@ public:
 		// setup function pointers
 		if( InstructionSet::SSSE3() )
 		{
-			DownsizePassFunc = &BloomProcessor::DownsizePassSSSE3;
+			// std::mem_fn only needed as a workaround for MSVC bug :/
+			DownsizePassFunc = std::mem_fn( &BloomProcessor::DownsizePassSSSE3 );
 		}
 		else
 		{
-			DownsizePassFunc = &BloomProcessor::DownsizePassSSE2;
+			DownsizePassFunc = std::mem_fn( &BloomProcessor::DownsizePassSSE2 );
 		}
 	}
 	void DownsizePass()
