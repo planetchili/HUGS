@@ -237,6 +237,9 @@
     <ClInclude Include="BloomProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Cpuid.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -277,6 +280,9 @@
     </ClCompile>
     <ClCompile Include="Sound.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Cpuid.cpp">
+      <Filter>Source Files\Framework</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

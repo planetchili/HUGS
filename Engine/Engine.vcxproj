@@ -94,6 +94,7 @@
     <ClInclude Include="Colors.h" />
     <ClInclude Include="ComManager.h" />
     <ClInclude Include="CountScreen.h" />
+    <ClInclude Include="Cpuid.h" />
     <ClInclude Include="D3DGraphics.h" />
     <ClInclude Include="Dinput.h" />
     <ClInclude Include="Drawable.h" />
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CollidableCircle.cpp" />
+    <ClCompile Include="Cpuid.cpp" />
     <ClCompile Include="D3DGraphics.cpp" />
     <ClCompile Include="dxflib\dl_dxf.cpp" />
     <ClCompile Include="dxflib\dl_writer_ascii.cpp" />

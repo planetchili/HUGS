@@ -4,6 +4,8 @@
 #include <immintrin.h>
 #include "FrameTimer.h"
 #include <fstream>
+#include <functional>
+#include "Cpuid.h"
 
 #define BLOOM_PROCESSOR_USE_SSE
 
@@ -36,84 +38,20 @@ public:
 		sumKernel = unsigned int( sumKernel / overdriveFactor );
 		hBuffer.Clear( BLACK );
 		vBuffer.Clear( BLACK );
+
+		// setup function pointers
+		if( InstructionSet::SSSE3() )
+		{
+			DownsizePassFunc = &BloomProcessor::DownsizePassSSSE3;
+		}
+		else
+		{
+			DownsizePassFunc = &BloomProcessor::DownsizePassSSE2;
+		}
 	}
 	void DownsizePass()
 	{
-		// surface height needs to be a multiple of 4
-		assert( input.GetHeight() % 4u == 0u );
-
-		// useful constants
-		const __m128i zero = _mm_setzero_si128();
-		const __m128i bloomShufLo = _mm_set_epi8(
-			128u,128u,128u,7u,128u,7u,128u,7u,
-			128u,128u,128u,3u,128u,3u,128u,3u );
-		const __m128i bloomShufHi = _mm_set_epi8(
-			128u,128u,128u,15u,128u,15u,128u,15u,
-			128u,128u,128u,11u,128u,11u,128u,11u );
-
-		// subroutine
-		const auto ProcessRow = [=]( __m128i row )
-		{
-			// unpack byte channels of 2 upper and 2 lower pixels to words
-			const __m128i chanLo = _mm_unpacklo_epi8( row,zero );
-			const __m128i chanHi = _mm_unpackhi_epi8( row,zero );
-			
-			// broadcast bloom value to all channels in the same pixel
-			const __m128i bloomLo = _mm_shuffle_epi8( row,bloomShufLo );
-			const __m128i bloomHi = _mm_shuffle_epi8( row,bloomShufHi );
-
-			// multiply bloom with color channels
-			const __m128i prodLo = _mm_mullo_epi16( chanLo,bloomLo );
-			const __m128i prodHi = _mm_mullo_epi16( chanHi,bloomHi );
-
-			// predivide channels by 16
-			const __m128i predivLo = _mm_srli_epi16( prodLo,4u );
-			const __m128i predivHi = _mm_srli_epi16( prodHi,4u );
-
-			// add upper and lower 2-pixel groups and return result
-			return _mm_add_epi16( predivLo,predivHi );
-		};
-		
-		for( size_t yIn = 0u,yOut = 0u; yIn < size_t( input.GetHeight() ); yIn += 4u,yOut++ )
-		{
-			// initialize input pointers
-			const __m128i* pRow0 = reinterpret_cast<const __m128i*>(
-				&input.GetBufferConst()[input.GetPitch() * yIn] );
-			const __m128i* pRow1 = reinterpret_cast<const __m128i*>(
-				&input.GetBufferConst()[input.GetPitch() * (yIn + 1u)] );
-			const __m128i* pRow2 = reinterpret_cast<const __m128i*>(
-				&input.GetBufferConst()[input.GetPitch() * (yIn + 2u)] );
-			const __m128i* pRow3 = reinterpret_cast<const __m128i*>(
-				&input.GetBufferConst()[input.GetPitch() * (yIn + 3u)] );
-			// initialize output pointer
-			Color* pOut = &hBuffer.GetBuffer()[hBuffer.GetPitch() * yOut];
-			// row end pointer
-			const __m128i* const pRowEnd = pRow1;
-
-			for( ; pRow0 < pRowEnd; pRow0++,pRow1++,pRow2++,pRow3++,pOut++ )
-			{
-				// load pixels
-				const __m128i row0 = _mm_load_si128( pRow0 );
-				const __m128i row1 = _mm_load_si128( pRow1 );
-				const __m128i row2 = _mm_load_si128( pRow2 );
-				const __m128i row3 = _mm_load_si128( pRow3 );
-
-				// process rows and sum results
-				__m128i sum = ProcessRow( row0 );
-				sum = _mm_add_epi16( sum,ProcessRow( row1 ) );
-				sum = _mm_add_epi16( sum,ProcessRow( row2 ) );
-				sum = _mm_add_epi16( sum,ProcessRow( row3 ) );
-
-				// add high and low pixel channel sums
-				sum = _mm_add_epi16( sum,_mm_srli_si128( sum,8u ) );
-
-				// divide channel sums by 256
-				sum = _mm_srli_epi16( sum,8u );
-
-				// pack word channels to bytes and store in output buffer
-				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum,sum ) );
-			}
-		}
+		DownsizePassFunc( this );
 	}
 	void HorizontalPass()
 	{
@@ -587,6 +525,157 @@ private:
 	{
 		return ( diameter - 1 ) / 2;
 	}
+	void DownsizePassSSSE3()
+	{
+		// surface height needs to be a multiple of 4
+		assert( input.GetHeight() % 4u == 0u );
+
+		// useful constants
+		const __m128i zero = _mm_setzero_si128();
+		const __m128i bloomShufLo = _mm_set_epi8(
+			128u,128u,128u,7u,128u,7u,128u,7u,
+			128u,128u,128u,3u,128u,3u,128u,3u );
+		const __m128i bloomShufHi = _mm_set_epi8(
+			128u,128u,128u,15u,128u,15u,128u,15u,
+			128u,128u,128u,11u,128u,11u,128u,11u );
+
+		// subroutine
+		const auto ProcessRow = [=]( __m128i row )
+		{
+			// unpack byte channels of 2 upper and 2 lower pixels to words
+			const __m128i chanLo = _mm_unpacklo_epi8( row,zero );
+			const __m128i chanHi = _mm_unpackhi_epi8( row,zero );
+
+			// broadcast bloom value to all channels in the same pixel
+			const __m128i bloomLo = _mm_shuffle_epi8( row,bloomShufLo );
+			const __m128i bloomHi = _mm_shuffle_epi8( row,bloomShufHi );
+
+			// multiply bloom with color channels
+			const __m128i prodLo = _mm_mullo_epi16( chanLo,bloomLo );
+			const __m128i prodHi = _mm_mullo_epi16( chanHi,bloomHi );
+
+			// predivide channels by 16
+			const __m128i predivLo = _mm_srli_epi16( prodLo,4u );
+			const __m128i predivHi = _mm_srli_epi16( prodHi,4u );
+
+			// add upper and lower 2-pixel groups and return result
+			return _mm_add_epi16( predivLo,predivHi );
+		};
+
+		for( size_t yIn = 0u,yOut = 0u; yIn < size_t( input.GetHeight() ); yIn += 4u,yOut++ )
+		{
+			// initialize input pointers
+			const __m128i* pRow0 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * yIn] );
+			const __m128i* pRow1 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * ( yIn + 1u )] );
+			const __m128i* pRow2 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * ( yIn + 2u )] );
+			const __m128i* pRow3 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * ( yIn + 3u )] );
+			// initialize output pointer
+			Color* pOut = &hBuffer.GetBuffer()[hBuffer.GetPitch() * yOut];
+			// row end pointer
+			const __m128i* const pRowEnd = pRow1;
+
+			for( ; pRow0 < pRowEnd; pRow0++,pRow1++,pRow2++,pRow3++,pOut++ )
+			{
+				// load pixels
+				const __m128i row0 = _mm_load_si128( pRow0 );
+				const __m128i row1 = _mm_load_si128( pRow1 );
+				const __m128i row2 = _mm_load_si128( pRow2 );
+				const __m128i row3 = _mm_load_si128( pRow3 );
+
+				// process rows and sum results
+				__m128i sum = ProcessRow( row0 );
+				sum = _mm_add_epi16( sum,ProcessRow( row1 ) );
+				sum = _mm_add_epi16( sum,ProcessRow( row2 ) );
+				sum = _mm_add_epi16( sum,ProcessRow( row3 ) );
+
+				// add high and low pixel channel sums
+				sum = _mm_add_epi16( sum,_mm_srli_si128( sum,8u ) );
+
+				// divide channel sums by 256
+				sum = _mm_srli_epi16( sum,8u );
+
+				// pack word channels to bytes and store in output buffer
+				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum,sum ) );
+			}
+		}
+	}
+	void DownsizePassSSE2()
+	{		// surface height needs to be a multiple of 4
+		assert( input.GetHeight() % 4u == 0u );
+
+		// useful constants
+		const __m128i zero = _mm_setzero_si128();
+
+		// subroutine
+		const auto ProcessRow = [&zero]( __m128i row )
+		{
+			// unpack byte channels of 2 upper and 2 lower pixels to words
+			const __m128i chanLo = _mm_unpacklo_epi8( row,zero );
+			const __m128i chanHi = _mm_unpackhi_epi8( row,zero );
+
+			// broadcast bloom value to all channels in the same pixel
+			const __m128i bloomLo = _mm_shufflehi_epi16( _mm_shufflelo_epi16(
+				chanLo,_MM_SHUFFLE( 3u,3u,3u,3u ) ),_MM_SHUFFLE( 3u,3u,3u,3u ) );
+			const __m128i bloomHi = _mm_shufflehi_epi16( _mm_shufflelo_epi16(
+				chanHi,_MM_SHUFFLE( 3u,3u,3u,3u ) ),_MM_SHUFFLE( 3u,3u,3u,3u ) );
+
+			// multiply bloom with color channels
+			const __m128i prodLo = _mm_mullo_epi16( chanLo,bloomLo );
+			const __m128i prodHi = _mm_mullo_epi16( chanHi,bloomHi );
+
+			// predivide channels by 16
+			const __m128i predivLo = _mm_srli_epi16( prodLo,4u );
+			const __m128i predivHi = _mm_srli_epi16( prodHi,4u );
+
+			// add upper and lower 2-pixel groups and return result
+			return _mm_add_epi16( predivLo,predivHi );
+		};
+
+		for( size_t yIn = 0u,yOut = 0u; yIn < size_t( input.GetHeight() ); yIn += 4u,yOut++ )
+		{
+			// initialize input pointers
+			const __m128i* pRow0 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * yIn] );
+			const __m128i* pRow1 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * ( yIn + 1u )] );
+			const __m128i* pRow2 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * ( yIn + 2u )] );
+			const __m128i* pRow3 = reinterpret_cast<const __m128i*>(
+				&input.GetBufferConst()[input.GetPitch() * ( yIn + 3u )] );
+			// initialize output pointer
+			Color* pOut = &hBuffer.GetBuffer()[hBuffer.GetPitch() * yOut];
+			// row end pointer
+			const __m128i* const pRowEnd = pRow1;
+
+			for( ; pRow0 < pRowEnd; pRow0++,pRow1++,pRow2++,pRow3++,pOut++ )
+			{
+				// load pixels
+				const __m128i row0 = _mm_load_si128( pRow0 );
+				const __m128i row1 = _mm_load_si128( pRow1 );
+				const __m128i row2 = _mm_load_si128( pRow2 );
+				const __m128i row3 = _mm_load_si128( pRow3 );
+
+				// process rows and sum results
+				__m128i sum = ProcessRow( row0 );
+				sum = _mm_add_epi16( sum,ProcessRow( row1 ) );
+				sum = _mm_add_epi16( sum,ProcessRow( row2 ) );
+				sum = _mm_add_epi16( sum,ProcessRow( row3 ) );
+
+				// add high and low pixel channel sums
+				sum = _mm_add_epi16( sum,_mm_srli_si128( sum,8u ) );
+
+				// divide channel sums by 256
+				sum = _mm_srli_epi16( sum,8u );
+
+				// pack word channels to bytes and store in output buffer
+				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum,sum ) );
+			}
+		}
+	}
 private:
 	static const unsigned int diameter = 16u;
 	__declspec( align( 16 ) ) unsigned char kernel[diameter];
@@ -595,6 +684,9 @@ private:
 	Surface& input;
 	Surface hBuffer;
 	Surface vBuffer;
+	// function pointers
+	std::function<void( BloomProcessor* )> DownsizePassFunc;
+	// benchmarking
 	FrameTimer timer;
 	std::wofstream log;
 };
