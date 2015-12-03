@@ -218,7 +218,7 @@ public:
 			if( data[i].dwOfs >= offsetof( DIJOYSTATE2,rgbButtons[0] ) &&
 				data[i].dwOfs <= offsetof( DIJOYSTATE2,rgbButtons[127] ) )
 			{
-				events.emplace_back( data[i].dwOfs - offsetof( DIJOYSTATE2,rgbButtons[0] ),
+				events.emplace_back( data[i].dwOfs - unsigned int( offsetof( DIJOYSTATE2,rgbButtons[0] ) ),
 					(data[i].dwData & 0x80) == 0x80 );
 			}
 			else if( data[i].dwOfs == offsetof( DIJOYSTATE2,rgdwPOV ) )

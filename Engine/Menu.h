@@ -148,7 +148,7 @@ protected:
 private:
 	RectI CalculateItemBorders() const
 	{
-		int i = items.size();
+		int i = int( items.size() );
 		return {
 			borders.top + padding + ( buttonHeight + padding ) * i,
 			borders.top + ( buttonHeight + padding ) * ( i + 1 ),

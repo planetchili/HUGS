@@ -111,7 +111,7 @@ private:
 		}
 		unsigned int GetLapCount() const
 		{
-			return lapTimes.size();
+			return unsigned int( lapTimes.size() );
 		}
 		virtual void OnNotify() override
 		{

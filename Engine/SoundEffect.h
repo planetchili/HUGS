@@ -11,7 +11,7 @@ public:
 		:
 		rng( seed ),
 		freqDist( 1.0f,freqDev ),
-		soundDist( 0,wavFiles.size() - 1 )
+		soundDist( 0,unsigned int( wavFiles.size() - 1 ) )
 	{
 		for( auto& f : wavFiles )
 		{

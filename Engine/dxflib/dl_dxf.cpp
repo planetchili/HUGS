@@ -361,7 +361,7 @@ bool DL_Dxf::getChoppedLine(char *s, unsigned int size,
  */
 bool DL_Dxf::stripWhiteSpace(char** s) {
     // last non-NULL char:
-    int lastChar = strlen(*s) - 1;
+    size_t lastChar = strlen(*s) - 1;
 
     // Is last character CR or LF?
     while ( (lastChar >= 0) &&
@@ -2496,9 +2496,9 @@ void DL_Dxf::writeMText(DL_WriterA& dw,
     dw.dxfInt(72, data.drawingDirection);
 
     // Creare text chunks of 250 characters each:
-    int length = data.text.length();
+    size_t length = data.text.length();
     char chunk[251];
-    int i;
+    size_t i;
     for (i=250; i<length; i+=250) {
         strncpy(chunk, &data.text.c_str()[i-250], 250);
         chunk[250]='\0';
@@ -4989,7 +4989,7 @@ int DL_Dxf::getLibVersion(const char* str) {
     }
 
     if (idx==3) {
-        d[3] = strlen(str);
+        d[3] = int( strlen(str) );
 
         strncpy(v[0], str, d[0]);
         v[0][d[0]] = '\0';

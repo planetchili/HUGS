@@ -41,14 +41,14 @@ LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 		case WM_KEYDOWN:
 			if( !( lParam & 0x40000000 ) ) // no thank you on the autorepeat
 			{
-				kServ.OnKeyPressed( wParam );
+				kServ.OnKeyPressed( unsigned char( wParam ) );
 			}
 			break;
 		case WM_KEYUP:
-   			kServ.OnKeyReleased( wParam );
+			kServ.OnKeyReleased( unsigned char( wParam ) );
 			break;
 		case WM_CHAR:
-			kServ.OnChar( wParam );
+			kServ.OnChar( unsigned char( wParam ) );
 			break;
 		// ************ END KEYBOARD MESSAGES ************ //
 
