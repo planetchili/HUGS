@@ -161,6 +161,7 @@ public:
 		{
 			brushes.emplace_back( *this );
 		}
+		funk.Clear( BLACK );
 	}
 	virtual void Update( float dt ) override
 	{
