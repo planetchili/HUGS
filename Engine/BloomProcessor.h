@@ -44,19 +44,23 @@ public:
 
 		// useful constants
 		const __m128i zero = _mm_setzero_si128();
+		const __m128i bloomShufLo = _mm_set_epi8(
+			128u,128u,128u,7u,128u,7u,128u,7u,
+			128u,128u,128u,3u,128u,3u,128u,3u );
+		const __m128i bloomShufHi = _mm_set_epi8(
+			128u,128u,128u,15u,128u,15u,128u,15u,
+			128u,128u,128u,11u,128u,11u,128u,11u );
 
 		// subroutine
-		const auto ProcessRow = [&zero]( __m128i row )
+		const auto ProcessRow = [=]( __m128i row )
 		{
 			// unpack byte channels of 2 upper and 2 lower pixels to words
 			const __m128i chanLo = _mm_unpacklo_epi8( row,zero );
 			const __m128i chanHi = _mm_unpackhi_epi8( row,zero );
 			
 			// broadcast bloom value to all channels in the same pixel
-			const __m128i bloomLo = _mm_shufflehi_epi16( _mm_shufflelo_epi16( 
-				chanLo,_MM_SHUFFLE( 3u,3u,3u,3u ) ),_MM_SHUFFLE( 3u,3u,3u,3u ) );
-			const __m128i bloomHi = _mm_shufflehi_epi16( _mm_shufflelo_epi16(
-				chanHi,_MM_SHUFFLE( 3u,3u,3u,3u ) ),_MM_SHUFFLE( 3u,3u,3u,3u ) );
+			const __m128i bloomLo = _mm_shuffle_epi8( row,bloomShufLo );
+			const __m128i bloomHi = _mm_shuffle_epi8( row,bloomShufHi );
 
 			// multiply bloom with color channels
 			const __m128i prodLo = _mm_mullo_epi16( chanLo,bloomLo );
