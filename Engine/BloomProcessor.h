@@ -30,11 +30,6 @@ public:
 			kernel[x] = unsigned char( 255 * ( kernelFloat[x]
 				/ kernelFloat[GetKernelCenter()] ) );
 		}
-		for( int x = 0; x < diameter; x++ )
-		{
-			sumKernel += kernel[x];
-		}
-		sumKernel = unsigned int( sumKernel / overdriveFactor );
 		hBuffer.Clear( BLACK );
 		vBuffer.Clear( BLACK );
 
@@ -50,10 +45,12 @@ public:
 			{
 				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSE2 );
 			}
+			HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSE2 );
 		}
 		else
 		{
 			DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassX86 );
+			HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassX86 );
 		}
 	}
 	void DownsizePass()
@@ -62,34 +59,7 @@ public:
 	}
 	void HorizontalPass()
 	{
-		const size_t centerKernel = GetKernelCenter();
-		const size_t width = hBuffer.GetWidth();
-		const size_t height = hBuffer.GetHeight();
-
-		for( size_t y = 0u; y < height; y++ )
-		{
-			for( size_t x = 0u; x < width - diameter + 1; x++ )
-			{
-				unsigned int r = 0;
-				unsigned int g = 0;
-				unsigned int b = 0;
-				const Color* const pBuffer = &hBuffer.GetBufferConst()[y * width + x];
-				for( size_t i = 0; i < diameter; i++ )
-				{
-					const Color c = pBuffer[i];
-					const unsigned int coef = kernel[i];
-					r += c.r * coef;
-					g += c.g * coef;
-					b += c.b * coef;
-				}
-				vBuffer.GetBuffer()[y * width + x + centerKernel] =
-				{
-					unsigned char( min( r / sumKernel,255u ) ),
-					unsigned char( min( g / sumKernel,255u ) ),
-					unsigned char( min( b / sumKernel,255u ) )
-				};
-			}
-		}
+		HorizontalPassFunc( this );
 	}
 	void VerticalPass()
 	{
@@ -117,9 +87,9 @@ public:
 				}
 				hBuffer.GetBuffer()[( y + centerKernel ) * width + x] =
 				{
-					unsigned char( min( r / sumKernel,255u ) ),
-					unsigned char( min( g / sumKernel,255u ) ),
-					unsigned char( min( b / sumKernel,255u ) )
+					unsigned char( min( r / divisorKernel,255u ) ),
+					unsigned char( min( g / divisorKernel,255u ) ),
+					unsigned char( min( b / divisorKernel,255u ) )
 				};
 			}
 		}
@@ -513,15 +483,20 @@ public:
 	}
 	void Go()
 	{
+		//input.Save( L"shot_0pre.bmp" );
 		timer.StartFrame();
 		DownsizePass();
 		if( timer.StopFrame() )
 		{
 			log << timer.GetAvg() << std::endl;
 		}
+		//hBuffer.Save( L"shot_1down.bmp" );
 		HorizontalPass();
+		//vBuffer.Save( L"shot_2h.bmp" );
 		VerticalPass();
+		//hBuffer.Save( L"shot_3v.bmp" );
 		UpsizeBlendPass();
+		//input.Save( L"shot_4post.bmp" );
 	}
 	static unsigned int GetFringeSize()
 	{
@@ -602,8 +577,8 @@ private:
 				// add high and low pixel channel sums
 				sum = _mm_add_epi16( sum,_mm_srli_si128( sum,8u ) );
 
-				// divide channel sums by 256
-				sum = _mm_srli_epi16( sum,8u );
+				// divide channel sums by 64
+				sum = _mm_srli_epi16( sum,6u );
 
 				// pack word channels to bytes and store in output buffer
 				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum,sum ) );
@@ -735,16 +710,217 @@ private:
 			}
 		}
 	}
+	void _HorizontalPassSSE2()
+	{
+		// useful constants
+		const __m128i zero = _mm_setzero_si128();
+		// masks for shifting through convolution window
+		const __m128i maskHi = _mm_set_epi32( 0xFFFFFFFF,0x00000000,0x00000000,0x00000000 );
+		const __m128i maskLo = _mm_set_epi32( 0x00000000,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF );
+
+		// routines
+		auto Process8Pixels = [=]( const __m128i srclo,const __m128i srchi,const __m128i coef )
+		{
+			// for accumulating sum of high and low pixels in srclo and srchi
+			__m128i sum;
+
+			// process low pixels of srclo
+			{
+				// unpack two pixel byte->word components into src from lo end of srclo
+				const __m128i src = _mm_unpacklo_epi8( srclo,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflelo_epi16(
+					coef,_MM_SHUFFLE( 1,1,0,0 ) ),_MM_SHUFFLE( 1,1,0,0 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				sum = _mm_srli_epi16( prod,4 );
+			}
+			// process high pixels of srclo
+			{
+				// unpack two pixel byte->word components into src from lo end of srclo
+				const __m128i src = _mm_unpackhi_epi8( srclo,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflelo_epi16(
+					coef,_MM_SHUFFLE( 3,3,2,2 ) ),_MM_SHUFFLE( 1,1,0,0 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			// process low pixels of srchi
+			{
+				// unpack two pixel byte->word components into src from lo end of srchi
+				const __m128i src = _mm_unpacklo_epi8( srchi,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflehi_epi16(
+					coef,_MM_SHUFFLE( 1,1,0,0 ) ),_MM_SHUFFLE( 3,3,2,2 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			// process high pixels of srchi
+			{
+				// unpack two pixel byte->word components into src from lo end of srchi
+				const __m128i src = _mm_unpackhi_epi8( srchi,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflehi_epi16(
+					coef,_MM_SHUFFLE( 3,3,2,2 ) ),_MM_SHUFFLE( 3,3,2,2 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			return sum;
+		};
+		// the lo must be pre-rotated 32-bit (to allow chaining)
+		auto Shift256 = [=]( __m128i& lo,__m128i& hi )
+		{
+			// rotate second lowest pixel in hi to lowest position (lowest goes to top)
+			hi = _mm_shuffle_epi32( hi,_MM_SHUFFLE( 0,3,2,1 ) );
+			// clear high pixel of convolution window lo
+			lo = _mm_and_si128( lo,maskLo );
+			// copy high pixel from hi to high pixel location in lo
+			lo = _mm_or_si128( lo,_mm_and_si128( hi,maskHi ) );
+		};
+
+		// indexing constants
+		const size_t centerKernel = GetKernelCenter();
+		const size_t width = hBuffer.GetWidth();
+		const size_t height = hBuffer.GetHeight();
+
+		// load coefficent bytes and unpack to words
+		const __m128i coef = _mm_load_si128( (__m128i*)kernel );
+		const __m128i coefLo = _mm_unpacklo_epi8( coef,zero );
+		const __m128i coefHi = _mm_unpackhi_epi8( coef,zero );
+
+		for( size_t y = 0u; y < height; y++ )
+		{
+			// setup pointers
+			const __m128i* pIn = reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[y * hBuffer.GetPitch()] );
+			const __m128i* const pEnd = reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[( y + 1 ) * hBuffer.GetPitch()] );
+			Color* pOut = &vBuffer.GetBuffer()[y * vBuffer.GetPitch() + GetKernelCenter()];
+
+			// preload input pixels for convolution window
+			__m128i src0 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src1 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src2 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src3 = _mm_load_si128( pIn );
+			pIn++;
+
+			for( ; pIn < pEnd; pIn++ )
+			{
+				// on-deck pixels for shifting into convolution window
+				__m128i deck = _mm_load_si128( pIn );
+
+				for( size_t i = 0u; i < 4u; i++,pOut++ )
+				{
+					// process convolution window and accumulate
+					__m128i sum16 = Process8Pixels( src0,src1,coefLo );
+					sum16 = _mm_add_epi16( sum16,Process8Pixels( src2,src3,coefHi ) );
+
+					// add low and high accumulators
+					sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
+
+					// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
+					sum16 = _mm_srli_epi16( sum16,6 );
+
+					// pack result and output to buffer
+					*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
+
+					// shift pixels from deck through convolution window
+					// pre-rotate src0 to begin chaining
+					src0 = _mm_shuffle_epi32( src0,_MM_SHUFFLE( 0,3,2,1 ) );
+					// 640-bit chained shift
+					Shift256( src0,src1 );
+					Shift256( src1,src2 );
+					Shift256( src2,src3 );
+					Shift256( src3,deck );
+				}
+			}
+			// final pixel end of row
+			{
+				// process convolution window and accumulate
+				__m128i sum16 = Process8Pixels( src0,src1,coefLo );
+				sum16 = _mm_add_epi16( sum16,Process8Pixels( src2,src3,coefHi ) );
+
+				// add low and high accumulators
+				sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
+
+				// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
+				sum16 = _mm_srli_epi16( sum16,6 );
+
+				// pack result and output to buffer
+				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
+			}
+		}
+	}
+	void _HorizontalPassX86()
+	{
+		const size_t centerKernel = GetKernelCenter();
+		const size_t width = hBuffer.GetWidth();
+		const size_t height = hBuffer.GetHeight();
+
+		for( size_t y = 0u; y < height; y++ )
+		{
+			for( size_t x = 0u; x < width - diameter + 1; x++ )
+			{
+				unsigned int r = 0;
+				unsigned int g = 0;
+				unsigned int b = 0;
+				const Color* const pBuffer = &hBuffer.GetBufferConst()[y * width + x];
+				for( size_t i = 0; i < diameter; i++ )
+				{
+					const Color c = pBuffer[i];
+					const unsigned int coef = kernel[i];
+					r += c.r * coef;
+					g += c.g * coef;
+					b += c.b * coef;
+				}
+				vBuffer.GetBuffer()[y * width + x + centerKernel] =
+				{
+					unsigned char( min( r / divisorKernel,255u ) ),
+					unsigned char( min( g / divisorKernel,255u ) ),
+					unsigned char( min( b / divisorKernel,255u ) )
+				};
+			}
+		}
+	}
 private:
 	static const unsigned int diameter = 16u;
 	__declspec( align( 16 ) ) unsigned char kernel[diameter];
-	float overdriveFactor = 2.0f;
-	unsigned int sumKernel = 0u;
+	unsigned int divisorKernel = 1024u;
 	Surface& input;
 	Surface hBuffer;
 	Surface vBuffer;
 	// function pointers
 	std::function<void( BloomProcessor* )> DownsizePassFunc;
+	std::function<void( BloomProcessor* )> HorizontalPassFunc;
 	// benchmarking
 	FrameTimer timer;
 	std::wofstream log;
