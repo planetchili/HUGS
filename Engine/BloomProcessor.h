@@ -66,7 +66,8 @@ public:
 	}
 	void VerticalPass()
 	{
-		VerticalPassFunc( this );
+		//VerticalPassFunc( this );
+		_VerticalPassSSE2RegCache();
 	}
 	void UpsizeBlendPass()
 	{
@@ -1040,6 +1041,149 @@ private:
 				};
 			}
 		}
+	}
+	void _VerticalPassSSE2RegCache()
+	{
+#pragma warning (push)
+#pragma warning (disable: 4556)
+#pragma region Convolution Macro
+#define CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,in,index )\
+			{\
+		const __m128i input = in;\
+		__m128i coefBroadcast;\
+		if( index < 8 )\
+								{\
+			coefBroadcast = _mm_unpacklo_epi8( coef,zero );\
+			if( index < 4 )\
+												{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflelo_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index,index,index,index ) ),\
+					_MM_SHUFFLE( 0,0,0,0 ) );\
+												}\
+																								else\
+					{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflehi_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index - 4,index - 4,index - 4,index - 4 ) ),\
+					_MM_SHUFFLE( 2,2,2,2 ) );\
+					}\
+								}\
+																else\
+				{\
+			coefBroadcast = _mm_unpackhi_epi8( coef,zero );\
+			if( index < 12 )\
+												{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflelo_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index - 8,index - 8,index - 8,index - 8 ) ),\
+					_MM_SHUFFLE( 0,0,0,0 ) );\
+												}\
+																								else\
+					{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflehi_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index - 12,index - 12,index - 12,index - 12 ) ),\
+					_MM_SHUFFLE( 2,2,2,2 ) );\
+					}\
+				}\
+		\
+				{\
+			const __m128i inputLo = _mm_unpacklo_epi8( input,zero ); \
+			const __m128i productLo = _mm_mullo_epi16( inputLo,coefBroadcast ); \
+			const __m128i predivLo = _mm_srli_epi16( productLo,4 ); \
+			sumLo = _mm_add_epi16( sumLo,predivLo ); \
+				}\
+				{\
+			const __m128i inputHi = _mm_unpackhi_epi8( input,zero ); \
+			const __m128i productHi = _mm_mullo_epi16( inputHi,coefBroadcast ); \
+			const __m128i predivHi = _mm_srli_epi16( productHi,4 ); \
+			sumHi = _mm_add_epi16( sumHi,predivHi ); \
+				}\
+			}
+#pragma endregion
+
+		const size_t centerKernel = GetKernelCenter();
+		const size_t height = vBuffer.GetHeight();
+		const size_t fringe = diameter / 2u;
+		const __m128i zero = _mm_setzero_si128();
+		const __m128i coef = _mm_load_si128(
+			reinterpret_cast<const __m128i*>( &kernel ) );
+
+		const __m128i* columnPtrIn = reinterpret_cast<const __m128i*>(
+			&vBuffer.GetBufferConst()[fringe] );
+		__m128i* columnPtrOut = reinterpret_cast<__m128i*>(
+			&hBuffer.GetBuffer()[fringe + centerKernel * hBuffer.GetPitch()] );
+		const size_t rowDeltaXmm = reinterpret_cast<const __m128i*>(
+			&vBuffer.GetBufferConst()[fringe + vBuffer.GetPitch()] ) - columnPtrIn;
+		const __m128i* const columnPtrInEnd = reinterpret_cast<const __m128i*>(
+			&vBuffer.GetBufferConst()[vBuffer.GetPitch() - fringe] );
+
+		for( ; columnPtrIn < columnPtrInEnd; columnPtrIn++,columnPtrOut++ )
+		{
+			const __m128i* rowPtrIn = columnPtrIn;
+			__m128i* rowPtrOut = columnPtrOut;
+			const __m128i* const rowPtrInEnd = &rowPtrIn[( height - diameter + 8u ) * rowDeltaXmm];
+
+			__m128i inCache0 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+			__m128i inCache1 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+			__m128i inCache2 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+			__m128i inCache3 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+			__m128i inCache4 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+			__m128i inCache5 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+			__m128i inCache6 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+			__m128i inCache7 = _mm_load_si128( rowPtrIn );
+			rowPtrIn += rowDeltaXmm;
+
+			for( ; rowPtrIn < rowPtrInEnd; rowPtrIn += rowDeltaXmm,rowPtrOut += rowDeltaXmm )
+			{
+				const __m128i* windowPtrIn = rowPtrIn;
+
+				__m128i sumHi = zero;
+				__m128i sumLo = zero;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache0,0 );
+				inCache0 = inCache1;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache1,1 );
+				inCache1 = inCache2;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache2,2 );
+				inCache2 = inCache3;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache3,3 );
+				inCache3 = inCache4;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache4,4 );
+				inCache4 = inCache5;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache5,5 );
+				inCache5 = inCache6;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache6,6 );
+				inCache6 = inCache7;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache7,7 );
+				inCache7 = _mm_load_si128( windowPtrIn );
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,inCache7,8 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,_mm_load_si128( windowPtrIn ),9 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,_mm_load_si128( windowPtrIn ),10 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,_mm_load_si128( windowPtrIn ),11 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,_mm_load_si128( windowPtrIn ),12 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,_mm_load_si128( windowPtrIn ),13 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,_mm_load_si128( windowPtrIn ),14 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,_mm_load_si128( windowPtrIn ),15 );
+
+				sumHi = _mm_srli_epi16( sumHi,6 );
+				sumLo = _mm_srli_epi16( sumLo,6 );
+
+				_mm_store_si128( rowPtrOut,_mm_packus_epi16( sumLo,sumHi ) );
+			}
+		}
+#undef CONVOLUTE_STEP_VERTICAL_BLUR
+#pragma warning (pop)
 	}
 	void _VerticalPassSSE2()
 	{
