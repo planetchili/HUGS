@@ -68,7 +68,7 @@ public:
 	void VerticalPass()
 	{
 		//VerticalPassFunc( this );
-		_VerticalPassSSE2();
+		_VerticalPassSSSE3();
 	}
 	void UpsizeBlendPass()
 	{
@@ -1090,7 +1090,7 @@ private:
 		{
 			const __m128i* rowPtrIn = columnPtrIn;
 			__m128i* rowPtrOut = columnPtrOut;
-			const __m128i* const rowPtrInEnd = &rowPtrIn[( height - diameter ) * rowDeltaXmm];
+			const __m128i* const rowPtrInEnd = &rowPtrIn[height * rowDeltaXmm];
 
 			for( ; rowPtrIn < rowPtrInEnd; rowPtrIn += rowDeltaXmm,rowPtrOut += rowDeltaXmm )
 			{
@@ -1190,7 +1190,7 @@ private:
 		{
 			const __m128i* rowPtrIn = columnPtrIn;
 			__m128i* rowPtrOut = columnPtrOut;
-			const __m128i* const rowPtrInEnd = &rowPtrIn[( height - diameter ) * rowDeltaXmm];
+			const __m128i* const rowPtrInEnd = &rowPtrIn[height * rowDeltaXmm];
 
 			for( ; rowPtrIn < rowPtrInEnd; rowPtrIn += rowDeltaXmm,rowPtrOut += rowDeltaXmm )
 			{
