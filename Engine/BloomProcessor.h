@@ -47,11 +47,13 @@ public:
 				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSE2 );
 				HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSE2 );
 			}
+			VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSE2 );
 		}
 		else
 		{
 			DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassX86 );
 			HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassX86 );
+			VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassX86 );
 		}
 	}
 	void DownsizePass()
@@ -64,36 +66,7 @@ public:
 	}
 	void VerticalPass()
 	{
-		const size_t centerKernel = GetKernelCenter();
-		const size_t width = vBuffer.GetWidth();
-		const size_t height = vBuffer.GetHeight();
-		const size_t fringe = diameter / 2u;
-
-		for( size_t x = fringe; x < width - fringe; x++ )
-		{
-			for( size_t y = 0u; y < height - diameter + 1; y++ )
-			{
-				unsigned int r = 0;
-				unsigned int g = 0;
-				unsigned int b = 0;
-				const Color* pBuffer = &vBuffer.GetBufferConst()[y * width + x];
-				for( size_t i = 0; i < diameter; i++,
-					pBuffer += width )
-				{
-					const Color c = *pBuffer;
-					const unsigned int coef = kernel[i];
-					r += c.r * coef;
-					g += c.g * coef;
-					b += c.b * coef;
-				}
-				hBuffer.GetBuffer()[( y + centerKernel ) * width + x] =
-				{
-					unsigned char( min( r / divisorKernel,255u ) ),
-					unsigned char( min( g / divisorKernel,255u ) ),
-					unsigned char( min( b / divisorKernel,255u ) )
-				};
-			}
-		}
+		VerticalPassFunc( this );
 	}
 	void UpsizeBlendPass()
 	{
@@ -487,14 +460,14 @@ public:
 		//input.Save( L"shot_0pre.bmp" );
 		DownsizePass();
 		//hBuffer.Save( L"shot_1down.bmp" );
-		timer.StartFrame();
 		HorizontalPass();
+		//vBuffer.Save( L"shot_2h.bmp" );
+		timer.StartFrame();
+		VerticalPass();
 		if( timer.StopFrame() )
 		{
 			log << timer.GetAvg() << std::endl;
 		}
-		//vBuffer.Save( L"shot_2h.bmp" );
-		VerticalPass();
 		//hBuffer.Save( L"shot_3v.bmp" );
 		UpsizeBlendPass();
 		//input.Save( L"shot_4post.bmp" );
@@ -1068,6 +1041,165 @@ private:
 			}
 		}
 	}
+	void _VerticalPassSSE2()
+	{
+#pragma warning (push)
+#pragma warning (disable: 4556)
+#pragma region Convolution Macro
+#define CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,index )\
+	{\
+		const __m128i input = _mm_load_si128( windowPtrIn );\
+		__m128i coefBroadcast;\
+		if( index < 8 )\
+		{\
+			coefBroadcast = _mm_unpacklo_epi8( coef,zero );\
+			if( index < 4 )\
+			{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflelo_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index,index,index,index ) ),\
+					_MM_SHUFFLE( 0,0,0,0 ) );\
+			}\
+			else\
+			{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflehi_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index - 4,index - 4,index - 4,index - 4 ) ),\
+					_MM_SHUFFLE( 2,2,2,2 ) );\
+			}\
+		}\
+		else\
+		{\
+			coefBroadcast = _mm_unpackhi_epi8( coef,zero );\
+			if( index < 12 )\
+			{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflelo_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index - 8,index - 8,index - 8,index - 8 ) ),\
+					_MM_SHUFFLE( 0,0,0,0 ) );\
+			}\
+			else\
+			{\
+				coefBroadcast = _mm_shuffle_epi32( _mm_shufflehi_epi16(\
+					coefBroadcast,_MM_SHUFFLE( index - 12,index - 12,index - 12,index - 12 ) ),\
+					_MM_SHUFFLE( 2,2,2,2 ) );\
+			}\
+		}\
+		\
+		{\
+			const __m128i inputLo = _mm_unpacklo_epi8( input,zero ); \
+			const __m128i productLo = _mm_mullo_epi16( inputLo,coefBroadcast ); \
+			const __m128i predivLo = _mm_srli_epi16( productLo,4 ); \
+			sumLo = _mm_add_epi16( sumLo,predivLo ); \
+		}\
+		{\
+			const __m128i inputHi = _mm_unpackhi_epi8( input,zero ); \
+			const __m128i productHi = _mm_mullo_epi16( inputHi,coefBroadcast ); \
+			const __m128i predivHi = _mm_srli_epi16( productHi,4 ); \
+			sumHi = _mm_add_epi16( sumHi,predivHi ); \
+		}\
+	}
+#pragma endregion
+
+		const size_t centerKernel = GetKernelCenter();
+		const size_t height = vBuffer.GetHeight();
+		const size_t fringe = diameter / 2u;
+		const __m128i zero = _mm_setzero_si128();
+		const __m128i coef = _mm_load_si128( 
+			reinterpret_cast<const __m128i*>( &kernel ) );
+
+		const __m128i* columnPtrIn = reinterpret_cast<const __m128i*>(
+			&vBuffer.GetBufferConst()[fringe] );
+		__m128i* columnPtrOut = reinterpret_cast<__m128i*>(
+			&hBuffer.GetBuffer()[fringe + centerKernel * hBuffer.GetPitch()] );
+		const size_t rowDeltaXmm = reinterpret_cast<const __m128i*>(
+			&vBuffer.GetBufferConst()[fringe + vBuffer.GetPitch()] ) - columnPtrIn;
+		const __m128i* const columnPtrInEnd = reinterpret_cast<const __m128i*>(
+			&vBuffer.GetBufferConst()[vBuffer.GetPitch() - fringe] );
+
+		for( ; columnPtrIn < columnPtrInEnd; columnPtrIn++,columnPtrOut++ )
+		{
+			const __m128i* rowPtrIn = columnPtrIn;
+			__m128i* rowPtrOut = columnPtrOut;
+			const __m128i* const rowPtrInEnd = &rowPtrIn[( height - diameter ) * rowDeltaXmm];
+
+			for( ; rowPtrIn < rowPtrInEnd; rowPtrIn += rowDeltaXmm,rowPtrOut += rowDeltaXmm )
+			{
+				const __m128i* windowPtrIn = rowPtrIn;
+
+				__m128i sumHi = zero;
+				__m128i sumLo = zero;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,0 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,1 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,2 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,3 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,4 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,5 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,6 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,7 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,8 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,9 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,10 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,11 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,12 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,13 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,14 );
+				windowPtrIn += rowDeltaXmm;
+				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,15 );
+
+				sumHi = _mm_srli_epi16( sumHi,6 );
+				sumLo = _mm_srli_epi16( sumLo,6 );
+
+				_mm_store_si128( rowPtrOut,_mm_packus_epi16( sumLo,sumHi ) );
+			}
+		}
+#undef CONVOLUTE_STEP_VERTICAL_BLUR
+#pragma warning (pop)
+	}
+	void _VerticalPassX86()
+	{
+		const size_t centerKernel = GetKernelCenter();
+		const size_t width = vBuffer.GetWidth();
+		const size_t height = vBuffer.GetHeight();
+		const size_t fringe = diameter / 2u;
+
+		for( size_t x = fringe; x < width - fringe; x++ )
+		{
+			for( size_t y = 0u; y < height - diameter + 1; y++ )
+			{
+				unsigned int r = 0;
+				unsigned int g = 0;
+				unsigned int b = 0;
+				const Color* pBuffer = &vBuffer.GetBufferConst()[y * width + x];
+				for( size_t i = 0; i < diameter; i++,
+					pBuffer += width )
+				{
+					const Color c = *pBuffer;
+					const unsigned int coef = kernel[i];
+					r += c.r * coef;
+					g += c.g * coef;
+					b += c.b * coef;
+				}
+				hBuffer.GetBuffer()[( y + centerKernel ) * width + x] =
+				{
+					unsigned char( min( r / divisorKernel,255u ) ),
+					unsigned char( min( g / divisorKernel,255u ) ),
+					unsigned char( min( b / divisorKernel,255u ) )
+				};
+			}
+		}
+	}
 private:
 	static const unsigned int diameter = 16u;
 	__declspec( align( 16 ) ) unsigned char kernel[diameter];
@@ -1078,6 +1210,7 @@ private:
 	// function pointers
 	std::function<void( BloomProcessor* )> DownsizePassFunc;
 	std::function<void( BloomProcessor* )> HorizontalPassFunc;
+	std::function<void( BloomProcessor* )> VerticalPassFunc;
 	// benchmarking
 	FrameTimer timer;
 	std::wofstream log;
