@@ -60,8 +60,7 @@ public:
 	}
 	void HorizontalPass()
 	{
-		_HorizontalPassSSSE3();
-		//HorizontalPassFunc( this );
+		HorizontalPassFunc( this );
 	}
 	void VerticalPass()
 	{
@@ -712,6 +711,7 @@ private:
 			}
 		}
 	}
+	// pshufb version slower! bad touch
 	void _HorizontalPassSSSE3Ex()
 	{
 		// useful constants
@@ -881,6 +881,7 @@ private:
 		}
 
 	}
+	// palignr nice boost, fastest with VEX encoding
 	void _HorizontalPassSSSE3()
 	{
 		// useful constants
