@@ -40,12 +40,13 @@ public:
 			{
 				// std::mem_fn only needed as a workaround for MSVC bug :/
 				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSSE3 );
+				HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSSE3 );
 			}
 			else
 			{
 				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSE2 );
+				HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSE2 );
 			}
-			HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSE2 );
 		}
 		else
 		{
@@ -59,7 +60,8 @@ public:
 	}
 	void HorizontalPass()
 	{
-		HorizontalPassFunc( this );
+		_HorizontalPassSSSE3();
+		//HorizontalPassFunc( this );
 	}
 	void VerticalPass()
 	{
@@ -484,14 +486,14 @@ public:
 	void Go()
 	{
 		//input.Save( L"shot_0pre.bmp" );
-		timer.StartFrame();
 		DownsizePass();
+		//hBuffer.Save( L"shot_1down.bmp" );
+		timer.StartFrame();
+		HorizontalPass();
 		if( timer.StopFrame() )
 		{
 			log << timer.GetAvg() << std::endl;
 		}
-		//hBuffer.Save( L"shot_1down.bmp" );
-		HorizontalPass();
 		//vBuffer.Save( L"shot_2h.bmp" );
 		VerticalPass();
 		//hBuffer.Save( L"shot_3v.bmp" );
@@ -709,6 +711,331 @@ private:
 				unsigned char( ( p0.b * x0 + p1.b * x1 + p2.b * x2 + p3.b * x3 + p4.b * x4 + p5.b * x5 + p6.b * x6 + p7.b * x7 + p8.b * x8 + p9.b * x9 + p10.b * x10 + p11.b * x11 + p12.b * x12 + p13.b * x13 + p14.b * x14 + p15.b * x15 ) / ( 16 * 255 ) ) };
 			}
 		}
+	}
+	void _HorizontalPassSSSE3Ex()
+	{
+		// useful constants
+		const __m128i zero = _mm_setzero_si128();
+		const __m128i coefMaskStart = _mm_set_epi8(
+			0x80u,0x01u,0x80u,0x01u,0x80u,0x01u,0x80u,0x01u,
+			0x80u,0x00u,0x80u,0x00u,0x80u,0x00u,0x80u,0x00u );
+		const __m128i coefMaskDelta = _mm_set_epi8(
+			0x00u,0x02u,0x00u,0x02u,0x00u,0x02u,0x00u,0x02u,
+			0x00u,0x02u,0x00u,0x02u,0x00u,0x02u,0x00u,0x02u );
+		// load coefficient bytes
+		const __m128i coef = _mm_load_si128( ( __m128i* )kernel );
+
+		// routines
+		auto Process8Pixels = [=]( const __m128i srclo,const __m128i srchi,__m128i& coefMask )
+		{
+			// for accumulating sum of high and low pixels in srclo and srchi
+			__m128i sum;
+
+			// process low pixels of srclo
+			{
+				// unpack two pixel byte->word components into src from lo end of srclo
+				const __m128i src = _mm_unpacklo_epi8( srclo,zero );
+
+				// broadcast and unpack coefficients to top and bottom 4 words
+				const __m128i co = _mm_shuffle_epi8( coef,coefMask );
+
+				// increment mask indices by 2
+				coefMask = _mm_add_epi8( coefMask,coefMaskDelta );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				sum = _mm_srli_epi16( prod,4 );
+			}
+			// process high pixels of srclo
+			{
+				// unpack two pixel byte->word components into src from lo end of srclo
+				const __m128i src = _mm_unpackhi_epi8( srclo,zero );
+
+				// broadcast and unpack coefficients to top and bottom 4 words
+				const __m128i co = _mm_shuffle_epi8( coef,coefMask );
+
+				// increment mask indices by 2
+				coefMask = _mm_add_epi8( coefMask,coefMaskDelta );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			// process low pixels of srchi
+			{
+				// unpack two pixel byte->word components into src from lo end of srchi
+				const __m128i src = _mm_unpacklo_epi8( srchi,zero );
+
+				// broadcast and unpack coefficients to top and bottom 4 words
+				const __m128i co = _mm_shuffle_epi8( coef,coefMask );
+
+				// increment mask indices by 2
+				coefMask = _mm_add_epi8( coefMask,coefMaskDelta );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			// process high pixels of srchi
+			{
+				// unpack two pixel byte->word components into src from lo end of srchi
+				const __m128i src = _mm_unpackhi_epi8( srchi,zero );
+
+				// broadcast and unpack coefficients to top and bottom 4 words
+				const __m128i co = _mm_shuffle_epi8( coef,coefMask );
+
+				// increment mask indices by 2
+				coefMask = _mm_add_epi8( coefMask,coefMaskDelta );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			return sum;
+		};
+
+		// indexing constants
+		const size_t centerKernel = GetKernelCenter();
+		const size_t width = hBuffer.GetWidth();
+		const size_t height = hBuffer.GetHeight();
+
+		for( size_t y = 0u; y < height; y++ )
+		{
+			// setup pointers
+			const __m128i* pIn = reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[y * hBuffer.GetPitch()] );
+			const __m128i* const pEnd = reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[( y + 1 ) * hBuffer.GetPitch()] );
+			Color* pOut = &vBuffer.GetBuffer()[y * vBuffer.GetPitch() + GetKernelCenter()];
+
+			// preload input pixels for convolution window
+			__m128i src0 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src1 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src2 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src3 = _mm_load_si128( pIn );
+			pIn++;
+
+			for( ; pIn < pEnd; pIn++ )
+			{
+				// on-deck pixels for shifting into convolution window
+				__m128i deck = _mm_load_si128( pIn );
+
+				for( size_t i = 0u; i < 4u; i++,pOut++ )
+				{
+					// setup coefficient shuffle mask
+					__m128i coefMask = coefMaskStart;
+
+					// process convolution window and accumulate
+					__m128i sum16 = Process8Pixels( src0,src1,coefMask );
+					sum16 = _mm_add_epi16( sum16,Process8Pixels( src2,src3,coefMask ) );
+
+					// add low and high accumulators
+					sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
+
+					// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
+					sum16 = _mm_srli_epi16( sum16,6 );
+
+					// pack result and output to buffer
+					*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
+
+					// 640-bit shift--from deck down to src0
+					src0 = _mm_alignr_epi8( src1,src0,4 );
+					src1 = _mm_alignr_epi8( src2,src1,4 );
+					src2 = _mm_alignr_epi8( src3,src2,4 );
+					src3 = _mm_alignr_epi8( deck,src3,4 );
+					deck = _mm_srli_si128( deck,4 );
+				}
+			}
+			// final pixel end of row
+			{
+				// setup coefficient shuffle mask
+				__m128i coefMask = coefMaskStart;
+
+				// process convolution window and accumulate
+				__m128i sum16 = Process8Pixels( src0,src1,coefMask );
+				sum16 = _mm_add_epi16( sum16,Process8Pixels( src2,src3,coefMask ) );
+
+				// add low and high accumulators
+				sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
+
+				// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
+				sum16 = _mm_srli_epi16( sum16,6 );
+
+				// pack result and output to buffer
+				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
+			}
+		}
+
+	}
+	void _HorizontalPassSSSE3()
+	{
+		// useful constants
+		const __m128i zero = _mm_setzero_si128();
+
+		// routines
+		auto Process8Pixels = [zero]( const __m128i srclo,const __m128i srchi,const __m128i coef )
+		{
+			// for accumulating sum of high and low pixels in srclo and srchi
+			__m128i sum;
+
+			// process low pixels of srclo
+			{
+				// unpack two pixel byte->word components into src from lo end of srclo
+				const __m128i src = _mm_unpacklo_epi8( srclo,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflelo_epi16(
+					coef,_MM_SHUFFLE( 1,1,0,0 ) ),_MM_SHUFFLE( 1,1,0,0 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				sum = _mm_srli_epi16( prod,4 );
+			}
+			// process high pixels of srclo
+			{
+				// unpack two pixel byte->word components into src from lo end of srclo
+				const __m128i src = _mm_unpackhi_epi8( srclo,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflelo_epi16(
+					coef,_MM_SHUFFLE( 3,3,2,2 ) ),_MM_SHUFFLE( 1,1,0,0 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			// process low pixels of srchi
+			{
+				// unpack two pixel byte->word components into src from lo end of srchi
+				const __m128i src = _mm_unpacklo_epi8( srchi,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflehi_epi16(
+					coef,_MM_SHUFFLE( 1,1,0,0 ) ),_MM_SHUFFLE( 3,3,2,2 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			// process high pixels of srchi
+			{
+				// unpack two pixel byte->word components into src from lo end of srchi
+				const __m128i src = _mm_unpackhi_epi8( srchi,zero );
+
+				// broadcast coefficients 1,0 to top and bottom 4 words
+				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
+				const __m128i co = _mm_shuffle_epi32( _mm_shufflehi_epi16(
+					coef,_MM_SHUFFLE( 3,3,2,2 ) ),_MM_SHUFFLE( 3,3,2,2 ) );
+
+				// multiply pixel components by coefficients
+				const __m128i prod = _mm_mullo_epi16( co,src );
+
+				// predivide by 16 and accumulate
+				const __m128i prediv = _mm_srli_epi16( prod,4 );
+				sum = _mm_add_epi16( sum,prediv );
+			}
+			return sum;
+		};
+
+		// indexing constants
+		const size_t centerKernel = GetKernelCenter();
+		const size_t width = hBuffer.GetWidth();
+		const size_t height = hBuffer.GetHeight();
+
+		// load coefficent bytes and unpack to words
+		const __m128i coef = _mm_load_si128( ( __m128i* )kernel );
+		const __m128i coefLo = _mm_unpacklo_epi8( coef,zero );
+		const __m128i coefHi = _mm_unpackhi_epi8( coef,zero );
+
+		for( size_t y = 0u; y < height; y++ )
+		{
+			// setup pointers
+			const __m128i* pIn = reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[y * hBuffer.GetPitch()] );
+			const __m128i* const pEnd = reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[( y + 1 ) * hBuffer.GetPitch()] );
+			Color* pOut = &vBuffer.GetBuffer()[y * vBuffer.GetPitch() + GetKernelCenter()];
+
+			// preload input pixels for convolution window
+			__m128i src0 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src1 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src2 = _mm_load_si128( pIn );
+			pIn++;
+			__m128i src3 = _mm_load_si128( pIn );
+			pIn++;
+
+			for( ; pIn < pEnd; pIn++ )
+			{
+				// on-deck pixels for shifting into convolution window
+				__m128i deck = _mm_load_si128( pIn );
+
+				for( size_t i = 0u; i < 4u; i++,pOut++ )
+				{
+					// process convolution window and accumulate
+					__m128i sum16 = Process8Pixels( src0,src1,coefLo );
+					sum16 = _mm_add_epi16( sum16,Process8Pixels( src2,src3,coefHi ) );
+
+					// add low and high accumulators
+					sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
+
+					// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
+					sum16 = _mm_srli_epi16( sum16,6 );
+
+					// pack result and output to buffer
+					*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
+
+					// 640-bit shift--from deck down to src0
+					src0 = _mm_alignr_epi8( src1,src0,4 );
+					src1 = _mm_alignr_epi8( src2,src1,4 );
+					src2 = _mm_alignr_epi8( src3,src2,4 );
+					src3 = _mm_alignr_epi8( deck,src3,4 );
+					deck = _mm_srli_si128( deck,4 );
+				}
+			}
+			// final pixel end of row
+			{
+				// process convolution window and accumulate
+				__m128i sum16 = Process8Pixels( src0,src1,coefLo );
+				sum16 = _mm_add_epi16( sum16,Process8Pixels( src2,src3,coefHi ) );
+
+				// add low and high accumulators
+				sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
+
+				// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
+				sum16 = _mm_srli_epi16( sum16,6 );
+
+				// pack result and output to buffer
+				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
+			}
+		}
+
 	}
 	void _HorizontalPassSSE2()
 	{
