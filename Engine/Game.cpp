@@ -50,7 +50,7 @@ void Game::Go()
 
 void Game::UpdateModel( float dt )
 {
-	input.di.GetPad().Update();
+	//input.di.GetPad().Update();
 
 	try
 	{
@@ -65,24 +65,25 @@ void Game::UpdateModel( float dt )
 
 void Game::ComposeFrame()
 {
-	pScreen->DrawPreBloom( gfx );
-	//const auto r = gfx.GetViewRegion();
-	//gfx.PutPixel( r.left + 32,r.top + 32,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 33,r.top + 32,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 34,r.top + 32,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 35,r.top + 32,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 32,r.top + 33,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 33,r.top + 33,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 34,r.top + 33,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 35,r.top + 33,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 32,r.top + 34,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 33,r.top + 34,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 34,r.top + 34,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 35,r.top + 34,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 32,r.top + 35,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 33,r.top + 35,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 34,r.top + 35,{ WHITE,255 } );
-	//gfx.PutPixel( r.left + 35,r.top + 35,{ WHITE,255 } );
+	auto p = Vec2( input.mouse.GetMouseX(),input.mouse.GetMouseY() );
+	//pScreen->DrawPreBloom( gfx );
+	const auto r = gfx.GetViewRegion();
+	gfx.PutPixel( p.x + 32,p.y + 32,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 33,p.y + 32,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 34,p.y + 32,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 35,p.y + 32,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 32,p.y + 33,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 33,p.y + 33,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 34,p.y + 33,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 35,p.y + 33,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 32,p.y + 34,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 33,p.y + 34,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 34,p.y + 34,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 35,p.y + 34,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 32,p.y + 35,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 33,p.y + 35,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 34,p.y + 35,{ WHITE,255 } );
+	//gfx.PutPixel( p.x + 35,p.y + 35,{ WHITE,255 } );
 	gfx.ProcessBloom();
-	pScreen->DrawPostBloom( gfx );
+	//pScreen->DrawPostBloom( gfx );
 }

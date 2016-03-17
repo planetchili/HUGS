@@ -71,407 +71,24 @@ public:
 	}
 	void UpsizeBlendPass()
 	{
-		Color* const pOutputBuffer = input.GetBuffer();
-		const Color* const pInputBuffer = hBuffer.GetBufferConst();
-		const size_t inFringe = diameter / 2u;
-		const size_t inWidth = hBuffer.GetWidth();
-		const size_t inHeight = hBuffer.GetHeight();
-		const size_t inBottom = inHeight - inFringe;
-		const size_t inTopLeft = ( inWidth + 1u ) * inFringe;
-		const size_t inTopRight = inWidth * ( inFringe + 1u ) - inFringe - 1u;
-		const size_t inBottomLeft = inWidth * ( inBottom - 1u ) + inFringe;
-		const size_t inBottomRight = inWidth * inBottom - inFringe - 1u;
-		const size_t outFringe = GetFringeSize();
-		const size_t outWidth = input.GetWidth();
-		const size_t outRight = outWidth - outFringe;
-		const size_t outBottom = input.GetHeight() - outFringe;
-		const size_t outTopLeft = ( outWidth + 1u ) * outFringe;
-		const size_t outTopRight = outWidth * ( outFringe + 1u ) - outFringe - 1u;
-		const size_t outBottomLeft = outWidth * ( outBottom - 1u ) + outFringe;
-		const size_t outBottomRight = outWidth * outBottom - outFringe - 1u;
-
-		auto AddSaturate = []( Color* pOut,unsigned int inr,unsigned int ing,unsigned int inb )
-		{
-			*pOut = {
-				unsigned char( min( inr + pOut->r,255u ) ),
-				unsigned char( min( ing + pOut->g,255u ) ),
-				unsigned char( min( inb + pOut->b,255u ) )
-			};
-		};
-
-		// top two rows
-		{
-			// top left block
-			{
-				const unsigned int r = pInputBuffer[inTopLeft].r;
-				const unsigned int g = pInputBuffer[inTopLeft].g;
-				const unsigned int b = pInputBuffer[inTopLeft].b;
-				AddSaturate( &pOutputBuffer[outTopLeft],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopLeft + 1u],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopLeft + outWidth],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopLeft + outWidth + 1u],r,g,b );
-			}
-
-			// center
-			{
-				Color* const pOutUpper = &pOutputBuffer[outFringe * outWidth];
-				Color* const pOutLower = &pOutputBuffer[( outFringe + 1u ) * outWidth];
-				const Color* const pIn = &pInputBuffer[inFringe * inWidth];
-				for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
-				{
-					const size_t baseX = ( x - 2u ) / 4u;
-					const unsigned int r0 = pIn[baseX].r;
-					const unsigned int g0 = pIn[baseX].g;
-					const unsigned int b0 = pIn[baseX].b;
-					const unsigned int r1 = pIn[baseX + 1u].r;
-					const unsigned int g1 = pIn[baseX + 1u].g;
-					const unsigned int b1 = pIn[baseX + 1u].b;
-					{
-						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-						const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
-						const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
-						AddSaturate( &pOutUpper[x],r,g,b );
-						AddSaturate( &pOutLower[x],r,g,b );
-					}
-					{
-						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-						const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
-						const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
-						AddSaturate( &pOutUpper[x + 1u],r,g,b );
-						AddSaturate( &pOutLower[x + 1u],r,g,b );
-					}
-					{
-						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-						const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
-						const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
-						AddSaturate( &pOutUpper[x + 2u],r,g,b );
-						AddSaturate( &pOutLower[x + 2u],r,g,b );
-					}
-					{
-						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-						const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
-						const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
-						AddSaturate( &pOutUpper[x + 3u],r,g,b );
-						AddSaturate( &pOutLower[x + 3u],r,g,b );
-					}
-				}
-			}
-
-			// top right block
-			{
-				const unsigned int r = pInputBuffer[inTopRight].r;
-				const unsigned int g = pInputBuffer[inTopRight].g;
-				const unsigned int b = pInputBuffer[inTopRight].b;
-				AddSaturate( &pOutputBuffer[outTopRight - 1u],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopRight],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopRight + outWidth - 1u],r,g,b );
-				AddSaturate( &pOutputBuffer[outTopRight + outWidth],r,g,b );
-			}
-		}
-
-		// center rows
-		for( size_t y = outFringe + 2u; y < outBottom - 2u; y += 4u )
-		{
-			const size_t baseY = ( y - 2u ) / 4u;
-
-			// first two pixels
-			{
-				const unsigned int r0 = pInputBuffer[baseY * inWidth + inFringe].r;
-				const unsigned int g0 = pInputBuffer[baseY * inWidth + inFringe].g;
-				const unsigned int b0 = pInputBuffer[baseY * inWidth + inFringe].b;
-				const unsigned int r1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].r;
-				const unsigned int g1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].g;
-				const unsigned int b1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].b;
-				{
-					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-					const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
-					const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
-					AddSaturate( &pOutputBuffer[y * outWidth + outFringe],r,g,b );
-					AddSaturate( &pOutputBuffer[y * outWidth + outFringe + 1u],r,g,b );
-				}
-				{
-					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-					const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
-					const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
-					AddSaturate( &pOutputBuffer[( y + 1u ) * outWidth + outFringe],r,g,b );
-					AddSaturate( &pOutputBuffer[( y + 1u ) * outWidth + outFringe + 1u],r,g,b );
-				}
-				{
-					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-					const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
-					const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
-					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe],r,g,b );
-					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe + 1u],r,g,b );
-				}
-				{
-					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-					const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
-					const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
-					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe],r,g,b );
-					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe + 1u],r,g,b );
-				}
-			}
-
-			// center pixels
-			for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
-			{
-				const size_t baseX = ( x - 2u ) / 4u;
-				const Color p0 = pInputBuffer[baseY * inWidth + baseX];
-				const Color p1 = pInputBuffer[baseY * inWidth + baseX + 1u];
-				const Color p2 = pInputBuffer[( baseY + 1u ) * inWidth + baseX];
-				const Color p3 = pInputBuffer[( baseY + 1u ) * inWidth + baseX + 1u];
-				const Color d0 = pOutputBuffer[y * outWidth + x];
-				const Color d1 = pOutputBuffer[y * outWidth + x + 1u];
-				const Color d2 = pOutputBuffer[y * outWidth + x + 2u];
-				const Color d3 = pOutputBuffer[y * outWidth + x + 3u];
-				const Color d4 = pOutputBuffer[( y + 1u ) * outWidth + x];
-				const Color d5 = pOutputBuffer[( y + 1u ) * outWidth + x + 1u];
-				const Color d6 = pOutputBuffer[( y + 1u ) * outWidth + x + 2u];
-				const Color d7 = pOutputBuffer[( y + 1u ) * outWidth + x + 3u];
-				const Color d8 = pOutputBuffer[( y + 2u ) * outWidth + x];
-				const Color d9 = pOutputBuffer[( y + 2u ) * outWidth + x + 1u];
-				const Color d10 = pOutputBuffer[( y + 2u ) * outWidth + x + 2u];
-				const Color d11 = pOutputBuffer[( y + 2u ) * outWidth + x + 3u];
-				const Color d12 = pOutputBuffer[( y + 3u ) * outWidth + x];
-				const Color d13 = pOutputBuffer[( y + 3u ) * outWidth + x + 1u];
-				const Color d14 = pOutputBuffer[( y + 3u ) * outWidth + x + 2u];
-				const Color d15 = pOutputBuffer[( y + 3u ) * outWidth + x + 3u];
-
-
-				unsigned int lr1 = p0.r * 224u + p2.r * 32u;
-				unsigned int lg1 = p0.g * 224u + p2.g * 32u;
-				unsigned int lb1 = p0.b * 224u + p2.b * 32u;
-				unsigned int rr1 = p1.r * 224u + p3.r * 32u;
-				unsigned int rg1 = p1.g * 224u + p3.g * 32u;
-				unsigned int rb1 = p1.b * 224u + p3.b * 32u;
-
-				pOutputBuffer[y * outWidth + x] =
-				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d0.r,255u ) ),
-				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d0.g,255u ) ),
-				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d0.b,255u ) ) };
-
-				pOutputBuffer[y * outWidth + x + 1u] =
-				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d1.r,255u ) ),
-				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d1.g,255u ) ),
-				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d1.b,255u ) ) };
-
-				pOutputBuffer[y * outWidth + x + 2u] =
-				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d2.r,255u ) ),
-				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d2.g,255u ) ),
-				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d2.b,255u ) ) };
-
-				pOutputBuffer[y * outWidth + x + 3u] =
-				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d3.r,255u ) ),
-				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d3.g,255u ) ),
-				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d3.b,255u ) ) };
-
-				lr1 = p0.r * 160u + p2.r * 96u;
-				lg1 = p0.g * 160u + p2.g * 96u;
-				lb1 = p0.b * 160u + p2.b * 96u;
-				rr1 = p1.r * 160u + p3.r * 96u;
-				rg1 = p1.g * 160u + p3.g * 96u;
-				rb1 = p1.b * 160u + p3.b * 96u;
-
-				pOutputBuffer[( y + 1u ) * outWidth + x] =
-				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d4.r,255u ) ),
-				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d4.g,255u ) ),
-				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d4.b,255u ) ) };
-
-				pOutputBuffer[( y + 1u ) * outWidth + x + 1u] =
-				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d5.r,255u ) ),
-				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d5.g,255u ) ),
-				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d5.b,255u ) ) };
-
-				pOutputBuffer[( y + 1u ) * outWidth + x + 2u] =
-				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d6.r,255u ) ),
-				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d6.g,255u ) ),
-				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d6.b,255u ) ) };
-
-				pOutputBuffer[( y + 1u ) * outWidth + x + 3u] =
-				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d7.r,255u ) ),
-				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d7.g,255u ) ),
-				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d7.b,255u ) ) };
-
-				lr1 = p0.r * 96u + p2.r * 160u;
-				lg1 = p0.g * 96u + p2.g * 160u;
-				lb1 = p0.b * 96u + p2.b * 160u;
-				rr1 = p1.r * 96u + p3.r * 160u;
-				rg1 = p1.g * 96u + p3.g * 160u;
-				rb1 = p1.b * 96u + p3.b * 160u;
-
-				pOutputBuffer[( y + 2u ) * outWidth + x] =
-				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d8.r,255u ) ),
-				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d8.g,255u ) ),
-				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d8.b,255u ) ) };
-
-				pOutputBuffer[( y + 2u ) * outWidth + x + 1u] =
-				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d9.r,255u ) ),
-				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d9.g,255u ) ),
-				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d9.b,255u ) ) };
-
-				pOutputBuffer[( y + 2u ) * outWidth + x + 2u] =
-				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d10.r,255u ) ),
-				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d10.g,255u ) ),
-				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d10.b,255u ) ) };
-
-				pOutputBuffer[( y + 2u ) * outWidth + x + 3u] =
-				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d11.r,255u ) ),
-				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d11.g,255u ) ),
-				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d11.b,255u ) ) };
-
-				lr1 = p0.r * 32u + p2.r * 224u;
-				lg1 = p0.g * 32u + p2.g * 224u;
-				lb1 = p0.b * 32u + p2.b * 224u;
-				rr1 = p1.r * 32u + p3.r * 224u;
-				rg1 = p1.g * 32u + p3.g * 224u;
-				rb1 = p1.b * 32u + p3.b * 224u;
-
-				pOutputBuffer[( y + 3u ) * outWidth + x] =
-				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d12.r,255u ) ),
-				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d12.g,255u ) ),
-				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d12.b,255u ) ) };
-
-				pOutputBuffer[( y + 3u ) * outWidth + x + 1u] =
-				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d13.r,255u ) ),
-				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d13.g,255u ) ),
-				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d13.b,255u ) ) };
-
-				pOutputBuffer[( y + 3u ) * outWidth + x + 2u] =
-				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d14.r,255u ) ),
-				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d14.g,255u ) ),
-				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d14.b,255u ) ) };
-
-				pOutputBuffer[( y + 3u ) * outWidth + x + 3u] =
-				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d15.r,255u ) ),
-				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d15.g,255u ) ),
-				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d15.b,255u ) ) };
-			}
-
-			// last two pixels
-			{
-				const unsigned int r0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].r;
-				const unsigned int g0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].g;
-				const unsigned int b0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].b;
-				const unsigned int r1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].r;
-				const unsigned int g1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].g;
-				const unsigned int b1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].b;
-				{
-					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-					const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
-					const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
-					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 2u],r,g,b );
-					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 1u],r,g,b );
-				}
-				{
-					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-					const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
-					const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
-					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 2u],r,g,b );
-					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 1u],r,g,b );
-				}
-				{
-					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-					const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
-					const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
-					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 2u],r,g,b );
-					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 1u],r,g,b );
-				}
-				{
-					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-					const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
-					const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
-					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 2u],r,g,b );
-					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 1u],r,g,b );
-				}
-			}
-		}
-
-		// bottom two rows
-		{
-			// bottom left block
-			{
-				const unsigned int r = pInputBuffer[inBottomLeft].r;
-				const unsigned int g = pInputBuffer[inBottomLeft].g;
-				const unsigned int b = pInputBuffer[inBottomLeft].b;
-				AddSaturate( &pOutputBuffer[outBottomLeft - outWidth],r,g,b );
-				AddSaturate( &pOutputBuffer[outBottomLeft - outWidth + 1u],r,g,b );
-				AddSaturate( &pOutputBuffer[outBottomLeft],r,g,b );
-				AddSaturate( &pOutputBuffer[outBottomLeft + 1u],r,g,b );
-			}
-
-			// center
-			{
-				Color* const pOutUpper = &pOutputBuffer[( outBottom - 2u ) * outWidth];
-				Color* const pOutLower = &pOutputBuffer[( outBottom - 1u ) * outWidth];
-				const Color* const pIn = &pInputBuffer[( inBottom - 1u ) * inWidth];
-				for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
-				{
-					const size_t baseX = ( x - 2u ) / 4u;
-					const unsigned int r0 = pIn[baseX].r;
-					const unsigned int g0 = pIn[baseX].g;
-					const unsigned int b0 = pIn[baseX].b;
-					const unsigned int r1 = pIn[baseX + 1u].r;
-					const unsigned int g1 = pIn[baseX + 1u].g;
-					const unsigned int b1 = pIn[baseX + 1u].b;
-					{
-						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
-						const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
-						const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
-						AddSaturate( &pOutUpper[x],r,g,b );
-						AddSaturate( &pOutLower[x],r,g,b );
-					}
-					{
-						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
-						const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
-						const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
-						AddSaturate( &pOutUpper[x + 1u],r,g,b );
-						AddSaturate( &pOutLower[x + 1u],r,g,b );
-					}
-					{
-						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
-						const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
-						const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
-						AddSaturate( &pOutUpper[x + 2u],r,g,b );
-						AddSaturate( &pOutLower[x + 2u],r,g,b );
-					}
-					{
-						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
-						const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
-						const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
-						AddSaturate( &pOutUpper[x + 3u],r,g,b );
-						AddSaturate( &pOutLower[x + 3u],r,g,b );
-					}
-				}
-			}
-
-			// bottom right block
-			{
-				const unsigned int r = pInputBuffer[inBottomRight].r;
-				const unsigned int g = pInputBuffer[inBottomRight].g;
-				const unsigned int b = pInputBuffer[inBottomRight].b;
-				AddSaturate( &pOutputBuffer[outBottomRight - outWidth - 1u],r,g,b );
-				AddSaturate( &pOutputBuffer[outBottomRight - outWidth],r,g,b );
-				AddSaturate( &pOutputBuffer[outBottomRight - 1u],r,g,b );
-				AddSaturate( &pOutputBuffer[outBottomRight],r,g,b );
-			}
-		}
+		_UpsizeBlendPassSSSE3();
 	}
 	void Go()
 	{
-		//input.Save( L"shot_0pre.bmp" );
+		input.Save( L"shot_0pre.bmp" );
 		DownsizePass();
-		//hBuffer.Save( L"shot_1down.bmp" );
+		hBuffer.Save( L"shot_1down.bmp" );
 		HorizontalPass();
-		//vBuffer.Save( L"shot_2h.bmp" );
-		timer.StartFrame();
+		vBuffer.Save( L"shot_2h.bmp" );
+		//timer.StartFrame();
 		VerticalPass();
-		if( timer.StopFrame() )
-		{
-			log << timer.GetAvg() << std::endl;
-		}
-		//hBuffer.Save( L"shot_3v.bmp" );
+		//if( timer.StopFrame() )
+		//{
+		//	log << timer.GetAvg() << std::endl;
+		//}
+		hBuffer.Save( L"shot_3v.bmp" );
 		UpsizeBlendPass();
-		//input.Save( L"shot_4post.bmp" );
+		input.Save( L"shot_4post.bmp" );
 	}
 	static unsigned int GetFringeSize()
 	{
@@ -1268,6 +885,673 @@ private:
 					unsigned char( min( g / divisorKernel,255u ) ),
 					unsigned char( min( b / divisorKernel,255u ) )
 				};
+			}
+		}
+	}
+	void _UpsizeBlendPassSSSE3()
+	{
+//#pragma warning( push )
+//#pragma warning( disable : 4700 )
+		const auto _mm_set128_epi16 = []()
+		{
+			__m128i x = _mm_setzero_si128();
+			x = _mm_cmpeq_epi16( x,x );
+			x = _mm_srli_epi16( x,15 );
+			return _mm_slli_epi16( x,7 );
+		};
+//#pragma warning( pop )
+
+		const __m128i zero = _mm_setzero_si128();
+		__m128i grad_coef = _mm_set_epi16( 224u,224u,224u,224u,160u,160u,160u,160u );
+
+		// interpolate horizontally between low 2 pixels of input
+		const auto GenerateGradient = [&]( __m128i in )
+		{
+			// unpack inputs (low 2 pixels) to 16-bit channel size
+			const __m128i in16 = _mm_unpacklo_epi8( in,zero );
+
+			// copy low pixel to high and low 64 bits
+			const __m128i in_a = _mm_shuffle_epi32( in16,_MM_SHUFFLE( 1,0,1,0 ) );
+			// multiply input by decreasing coeffients (lower pixels)
+			const __m128i prod_a_lo = _mm_mullo_epi16( in_a,grad_coef );
+			// transform decreasing coef to lower range (for high pixels)
+			grad_coef = _mm_sub_epi16( grad_coef,_mm_set128_epi16() );
+			// multiply input by decreasing coeffients (higher pixels)
+			const __m128i prod_a_hi = _mm_mullo_epi16( in_a,grad_coef );
+
+			// copy high pixel to high and low 64 bits
+			const __m128i in_b = _mm_shuffle_epi32( in16,_MM_SHUFFLE( 3,2,3,2 ) );
+			// transform decreasing coef to increasing coefficients (for low pixels)
+			grad_coef = _mm_shuffle_epi32( grad_coef,_MM_SHUFFLE( 0,1,3,2 ) );
+			// multiply input by increasing coeffients (lower pixels)
+			const __m128i prod_b_lo = _mm_mullo_epi16( in_b,grad_coef );
+			// transform increasing coef to higher range (for high pixels)
+			grad_coef = _mm_add_epi16( grad_coef,_mm_set128_epi16() );
+			// multiply input by increasing coeffients (higher pixels)
+			const __m128i prod_b_hi = _mm_mullo_epi16( in_b,grad_coef );
+
+			// return coefficients to original state
+			grad_coef = _mm_shuffle_epi32( grad_coef,_MM_SHUFFLE( 0,1,3,2 ) );
+
+			// add low products and divide
+			const __m128i ab_lo = _mm_srli_epi16( _mm_adds_epu16( prod_a_lo,prod_b_lo ),8 );
+			// add high products and divide
+			const __m128i ab_hi = _mm_srli_epi16( _mm_adds_epu16( prod_a_hi,prod_b_hi ),8 );
+
+			// pack and return result
+			return _mm_packus_epi16( ab_lo,ab_hi );
+		};
+
+		// upsize for top and bottom edge cases
+		const auto UpsizeEdge = [&]( const __m128i* pIn,const __m128i* pInEnd,__m128i* pOutTop,
+			__m128i* pOutBottom )
+		{
+			__m128i in = _mm_load_si128( pIn++ );
+			// left corner setup (prime the alignment pump)
+			__m128i oldPix = _mm_shuffle_epi32( in,_MM_SHUFFLE( 0,0,0,0 ) );
+
+			// main loop
+			while( true )
+			{
+				// gradient 0-1
+				__m128i newPix = GenerateGradient( in );
+				__m128i out = _mm_alignr_epi8( oldPix,newPix,8 );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+
+				// gradient 1-2
+				newPix = GenerateGradient( _mm_srli_si128( in,1 ) );
+				out = _mm_alignr_epi8( oldPix,newPix,8 );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+
+				// gradient 2-3
+				newPix = GenerateGradient( _mm_srli_si128( in,2 ) );
+				out = _mm_alignr_epi8( oldPix,newPix,8 );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+
+				// end condition
+				if( pIn >= pInEnd )
+				{
+					break;
+				}
+
+				// gradient 3-0'
+				const __m128i newIn = _mm_load_si128( pIn++ );
+				newPix = GenerateGradient( _mm_alignr_epi8( in,newIn,12 ) );
+				out = _mm_alignr_epi8( oldPix,newPix,8 );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+				in = newIn;
+			}
+
+			// right corner
+			const __m128i out = _mm_alignr_epi8( oldPix,_mm_shuffle_epi32( in,_MM_SHUFFLE( 3,3,3,3 ) ),8 );
+			*pOutTop = _mm_adds_epi8( *pOutTop,out );
+			*pOutBottom = _mm_adds_epi8( *pOutBottom,out );
+		};
+
+		// hold values from last iteration
+		__m128i old0;
+		__m128i old1;
+		__m128i old2;
+		__m128i old3;
+
+		// interpolate horizontally between first 2 pixels of inputs and then vertically
+		const auto VerticalGradientOutput = [&]( __m128i in0,__m128i in1,
+			__m128i* pOut0,__m128i* pOut1,__m128i* pOut2,__m128i* pOut3 )
+		{
+			const __m128i topGrad = GenerateGradient( in0 );
+			const __m128i bottomGrad = GenerateGradient( in1 );
+
+			// generate points between top and bottom pixel arrays
+			const __m128i middle = _mm_avg_epu8( topGrad,bottomGrad );
+			const __m128i eighth = _mm_avg_epu8( middle,_mm_avg_epu8( topGrad,middle ) );
+			// generate 1/8th distance value between top and bottom pixels
+			const __m128i distEighth = _mm_subs_epu8( eighth,topGrad );
+
+			// combine old top and new top and add to original image with saturation
+			// (new top is 1/8th between top and bottom horizontal interpolations)
+			*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( old0,eighth,8 ) );
+			old0 = eighth;
+			
+			// combine old top and new top and add to original image with saturation
+			const __m128i new1 = _mm_subs_epu8( middle,distEighth );
+			*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( old1,new1,8 ) );
+			old1 = new1;
+
+			// combine old top and new top and add to original image with saturation
+			const __m128i new2 = _mm_adds_epu8( middle,distEighth );
+			*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( old2,new2,8 ) );
+			old2 = new2;
+
+			// combine old top and new top and add to original image with saturation
+			const __m128i new3 = _mm_subs_epu8( bottomGrad,distEighth );
+			*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( old3,new3,8 ) );
+			old3 = new3;
+		};
+
+		// upsize for middle cases
+		const auto DoLine = [&]( const __m128i* pIn0,const __m128i* pIn1,
+			__m128i* pOut0,__m128i* pOut1,__m128i* pOut2,__m128i* pOut3 )
+		{
+			const auto pEnd = pIn1;
+			__m128i in0 = _mm_load_si128( pIn0++ );
+			__m128i in1 = _mm_load_si128( pIn1++ );
+
+			// left side prime pump
+			{
+				const __m128i top = _mm_shuffle_epi32( in0,_MM_SHUFFLE( 0,0,0,0 ) );
+				const __m128i bottom = _mm_shuffle_epi32( in1,_MM_SHUFFLE( 0,0,0,0 ) );
+				
+				const __m128i middle = _mm_avg_epu8( top,bottom );
+				const __m128i eighth = _mm_avg_epu8( middle,_mm_avg_epu8( top,middle ) );
+				const __m128i distEighth = _mm_subs_epu8( eighth,top );
+
+				old0 = eighth;
+				old1 = _mm_subs_epu8( middle,distEighth );
+				old2 = _mm_adds_epu8( middle,distEighth );
+				old3 = _mm_subs_epu8( bottom,distEighth );
+			}
+
+			// main loop
+			while( true )
+			{
+				// gradient 0-1
+				VerticalGradientOutput( in0,in1,pOut0++,pOut1++,pOut2++,pOut3++ );
+
+				// gradient 1-2
+				VerticalGradientOutput( 
+					_mm_srli_si128( in0,4 ),
+					_mm_srli_si128( in1,4 ),
+					pOut0++,pOut1++,pOut2++,pOut3++ );
+
+				// gradient 2-3
+				VerticalGradientOutput(
+					_mm_srli_si128( in0,8 ),
+					_mm_srli_si128( in1,8 ),
+					pOut0++,pOut1++,pOut2++,pOut3++ );
+
+				// end condition
+				if( pIn0 >= pEnd )
+				{
+					break;
+				}
+
+				// gradient 3-0'
+				const __m128i newIn0 = _mm_load_si128( pIn0++ );
+				const __m128i newIn1 = _mm_load_si128( pIn1++ );
+				VerticalGradientOutput(
+					_mm_alignr_epi8( in0,newIn0,12 ),
+					_mm_alignr_epi8( in1,newIn1,12 ),
+					pOut0++,pOut1++,pOut2++,pOut3++ );
+				in0 = newIn0;
+				in1 = newIn1;
+			}
+
+			// right side finish pump
+			{
+				const __m128i top = _mm_shuffle_epi32( _mm_srli_si128( in0,12 ),
+					_MM_SHUFFLE( 0,0,0,0 ) );
+				const __m128i bottom = _mm_shuffle_epi32( _mm_srli_si128( in1,12 ),
+					_MM_SHUFFLE( 0,0,0,0 ) );
+
+				const __m128i middle = _mm_avg_epu8( top,bottom );
+				const __m128i eighth = _mm_avg_epu8( middle,_mm_avg_epu8( top,middle ) );
+				const __m128i distEighth = _mm_subs_epu8( eighth,top );
+
+				*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( old0,eighth,8 ) );
+				*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( old0,
+					_mm_subs_epu8( middle,distEighth ),8 ) );
+				*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( old0,
+					_mm_adds_epu8( middle,distEighth ),8 ) );
+				*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( old0,
+					_mm_subs_epu8( bottom,distEighth ),8 ) );
+			}
+		};
+
+		// do top line
+		UpsizeEdge(
+			reinterpret_cast<const __m128i*>( hBuffer.GetBufferConst() ),
+			reinterpret_cast<const __m128i*>( &hBuffer.GetBufferConst()[hBuffer.GetWidth()] ),
+			reinterpret_cast<__m128i*>( input.GetBuffer() ),
+			reinterpret_cast<__m128i*>( &input.GetBuffer()[input.GetWidth()] ) );
+
+		// constants for line loop pointer arithmetic
+		const size_t inWidthScalar = hBuffer.GetWidth();
+		const size_t outWidthScalar = input.GetWidth();
+
+		// setup pointers for resizing line loop
+		const __m128i* pIn0 = reinterpret_cast<const __m128i*>( 
+			&hBuffer.GetBufferConst()[inWidthScalar] );
+		const __m128i* pIn1 = reinterpret_cast<const __m128i*>(
+			&hBuffer.GetBufferConst()[inWidthScalar * 2u] );
+		const __m128i* pEnd = reinterpret_cast<const __m128i*>(
+			&hBuffer.GetBufferConst()[inWidthScalar * ( hBuffer.GetHeight() - 2u )] );
+		__m128i* pOut0 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 2u] );
+		__m128i* pOut1 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 3u] );
+		__m128i* pOut2 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 4u] );
+		__m128i* pOut3 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 5u] );
+
+		const size_t inStep = pIn1 - pIn0;
+		// no overlap in output
+		const size_t outStep = (pOut1 - pOut0) * 4u;
+
+		// do middle lines
+		for( ; pIn0 < pEnd; pIn0 += inStep,pIn1 += inStep,
+			pOut0 += outStep,pOut1 += outStep,pOut2 += outStep,pOut3 += outStep )
+		{
+			DoLine( pIn0,pIn1,pOut0,pOut1,pOut2,pOut3 );
+		}
+
+		// do bottom line
+		UpsizeEdge(
+			reinterpret_cast<const __m128i*>( 
+				&hBuffer.GetBufferConst()[inWidthScalar * ( hBuffer.GetHeight() - 1u )] ),
+			reinterpret_cast<const __m128i*>( 
+			&hBuffer.GetBufferConst()[inWidthScalar * hBuffer.GetHeight()] ),
+			reinterpret_cast<__m128i*>( 
+			&input.GetBuffer()[outWidthScalar * ( input.GetHeight() - 2u )] ),
+			reinterpret_cast<__m128i*>(
+			&input.GetBuffer()[outWidthScalar * ( input.GetHeight() - 1u )] ) );
+	}
+	void _UpsizeBlendPassX86()
+	{
+		Color* const pOutputBuffer = input.GetBuffer();
+		const Color* const pInputBuffer = hBuffer.GetBufferConst();
+		const size_t inFringe = diameter / 2u;
+		const size_t inWidth = hBuffer.GetWidth();
+		const size_t inHeight = hBuffer.GetHeight();
+		const size_t inBottom = inHeight - inFringe;
+		const size_t inTopLeft = ( inWidth + 1u ) * inFringe;
+		const size_t inTopRight = inWidth * ( inFringe + 1u ) - inFringe - 1u;
+		const size_t inBottomLeft = inWidth * ( inBottom - 1u ) + inFringe;
+		const size_t inBottomRight = inWidth * inBottom - inFringe - 1u;
+		const size_t outFringe = GetFringeSize();
+		const size_t outWidth = input.GetWidth();
+		const size_t outRight = outWidth - outFringe;
+		const size_t outBottom = input.GetHeight() - outFringe;
+		const size_t outTopLeft = ( outWidth + 1u ) * outFringe;
+		const size_t outTopRight = outWidth * ( outFringe + 1u ) - outFringe - 1u;
+		const size_t outBottomLeft = outWidth * ( outBottom - 1u ) + outFringe;
+		const size_t outBottomRight = outWidth * outBottom - outFringe - 1u;
+
+		auto AddSaturate = []( Color* pOut,unsigned int inr,unsigned int ing,unsigned int inb )
+		{
+			*pOut = {
+				unsigned char( min( inr + pOut->r,255u ) ),
+				unsigned char( min( ing + pOut->g,255u ) ),
+				unsigned char( min( inb + pOut->b,255u ) )
+			};
+		};
+
+		// top two rows
+		{
+			// top left block
+			{
+				const unsigned int r = pInputBuffer[inTopLeft].r;
+				const unsigned int g = pInputBuffer[inTopLeft].g;
+				const unsigned int b = pInputBuffer[inTopLeft].b;
+				AddSaturate( &pOutputBuffer[outTopLeft],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + outWidth],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopLeft + outWidth + 1u],r,g,b );
+			}
+
+			// center
+			{
+				Color* const pOutUpper = &pOutputBuffer[outFringe * outWidth];
+				Color* const pOutLower = &pOutputBuffer[( outFringe + 1u ) * outWidth];
+				const Color* const pIn = &pInputBuffer[inFringe * inWidth];
+				for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
+				{
+					const size_t baseX = ( x - 2u ) / 4u;
+					const unsigned int r0 = pIn[baseX].r;
+					const unsigned int g0 = pIn[baseX].g;
+					const unsigned int b0 = pIn[baseX].b;
+					const unsigned int r1 = pIn[baseX + 1u].r;
+					const unsigned int g1 = pIn[baseX + 1u].g;
+					const unsigned int b1 = pIn[baseX + 1u].b;
+					{
+						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+						const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
+						AddSaturate( &pOutUpper[x],r,g,b );
+						AddSaturate( &pOutLower[x],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+						const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
+						AddSaturate( &pOutUpper[x + 1u],r,g,b );
+						AddSaturate( &pOutLower[x + 1u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+						const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
+						AddSaturate( &pOutUpper[x + 2u],r,g,b );
+						AddSaturate( &pOutLower[x + 2u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+						const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
+						AddSaturate( &pOutUpper[x + 3u],r,g,b );
+						AddSaturate( &pOutLower[x + 3u],r,g,b );
+					}
+				}
+			}
+
+			// top right block
+			{
+				const unsigned int r = pInputBuffer[inTopRight].r;
+				const unsigned int g = pInputBuffer[inTopRight].g;
+				const unsigned int b = pInputBuffer[inTopRight].b;
+				AddSaturate( &pOutputBuffer[outTopRight - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopRight],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopRight + outWidth - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outTopRight + outWidth],r,g,b );
+			}
+		}
+
+		// center rows
+		for( size_t y = outFringe + 2u; y < outBottom - 2u; y += 4u )
+		{
+			const size_t baseY = ( y - 2u ) / 4u;
+
+			// first two pixels
+			{
+				const unsigned int r0 = pInputBuffer[baseY * inWidth + inFringe].r;
+				const unsigned int g0 = pInputBuffer[baseY * inWidth + inFringe].g;
+				const unsigned int b0 = pInputBuffer[baseY * inWidth + inFringe].b;
+				const unsigned int r1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].r;
+				const unsigned int g1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].g;
+				const unsigned int b1 = pInputBuffer[( baseY + 1u ) * inWidth + inFringe].b;
+				{
+					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+					const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
+					AddSaturate( &pOutputBuffer[y * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[y * outWidth + outFringe + 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+					const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 1u ) * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 1u ) * outWidth + outFringe + 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+					const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 2u ) * outWidth + outFringe + 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+					const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 3u ) * outWidth + outFringe + 1u],r,g,b );
+				}
+			}
+
+			// center pixels
+			for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
+			{
+				const size_t baseX = ( x - 2u ) / 4u;
+				const Color p0 = pInputBuffer[baseY * inWidth + baseX];
+				const Color p1 = pInputBuffer[baseY * inWidth + baseX + 1u];
+				const Color p2 = pInputBuffer[( baseY + 1u ) * inWidth + baseX];
+				const Color p3 = pInputBuffer[( baseY + 1u ) * inWidth + baseX + 1u];
+				const Color d0 = pOutputBuffer[y * outWidth + x];
+				const Color d1 = pOutputBuffer[y * outWidth + x + 1u];
+				const Color d2 = pOutputBuffer[y * outWidth + x + 2u];
+				const Color d3 = pOutputBuffer[y * outWidth + x + 3u];
+				const Color d4 = pOutputBuffer[( y + 1u ) * outWidth + x];
+				const Color d5 = pOutputBuffer[( y + 1u ) * outWidth + x + 1u];
+				const Color d6 = pOutputBuffer[( y + 1u ) * outWidth + x + 2u];
+				const Color d7 = pOutputBuffer[( y + 1u ) * outWidth + x + 3u];
+				const Color d8 = pOutputBuffer[( y + 2u ) * outWidth + x];
+				const Color d9 = pOutputBuffer[( y + 2u ) * outWidth + x + 1u];
+				const Color d10 = pOutputBuffer[( y + 2u ) * outWidth + x + 2u];
+				const Color d11 = pOutputBuffer[( y + 2u ) * outWidth + x + 3u];
+				const Color d12 = pOutputBuffer[( y + 3u ) * outWidth + x];
+				const Color d13 = pOutputBuffer[( y + 3u ) * outWidth + x + 1u];
+				const Color d14 = pOutputBuffer[( y + 3u ) * outWidth + x + 2u];
+				const Color d15 = pOutputBuffer[( y + 3u ) * outWidth + x + 3u];
+
+
+				unsigned int lr1 = p0.r * 224u + p2.r * 32u;
+				unsigned int lg1 = p0.g * 224u + p2.g * 32u;
+				unsigned int lb1 = p0.b * 224u + p2.b * 32u;
+				unsigned int rr1 = p1.r * 224u + p3.r * 32u;
+				unsigned int rg1 = p1.g * 224u + p3.g * 32u;
+				unsigned int rb1 = p1.b * 224u + p3.b * 32u;
+
+				pOutputBuffer[y * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d0.r,255u ) ),
+				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d0.g,255u ) ),
+				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d0.b,255u ) ) };
+
+				pOutputBuffer[y * outWidth + x + 1u] =
+				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d1.r,255u ) ),
+				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d1.g,255u ) ),
+				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d1.b,255u ) ) };
+
+				pOutputBuffer[y * outWidth + x + 2u] =
+				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d2.r,255u ) ),
+				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d2.g,255u ) ),
+				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d2.b,255u ) ) };
+
+				pOutputBuffer[y * outWidth + x + 3u] =
+				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d3.r,255u ) ),
+				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d3.g,255u ) ),
+				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d3.b,255u ) ) };
+
+				lr1 = p0.r * 160u + p2.r * 96u;
+				lg1 = p0.g * 160u + p2.g * 96u;
+				lb1 = p0.b * 160u + p2.b * 96u;
+				rr1 = p1.r * 160u + p3.r * 96u;
+				rg1 = p1.g * 160u + p3.g * 96u;
+				rb1 = p1.b * 160u + p3.b * 96u;
+
+				pOutputBuffer[( y + 1u ) * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d4.r,255u ) ),
+				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d4.g,255u ) ),
+				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d4.b,255u ) ) };
+
+				pOutputBuffer[( y + 1u ) * outWidth + x + 1u] =
+				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d5.r,255u ) ),
+				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d5.g,255u ) ),
+				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d5.b,255u ) ) };
+
+				pOutputBuffer[( y + 1u ) * outWidth + x + 2u] =
+				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d6.r,255u ) ),
+				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d6.g,255u ) ),
+				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d6.b,255u ) ) };
+
+				pOutputBuffer[( y + 1u ) * outWidth + x + 3u] =
+				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d7.r,255u ) ),
+				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d7.g,255u ) ),
+				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d7.b,255u ) ) };
+
+				lr1 = p0.r * 96u + p2.r * 160u;
+				lg1 = p0.g * 96u + p2.g * 160u;
+				lb1 = p0.b * 96u + p2.b * 160u;
+				rr1 = p1.r * 96u + p3.r * 160u;
+				rg1 = p1.g * 96u + p3.g * 160u;
+				rb1 = p1.b * 96u + p3.b * 160u;
+
+				pOutputBuffer[( y + 2u ) * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d8.r,255u ) ),
+				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d8.g,255u ) ),
+				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d8.b,255u ) ) };
+
+				pOutputBuffer[( y + 2u ) * outWidth + x + 1u] =
+				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d9.r,255u ) ),
+				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d9.g,255u ) ),
+				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d9.b,255u ) ) };
+
+				pOutputBuffer[( y + 2u ) * outWidth + x + 2u] =
+				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d10.r,255u ) ),
+				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d10.g,255u ) ),
+				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d10.b,255u ) ) };
+
+				pOutputBuffer[( y + 2u ) * outWidth + x + 3u] =
+				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d11.r,255u ) ),
+				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d11.g,255u ) ),
+				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d11.b,255u ) ) };
+
+				lr1 = p0.r * 32u + p2.r * 224u;
+				lg1 = p0.g * 32u + p2.g * 224u;
+				lb1 = p0.b * 32u + p2.b * 224u;
+				rr1 = p1.r * 32u + p3.r * 224u;
+				rg1 = p1.g * 32u + p3.g * 224u;
+				rb1 = p1.b * 32u + p3.b * 224u;
+
+				pOutputBuffer[( y + 3u ) * outWidth + x] =
+				{ unsigned char( min( ( lr1 * 224u + rr1 * 32u ) / 65536u + d12.r,255u ) ),
+				unsigned char( min( ( lg1 * 224u + rg1 * 32u ) / 65536u + d12.g,255u ) ),
+				unsigned char( min( ( lb1 * 224u + rb1 * 32u ) / 65536u + d12.b,255u ) ) };
+
+				pOutputBuffer[( y + 3u ) * outWidth + x + 1u] =
+				{ unsigned char( min( ( lr1 * 160u + rr1 * 96u ) / 65536u + d13.r,255u ) ),
+				unsigned char( min( ( lg1 * 160u + rg1 * 96u ) / 65536u + d13.g,255u ) ),
+				unsigned char( min( ( lb1 * 160u + rb1 * 96u ) / 65536u + d13.b,255u ) ) };
+
+				pOutputBuffer[( y + 3u ) * outWidth + x + 2u] =
+				{ unsigned char( min( ( lr1 * 96u + rr1 * 160u ) / 65536u + d14.r,255u ) ),
+				unsigned char( min( ( lg1 * 96u + rg1 * 160u ) / 65536u + d14.g,255u ) ),
+				unsigned char( min( ( lb1 * 96u + rb1 * 160u ) / 65536u + d14.b,255u ) ) };
+
+				pOutputBuffer[( y + 3u ) * outWidth + x + 3u] =
+				{ unsigned char( min( ( lr1 * 32u + rr1 * 224u ) / 65536u + d15.r,255u ) ),
+				unsigned char( min( ( lg1 * 32u + rg1 * 224u ) / 65536u + d15.g,255u ) ),
+				unsigned char( min( ( lb1 * 32u + rb1 * 224u ) / 65536u + d15.b,255u ) ) };
+			}
+
+			// last two pixels
+			{
+				const unsigned int r0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].r;
+				const unsigned int g0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].g;
+				const unsigned int b0 = pInputBuffer[( baseY + 1u ) * inWidth - inFringe - 2u].b;
+				const unsigned int r1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].r;
+				const unsigned int g1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].g;
+				const unsigned int b1 = pInputBuffer[( baseY + 2u ) * inWidth - inFringe - 1u].b;
+				{
+					const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+					const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+					const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 1 ) * outWidth - outFringe - 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+					const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+					const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 2 ) * outWidth - outFringe - 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+					const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+					const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 3 ) * outWidth - outFringe - 1u],r,g,b );
+				}
+				{
+					const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+					const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+					const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
+					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 2u],r,g,b );
+					AddSaturate( &pOutputBuffer[( y + 4 ) * outWidth - outFringe - 1u],r,g,b );
+				}
+			}
+		}
+
+		// bottom two rows
+		{
+			// bottom left block
+			{
+				const unsigned int r = pInputBuffer[inBottomLeft].r;
+				const unsigned int g = pInputBuffer[inBottomLeft].g;
+				const unsigned int b = pInputBuffer[inBottomLeft].b;
+				AddSaturate( &pOutputBuffer[outBottomLeft - outWidth],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomLeft - outWidth + 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomLeft],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomLeft + 1u],r,g,b );
+			}
+
+			// center
+			{
+				Color* const pOutUpper = &pOutputBuffer[( outBottom - 2u ) * outWidth];
+				Color* const pOutLower = &pOutputBuffer[( outBottom - 1u ) * outWidth];
+				const Color* const pIn = &pInputBuffer[( inBottom - 1u ) * inWidth];
+				for( size_t x = outFringe + 2u; x < outRight - 2u; x += 4u )
+				{
+					const size_t baseX = ( x - 2u ) / 4u;
+					const unsigned int r0 = pIn[baseX].r;
+					const unsigned int g0 = pIn[baseX].g;
+					const unsigned int b0 = pIn[baseX].b;
+					const unsigned int r1 = pIn[baseX + 1u].r;
+					const unsigned int g1 = pIn[baseX + 1u].g;
+					const unsigned int b1 = pIn[baseX + 1u].b;
+					{
+						const unsigned int r = ( r0 * 224u + r1 * 32u ) / 256u;
+						const unsigned int g = ( g0 * 224u + g1 * 32u ) / 256u;
+						const unsigned int b = ( b0 * 224u + b1 * 32u ) / 256u;
+						AddSaturate( &pOutUpper[x],r,g,b );
+						AddSaturate( &pOutLower[x],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 160u + r1 * 96u ) / 256u;
+						const unsigned int g = ( g0 * 160u + g1 * 96u ) / 256u;
+						const unsigned int b = ( b0 * 160u + b1 * 96u ) / 256u;
+						AddSaturate( &pOutUpper[x + 1u],r,g,b );
+						AddSaturate( &pOutLower[x + 1u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 96u + r1 * 160u ) / 256u;
+						const unsigned int g = ( g0 * 96u + g1 * 160u ) / 256u;
+						const unsigned int b = ( b0 * 96u + b1 * 160u ) / 256u;
+						AddSaturate( &pOutUpper[x + 2u],r,g,b );
+						AddSaturate( &pOutLower[x + 2u],r,g,b );
+					}
+					{
+						const unsigned int r = ( r0 * 32u + r1 * 224u ) / 256u;
+						const unsigned int g = ( g0 * 32u + g1 * 224u ) / 256u;
+						const unsigned int b = ( b0 * 32u + b1 * 224u ) / 256u;
+						AddSaturate( &pOutUpper[x + 3u],r,g,b );
+						AddSaturate( &pOutLower[x + 3u],r,g,b );
+					}
+				}
+			}
+
+			// bottom right block
+			{
+				const unsigned int r = pInputBuffer[inBottomRight].r;
+				const unsigned int g = pInputBuffer[inBottomRight].g;
+				const unsigned int b = pInputBuffer[inBottomRight].b;
+				AddSaturate( &pOutputBuffer[outBottomRight - outWidth - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomRight - outWidth],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomRight - 1u],r,g,b );
+				AddSaturate( &pOutputBuffer[outBottomRight],r,g,b );
 			}
 		}
 	}
