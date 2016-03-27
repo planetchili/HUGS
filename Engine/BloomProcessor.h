@@ -72,6 +72,7 @@ public:
 	void UpsizeBlendPass()
 	{
 		_UpsizeBlendPassSSSE3();
+		//_UpsizeBlendPassX86();
 	}
 	void Go()
 	{
@@ -902,7 +903,7 @@ private:
 //#pragma warning( pop )
 
 		const __m128i zero = _mm_setzero_si128();
-		__m128i grad_coef = _mm_set_epi16( 224u,224u,224u,224u,160u,160u,160u,160u );
+		__m128i grad_coef = _mm_set_epi16( 160u,160u,160u,160u,224u,224u,224u,224u );
 
 		// interpolate horizontally between low 2 pixels of input
 		const auto GenerateGradient = [&]( __m128i in )
@@ -955,7 +956,7 @@ private:
 			{
 				// gradient 0-1
 				__m128i newPix = GenerateGradient( in );
-				__m128i out = _mm_alignr_epi8( oldPix,newPix,8 );
+				__m128i out = _mm_alignr_epi8( newPix,oldPix,8 );
 				*pOutTop = _mm_adds_epu8( *pOutTop,out );
 				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
 				pOutTop++;
@@ -964,7 +965,7 @@ private:
 
 				// gradient 1-2
 				newPix = GenerateGradient( _mm_srli_si128( in,1 ) );
-				out = _mm_alignr_epi8( oldPix,newPix,8 );
+				out = _mm_alignr_epi8( newPix,oldPix,8 );
 				*pOutTop = _mm_adds_epu8( *pOutTop,out );
 				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
 				pOutTop++;
@@ -973,7 +974,7 @@ private:
 
 				// gradient 2-3
 				newPix = GenerateGradient( _mm_srli_si128( in,2 ) );
-				out = _mm_alignr_epi8( oldPix,newPix,8 );
+				out = _mm_alignr_epi8( newPix,oldPix,8 );
 				*pOutTop = _mm_adds_epu8( *pOutTop,out );
 				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
 				pOutTop++;
@@ -988,8 +989,8 @@ private:
 
 				// gradient 3-0'
 				const __m128i newIn = _mm_load_si128( pIn++ );
-				newPix = GenerateGradient( _mm_alignr_epi8( in,newIn,12 ) );
-				out = _mm_alignr_epi8( oldPix,newPix,8 );
+				newPix = GenerateGradient( _mm_alignr_epi8( newIn,in,12 ) );
+				out = _mm_alignr_epi8( newPix,oldPix,8 );
 				*pOutTop = _mm_adds_epu8( *pOutTop,out );
 				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
 				pOutTop++;
@@ -999,7 +1000,7 @@ private:
 			}
 
 			// right corner
-			const __m128i out = _mm_alignr_epi8( oldPix,_mm_shuffle_epi32( in,_MM_SHUFFLE( 3,3,3,3 ) ),8 );
+			const __m128i out = _mm_alignr_epi8( _mm_shuffle_epi32( in,_MM_SHUFFLE( 3,3,3,3 ) ),oldPix,8 );
 			*pOutTop = _mm_adds_epi8( *pOutTop,out );
 			*pOutBottom = _mm_adds_epi8( *pOutBottom,out );
 		};
@@ -1019,28 +1020,28 @@ private:
 
 			// generate points between top and bottom pixel arrays
 			const __m128i middle = _mm_avg_epu8( topGrad,bottomGrad );
-			const __m128i eighth = _mm_avg_epu8( middle,_mm_avg_epu8( topGrad,middle ) );
+			const __m128i eighth = _mm_avg_epu8( topGrad,_mm_avg_epu8( topGrad,middle ) );
 			// generate 1/8th distance value between top and bottom pixels
 			const __m128i distEighth = _mm_subs_epu8( eighth,topGrad );
 
 			// combine old top and new top and add to original image with saturation
 			// (new top is 1/8th between top and bottom horizontal interpolations)
-			*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( old0,eighth,8 ) );
+			*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( eighth,old0,8 ) );
 			old0 = eighth;
 			
 			// combine old top and new top and add to original image with saturation
 			const __m128i new1 = _mm_subs_epu8( middle,distEighth );
-			*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( old1,new1,8 ) );
+			*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( new1,old1,8 ) );
 			old1 = new1;
 
 			// combine old top and new top and add to original image with saturation
 			const __m128i new2 = _mm_adds_epu8( middle,distEighth );
-			*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( old2,new2,8 ) );
+			*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( new2,old2,8 ) );
 			old2 = new2;
 
 			// combine old top and new top and add to original image with saturation
 			const __m128i new3 = _mm_subs_epu8( bottomGrad,distEighth );
-			*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( old3,new3,8 ) );
+			*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( new3,old3,8 ) );
 			old3 = new3;
 		};
 
@@ -1058,7 +1059,7 @@ private:
 				const __m128i bottom = _mm_shuffle_epi32( in1,_MM_SHUFFLE( 0,0,0,0 ) );
 				
 				const __m128i middle = _mm_avg_epu8( top,bottom );
-				const __m128i eighth = _mm_avg_epu8( middle,_mm_avg_epu8( top,middle ) );
+				const __m128i eighth = _mm_avg_epu8( top,_mm_avg_epu8( top,middle ) );
 				const __m128i distEighth = _mm_subs_epu8( eighth,top );
 
 				old0 = eighth;
@@ -1095,8 +1096,8 @@ private:
 				const __m128i newIn0 = _mm_load_si128( pIn0++ );
 				const __m128i newIn1 = _mm_load_si128( pIn1++ );
 				VerticalGradientOutput(
-					_mm_alignr_epi8( in0,newIn0,12 ),
-					_mm_alignr_epi8( in1,newIn1,12 ),
+					_mm_alignr_epi8( newIn0,in0,12 ),
+					_mm_alignr_epi8( newIn1,in1,12 ),
 					pOut0++,pOut1++,pOut2++,pOut3++ );
 				in0 = newIn0;
 				in1 = newIn1;
@@ -1110,16 +1111,16 @@ private:
 					_MM_SHUFFLE( 0,0,0,0 ) );
 
 				const __m128i middle = _mm_avg_epu8( top,bottom );
-				const __m128i eighth = _mm_avg_epu8( middle,_mm_avg_epu8( top,middle ) );
+				const __m128i eighth = _mm_avg_epu8( top,_mm_avg_epu8( top,middle ) );
 				const __m128i distEighth = _mm_subs_epu8( eighth,top );
 
-				*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( old0,eighth,8 ) );
-				*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( old0,
-					_mm_subs_epu8( middle,distEighth ),8 ) );
-				*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( old0,
-					_mm_adds_epu8( middle,distEighth ),8 ) );
-				*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( old0,
-					_mm_subs_epu8( bottom,distEighth ),8 ) );
+				*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( eighth,old0,8 ) );
+				*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( 
+					_mm_subs_epu8( middle,distEighth ),old0,8 ) );
+				*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( 
+					_mm_adds_epu8( middle,distEighth ),old0,8 ) );
+				*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( 
+					_mm_subs_epu8( bottom,distEighth ),old0,8 ) );
 			}
 		};
 
