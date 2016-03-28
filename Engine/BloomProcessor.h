@@ -42,12 +42,14 @@ public:
 				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSSE3 );
 				HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSSE3 );
 				VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSSE3 );
+				UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSSE3 );
 			}
 			else
 			{
 				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSE2 );
 				HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSE2 );
 				VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSE2 );
+				UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSE2 );
 			}
 		}
 		else
@@ -55,6 +57,7 @@ public:
 			DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassX86 );
 			HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassX86 );
 			VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassX86 );
+			UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassX86 );
 		}
 	}
 	void DownsizePass()
@@ -71,31 +74,51 @@ public:
 	}
 	void UpsizeBlendPass()
 	{
-		_UpsizeBlendPassSSSE3();
-		//_UpsizeBlendPassX86();
+		UpsizeBlendPassFunc( this );
+	}
+	void SetUpsizeX86()
+	{
+		UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassX86 );
+	}
+	void SetUpsizeSSE()
+	{
+		if( InstructionSet::SSSE3() )
+		{
+			UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSSE3 );
+		}
+		else
+		{
+			UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSE2 );
+		}
 	}
 	void Go()
 	{
-		input.Save( L"shot_0pre.bmp" );
-		DownsizePass();
-		hBuffer.Save( L"shot_1down.bmp" );
-		HorizontalPass();
-		vBuffer.Save( L"shot_2h.bmp" );
 		//timer.StartFrame();
+		//input.Save( L"shot_0pre.bmp" );
+		DownsizePass();
+		//hBuffer.Save( L"shot_1down.bmp" );
+		HorizontalPass();
+		//vBuffer.Save( L"shot_2h.bmp" );
 		VerticalPass();
+		//hBuffer.Save( L"shot_3v.bmp" );
+		UpsizeBlendPass();
 		//if( timer.StopFrame() )
 		//{
 		//	log << timer.GetAvg() << std::endl;
 		//}
-		hBuffer.Save( L"shot_3v.bmp" );
-		UpsizeBlendPass();
-		input.Save( L"shot_4post.bmp" );
 	}
 	static unsigned int GetFringeSize()
 	{
 		return ( diameter / 2u ) * 4u;
 	}
 private:
+	template<int shift>
+	static __m128i AlignRightSSE2( __m128i hi,__m128i lo )
+	{
+		const __m128i top = _mm_slli_si128( hi,16 - shift );
+		const __m128i bot = _mm_srli_si128( lo,shift );
+		return _mm_or_si128( top,bot );
+	}
 	static unsigned int GetKernelCenter()
 	{
 		return ( diameter - 1 ) / 2;
@@ -891,8 +914,17 @@ private:
 	}
 	void _UpsizeBlendPassSSSE3()
 	{
-//#pragma warning( push )
-//#pragma warning( disable : 4700 )
+#ifdef NDEBUG
+	#pragma warning( push )
+	#pragma warning( disable : 4700 )
+		const auto _mm_set128_epi16 = []()
+		{
+			__m128i x = _mm_cmpeq_epi16( x,x );
+			x = _mm_srli_epi16( x,15 );
+			return _mm_slli_epi16( x,7 );
+		};
+	#pragma warning( pop )
+#else
 		const auto _mm_set128_epi16 = []()
 		{
 			__m128i x = _mm_setzero_si128();
@@ -900,7 +932,7 @@ private:
 			x = _mm_srli_epi16( x,15 );
 			return _mm_slli_epi16( x,7 );
 		};
-//#pragma warning( pop )
+#endif
 
 		const __m128i zero = _mm_setzero_si128();
 		__m128i grad_coef = _mm_set_epi16( 160u,160u,160u,160u,224u,224u,224u,224u );
@@ -1019,30 +1051,41 @@ private:
 			const __m128i bottomGrad = GenerateGradient( in1 );
 
 			// generate points between top and bottom pixel arrays
-			const __m128i middle = _mm_avg_epu8( topGrad,bottomGrad );
-			const __m128i eighth = _mm_avg_epu8( topGrad,_mm_avg_epu8( topGrad,middle ) );
-			// generate 1/8th distance value between top and bottom pixels
-			const __m128i distEighth = _mm_subs_epu8( eighth,topGrad );
+			const __m128i half = _mm_avg_epu8( topGrad,bottomGrad );
 
-			// combine old top and new top and add to original image with saturation
-			// (new top is 1/8th between top and bottom horizontal interpolations)
-			*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( eighth,old0,8 ) );
-			old0 = eighth;
-			
-			// combine old top and new top and add to original image with saturation
-			const __m128i new1 = _mm_subs_epu8( middle,distEighth );
-			*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( new1,old1,8 ) );
-			old1 = new1;
+			{
+				// first quarter needed for top half
+				const __m128i firstQuarter = _mm_avg_epu8( topGrad,half );
 
-			// combine old top and new top and add to original image with saturation
-			const __m128i new2 = _mm_adds_epu8( middle,distEighth );
-			*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( new2,old2,8 ) );
-			old2 = new2;
+				// generate 1/8 pt from top to bottom
+				const __m128i firstEighth = _mm_avg_epu8( topGrad,firstQuarter );
+				// combine old 1/8 pt and new and add to original image with saturation
+				*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( firstEighth,old0,8 ) );
+				old0 = firstEighth;
 
-			// combine old top and new top and add to original image with saturation
-			const __m128i new3 = _mm_subs_epu8( bottomGrad,distEighth );
-			*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( new3,old3,8 ) );
-			old3 = new3;
+				// generate 3/8 pt from top to bottom
+				const __m128i thirdEighth = _mm_avg_epu8( firstQuarter,half );
+				// combine old 3/8 pt and new and add to original image with saturation
+				*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( thirdEighth,old1,8 ) );
+				old1 = thirdEighth;
+			}
+
+			{
+				// third quarter needed for bottom half
+				const __m128i thirdQuarter = _mm_avg_epu8( half,bottomGrad );
+
+				// generate 5/8 pt from top to bottom
+				const __m128i fifthEighth = _mm_avg_epu8( half,thirdQuarter );
+				// combine old 5/8 pt and new and add to original image with saturation
+				*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( fifthEighth,old2,8 ) );
+				old2 = fifthEighth;
+
+				// generate 7/8 pt from top to bottom
+				const __m128i seventhEighth = _mm_avg_epu8( thirdQuarter,bottomGrad );
+				// combine old 7/8 pt and new and add to original image with saturation
+				*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( seventhEighth,old3,8 ) );
+				old3 = seventhEighth;
+			}
 		};
 
 		// upsize for middle cases
@@ -1137,9 +1180,9 @@ private:
 
 		// setup pointers for resizing line loop
 		const __m128i* pIn0 = reinterpret_cast<const __m128i*>( 
-			&hBuffer.GetBufferConst()[inWidthScalar] );
+			hBuffer.GetBufferConst() );
 		const __m128i* pIn1 = reinterpret_cast<const __m128i*>(
-			&hBuffer.GetBufferConst()[inWidthScalar * 2u] );
+			&hBuffer.GetBufferConst()[inWidthScalar] );
 		const __m128i* pEnd = reinterpret_cast<const __m128i*>(
 			&hBuffer.GetBufferConst()[inWidthScalar * ( hBuffer.GetHeight() - 2u )] );
 		__m128i* pOut0 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 2u] );
@@ -1165,6 +1208,306 @@ private:
 			reinterpret_cast<const __m128i*>( 
 			&hBuffer.GetBufferConst()[inWidthScalar * hBuffer.GetHeight()] ),
 			reinterpret_cast<__m128i*>( 
+			&input.GetBuffer()[outWidthScalar * ( input.GetHeight() - 2u )] ),
+			reinterpret_cast<__m128i*>(
+			&input.GetBuffer()[outWidthScalar * ( input.GetHeight() - 1u )] ) );
+	}
+	void _UpsizeBlendPassSSE2()
+	{
+#ifdef NDEBUG
+	#pragma warning( push )
+	#pragma warning( disable : 4700 )
+		const auto _mm_set128_epi16 = []()
+		{
+			__m128i x = _mm_cmpeq_epi16( x,x );
+			x = _mm_srli_epi16( x,15 );
+			return _mm_slli_epi16( x,7 );
+		};
+	#pragma warning( pop )
+#else
+		const auto _mm_set128_epi16 = []()
+		{
+			__m128i x = _mm_setzero_si128();
+			x = _mm_cmpeq_epi16( x,x );
+			x = _mm_srli_epi16( x,15 );
+			return _mm_slli_epi16( x,7 );
+		};
+#endif
+
+		const __m128i zero = _mm_setzero_si128();
+		__m128i grad_coef = _mm_set_epi16( 160u,160u,160u,160u,224u,224u,224u,224u );
+
+		// interpolate horizontally between low 2 pixels of input
+		const auto GenerateGradient = [&]( __m128i in )
+		{
+			// unpack inputs (low 2 pixels) to 16-bit channel size
+			const __m128i in16 = _mm_unpacklo_epi8( in,zero );
+
+			// copy low pixel to high and low 64 bits
+			const __m128i in_a = _mm_shuffle_epi32( in16,_MM_SHUFFLE( 1,0,1,0 ) );
+			// multiply input by decreasing coeffients (lower pixels)
+			const __m128i prod_a_lo = _mm_mullo_epi16( in_a,grad_coef );
+			// transform decreasing coef to lower range (for high pixels)
+			grad_coef = _mm_sub_epi16( grad_coef,_mm_set128_epi16() );
+			// multiply input by decreasing coeffients (higher pixels)
+			const __m128i prod_a_hi = _mm_mullo_epi16( in_a,grad_coef );
+
+			// copy high pixel to high and low 64 bits
+			const __m128i in_b = _mm_shuffle_epi32( in16,_MM_SHUFFLE( 3,2,3,2 ) );
+			// transform decreasing coef to increasing coefficients (for low pixels)
+			grad_coef = _mm_shuffle_epi32( grad_coef,_MM_SHUFFLE( 0,1,3,2 ) );
+			// multiply input by increasing coeffients (lower pixels)
+			const __m128i prod_b_lo = _mm_mullo_epi16( in_b,grad_coef );
+			// transform increasing coef to higher range (for high pixels)
+			grad_coef = _mm_add_epi16( grad_coef,_mm_set128_epi16() );
+			// multiply input by increasing coeffients (higher pixels)
+			const __m128i prod_b_hi = _mm_mullo_epi16( in_b,grad_coef );
+
+			// return coefficients to original state
+			grad_coef = _mm_shuffle_epi32( grad_coef,_MM_SHUFFLE( 0,1,3,2 ) );
+
+			// add low products and divide
+			const __m128i ab_lo = _mm_srli_epi16( _mm_adds_epu16( prod_a_lo,prod_b_lo ),8 );
+			// add high products and divide
+			const __m128i ab_hi = _mm_srli_epi16( _mm_adds_epu16( prod_a_hi,prod_b_hi ),8 );
+
+			// pack and return result
+			return _mm_packus_epi16( ab_lo,ab_hi );
+		};
+
+		// upsize for top and bottom edge cases
+		const auto UpsizeEdge = [&]( const __m128i* pIn,const __m128i* pInEnd,__m128i* pOutTop,
+			__m128i* pOutBottom )
+		{
+			__m128i in = _mm_load_si128( pIn++ );
+			// left corner setup (prime the alignment pump)
+			__m128i oldPix = _mm_shuffle_epi32( in,_MM_SHUFFLE( 0,0,0,0 ) );
+
+			// main loop
+			while( true )
+			{
+				// gradient 0-1
+				__m128i newPix = GenerateGradient( in );
+				__m128i out = AlignRightSSE2<8>( newPix,oldPix );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+
+				// gradient 1-2
+				newPix = GenerateGradient( _mm_srli_si128( in,1 ) );
+				out = AlignRightSSE2<8>( newPix,oldPix );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+
+				// gradient 2-3
+				newPix = GenerateGradient( _mm_srli_si128( in,2 ) );
+				out = AlignRightSSE2<8>( newPix,oldPix );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+
+				// end condition
+				if( pIn >= pInEnd )
+				{
+					break;
+				}
+
+				// gradient 3-0'
+				const __m128i newIn = _mm_load_si128( pIn++ );
+				newPix = GenerateGradient( AlignRightSSE2<12>( newIn,in ) );
+				out = AlignRightSSE2<8>( newPix,oldPix );
+				*pOutTop = _mm_adds_epu8( *pOutTop,out );
+				*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				pOutTop++;
+				pOutBottom++;
+				oldPix = newPix;
+				in = newIn;
+			}
+
+			// right corner
+			const __m128i out = AlignRightSSE2<8>( _mm_shuffle_epi32( in,_MM_SHUFFLE( 3,3,3,3 ) ),oldPix );
+			*pOutTop = _mm_adds_epi8( *pOutTop,out );
+			*pOutBottom = _mm_adds_epi8( *pOutBottom,out );
+		};
+
+		// hold values from last iteration
+		__m128i old0;
+		__m128i old1;
+		__m128i old2;
+		__m128i old3;
+
+		// interpolate horizontally between first 2 pixels of inputs and then vertically
+		const auto VerticalGradientOutput = [&]( __m128i in0,__m128i in1,
+			__m128i* pOut0,__m128i* pOut1,__m128i* pOut2,__m128i* pOut3 )
+		{
+			const __m128i topGrad = GenerateGradient( in0 );
+			const __m128i bottomGrad = GenerateGradient( in1 );
+
+			// generate points between top and bottom pixel arrays
+			const __m128i half = _mm_avg_epu8( topGrad,bottomGrad );
+
+			{
+				// first quarter needed for top half
+				const __m128i firstQuarter = _mm_avg_epu8( topGrad,half );
+
+				// generate 1/8 pt from top to bottom
+				const __m128i firstEighth = _mm_avg_epu8( topGrad,firstQuarter );
+				// combine old 1/8 pt and new and add to original image with saturation
+				*pOut0 = _mm_adds_epu8( *pOut0,AlignRightSSE2<8>( firstEighth,old0 ) );
+				old0 = firstEighth;
+
+				// generate 3/8 pt from top to bottom
+				const __m128i thirdEighth = _mm_avg_epu8( firstQuarter,half );
+				// combine old 3/8 pt and new and add to original image with saturation
+				*pOut1 = _mm_adds_epu8( *pOut1,AlignRightSSE2<8>( thirdEighth,old1 ) );
+				old1 = thirdEighth;
+			}
+
+			{
+				// third quarter needed for bottom half
+				const __m128i thirdQuarter = _mm_avg_epu8( half,bottomGrad );
+
+				// generate 5/8 pt from top to bottom
+				const __m128i fifthEighth = _mm_avg_epu8( half,thirdQuarter );
+				// combine old 5/8 pt and new and add to original image with saturation
+				*pOut2 = _mm_adds_epu8( *pOut2,AlignRightSSE2<8>( fifthEighth,old2 ) );
+				old2 = fifthEighth;
+
+				// generate 7/8 pt from top to bottom
+				const __m128i seventhEighth = _mm_avg_epu8( thirdQuarter,bottomGrad );
+				// combine old 7/8 pt and new and add to original image with saturation
+				*pOut3 = _mm_adds_epu8( *pOut3,AlignRightSSE2<8>( seventhEighth,old3 ) );
+				old3 = seventhEighth;
+			}
+		};
+
+		// upsize for middle cases
+		const auto DoLine = [&]( const __m128i* pIn0,const __m128i* pIn1,
+			__m128i* pOut0,__m128i* pOut1,__m128i* pOut2,__m128i* pOut3 )
+		{
+			const auto pEnd = pIn1;
+			__m128i in0 = _mm_load_si128( pIn0++ );
+			__m128i in1 = _mm_load_si128( pIn1++ );
+
+			// left side prime pump
+			{
+				const __m128i top = _mm_shuffle_epi32( in0,_MM_SHUFFLE( 0,0,0,0 ) );
+				const __m128i bottom = _mm_shuffle_epi32( in1,_MM_SHUFFLE( 0,0,0,0 ) );
+
+				const __m128i middle = _mm_avg_epu8( top,bottom );
+				const __m128i eighth = _mm_avg_epu8( top,_mm_avg_epu8( top,middle ) );
+				const __m128i distEighth = _mm_subs_epu8( eighth,top );
+
+				old0 = eighth;
+				old1 = _mm_subs_epu8( middle,distEighth );
+				old2 = _mm_adds_epu8( middle,distEighth );
+				old3 = _mm_subs_epu8( bottom,distEighth );
+			}
+
+			// main loop
+			while( true )
+			{
+				// gradient 0-1
+				VerticalGradientOutput( in0,in1,pOut0++,pOut1++,pOut2++,pOut3++ );
+
+				// gradient 1-2
+				VerticalGradientOutput(
+					_mm_srli_si128( in0,4 ),
+					_mm_srli_si128( in1,4 ),
+					pOut0++,pOut1++,pOut2++,pOut3++ );
+
+				// gradient 2-3
+				VerticalGradientOutput(
+					_mm_srli_si128( in0,8 ),
+					_mm_srli_si128( in1,8 ),
+					pOut0++,pOut1++,pOut2++,pOut3++ );
+
+				// end condition
+				if( pIn0 >= pEnd )
+				{
+					break;
+				}
+
+				// gradient 3-0'
+				const __m128i newIn0 = _mm_load_si128( pIn0++ );
+				const __m128i newIn1 = _mm_load_si128( pIn1++ );
+				VerticalGradientOutput(
+					AlignRightSSE2<12>( newIn0,in0 ),
+					AlignRightSSE2<12>( newIn1,in1 ),
+					pOut0++,pOut1++,pOut2++,pOut3++ );
+				in0 = newIn0;
+				in1 = newIn1;
+			}
+
+			// right side finish pump
+			{
+				const __m128i top = _mm_shuffle_epi32( _mm_srli_si128( in0,12 ),
+					_MM_SHUFFLE( 0,0,0,0 ) );
+				const __m128i bottom = _mm_shuffle_epi32( _mm_srli_si128( in1,12 ),
+					_MM_SHUFFLE( 0,0,0,0 ) );
+
+				const __m128i middle = _mm_avg_epu8( top,bottom );
+				const __m128i eighth = _mm_avg_epu8( top,_mm_avg_epu8( top,middle ) );
+				const __m128i distEighth = _mm_subs_epu8( eighth,top );
+
+				*pOut0 = _mm_adds_epu8( *pOut0,AlignRightSSE2<8>( eighth,old0 ) );
+				*pOut1 = _mm_adds_epu8( *pOut1,AlignRightSSE2<8>(
+					_mm_subs_epu8( middle,distEighth ),old0 ) );
+				*pOut2 = _mm_adds_epu8( *pOut2,AlignRightSSE2<8>(
+					_mm_adds_epu8( middle,distEighth ),old0 ) );
+				*pOut3 = _mm_adds_epu8( *pOut3,AlignRightSSE2<8>(
+					_mm_subs_epu8( bottom,distEighth ),old0 ) );
+			}
+		};
+
+		// do top line
+		UpsizeEdge(
+			reinterpret_cast<const __m128i*>( hBuffer.GetBufferConst() ),
+			reinterpret_cast<const __m128i*>( &hBuffer.GetBufferConst()[hBuffer.GetWidth()] ),
+			reinterpret_cast<__m128i*>( input.GetBuffer() ),
+			reinterpret_cast<__m128i*>( &input.GetBuffer()[input.GetWidth()] ) );
+
+		// constants for line loop pointer arithmetic
+		const size_t inWidthScalar = hBuffer.GetWidth();
+		const size_t outWidthScalar = input.GetWidth();
+
+		// setup pointers for resizing line loop
+		const __m128i* pIn0 = reinterpret_cast<const __m128i*>(
+			hBuffer.GetBufferConst() );
+		const __m128i* pIn1 = reinterpret_cast<const __m128i*>(
+			&hBuffer.GetBufferConst()[inWidthScalar] );
+		const __m128i* pEnd = reinterpret_cast<const __m128i*>(
+			&hBuffer.GetBufferConst()[inWidthScalar * ( hBuffer.GetHeight() - 2u )] );
+		__m128i* pOut0 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 2u] );
+		__m128i* pOut1 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 3u] );
+		__m128i* pOut2 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 4u] );
+		__m128i* pOut3 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 5u] );
+
+		const size_t inStep = pIn1 - pIn0;
+		// no overlap in output
+		const size_t outStep = ( pOut1 - pOut0 ) * 4u;
+
+		// do middle lines
+		for( ; pIn0 < pEnd; pIn0 += inStep,pIn1 += inStep,
+			pOut0 += outStep,pOut1 += outStep,pOut2 += outStep,pOut3 += outStep )
+		{
+			DoLine( pIn0,pIn1,pOut0,pOut1,pOut2,pOut3 );
+		}
+
+		// do bottom line
+		UpsizeEdge(
+			reinterpret_cast<const __m128i*>(
+			&hBuffer.GetBufferConst()[inWidthScalar * ( hBuffer.GetHeight() - 1u )] ),
+			reinterpret_cast<const __m128i*>(
+			&hBuffer.GetBufferConst()[inWidthScalar * hBuffer.GetHeight()] ),
+			reinterpret_cast<__m128i*>(
 			&input.GetBuffer()[outWidthScalar * ( input.GetHeight() - 2u )] ),
 			reinterpret_cast<__m128i*>(
 			&input.GetBuffer()[outWidthScalar * ( input.GetHeight() - 1u )] ) );
@@ -1567,6 +1910,7 @@ private:
 	std::function<void( BloomProcessor* )> DownsizePassFunc;
 	std::function<void( BloomProcessor* )> HorizontalPassFunc;
 	std::function<void( BloomProcessor* )> VerticalPassFunc;
+	std::function<void( BloomProcessor* )> UpsizeBlendPassFunc;
 	// benchmarking
 	FrameTimer timer;
 	std::wofstream log;
