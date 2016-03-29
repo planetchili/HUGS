@@ -193,8 +193,8 @@ private:
 				// add high and low pixel channel sums
 				sum = _mm_add_epi16( sum,_mm_srli_si128( sum,8u ) );
 
-				// divide channel sums by 64
-				sum = _mm_srli_epi16( sum,6u );
+				// divide channel sums by 256
+				sum = _mm_srli_epi16( sum,8u );
 
 				// pack word channels to bytes and store in output buffer
 				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum,sum ) );
@@ -473,8 +473,8 @@ private:
 				// add low and high accumulators
 				sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
-				// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
-				sum16 = _mm_srli_epi16( sum16,6 );
+				// divide by 64 (16 x 32 = 512 in total / 4x overdrive factor)
+				sum16 = _mm_srli_epi16( sum16,5 );
 
 				// pack result and output to buffer
 				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
@@ -619,8 +619,8 @@ private:
 					// add low and high accumulators
 					sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
-					// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
-					sum16 = _mm_srli_epi16( sum16,6 );
+					// divide by 64 (16 x 32 = 512 in total / 4x overdrive factor)
+					sum16 = _mm_srli_epi16( sum16,5 );
 
 					// pack result and output to buffer
 					*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
@@ -746,8 +746,8 @@ private:
 					Process( windowPtrIn,sumLo,sumHi,coefMask );
 				}
 
-				sumHi = _mm_srli_epi16( sumHi,6 );
-				sumLo = _mm_srli_epi16( sumLo,6 );
+				sumHi = _mm_srli_epi16( sumHi,5 );
+				sumLo = _mm_srli_epi16( sumLo,5 );
 
 				_mm_store_si128( rowPtrOut,_mm_packus_epi16( sumLo,sumHi ) );
 			}
@@ -870,8 +870,8 @@ private:
 				windowPtrIn += rowDeltaXmm;
 				CONVOLUTE_STEP_VERTICAL_BLUR( sumLo,sumHi,windowPtrIn,15 );
 
-				sumHi = _mm_srli_epi16( sumHi,6 );
-				sumLo = _mm_srli_epi16( sumLo,6 );
+				sumHi = _mm_srli_epi16( sumHi,5 );
+				sumLo = _mm_srli_epi16( sumLo,5 );
 
 				_mm_store_si128( rowPtrOut,_mm_packus_epi16( sumLo,sumHi ) );
 			}
@@ -1902,7 +1902,7 @@ private:
 private:
 	static const unsigned int diameter = 16u;
 	__declspec( align( 16 ) ) unsigned char kernel[diameter];
-	unsigned int divisorKernel = 1024u;
+	unsigned int divisorKernel = 512u; // 4x overdrive
 	Surface& input;
 	Surface hBuffer;
 	Surface vBuffer;
