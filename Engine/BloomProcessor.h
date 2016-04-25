@@ -603,7 +603,7 @@ private:
 					sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
 					// divide by 64 (16 x 32 = 512 in total / 4x overdrive factor)
-					sum16 = _mm_srli_epi16( sum16,5 );
+					sum16 = _mm_srli_epi16( sum16,6 );
 
 					// pack result and output to buffer
 					*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
@@ -1003,8 +1003,8 @@ private:
 
 			// right corner
 			const __m128i out = _mm_alignr_epi8( _mm_shuffle_epi32( in,_MM_SHUFFLE( 3,3,3,3 ) ),oldPix,8 );
-			*pOutTop = _mm_adds_epi8( *pOutTop,out );
-			*pOutBottom = _mm_adds_epi8( *pOutBottom,out );
+			*pOutTop = _mm_adds_epu8( *pOutTop,out );
+			*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
 		};
 
 		// hold values from last iteration
@@ -1333,8 +1333,8 @@ private:
 
 			// right corner
 			const __m128i out = AlignRightSSE2<8>( _mm_shuffle_epi32( in,_MM_SHUFFLE( 3,3,3,3 ) ),oldPix );
-			*pOutTop = _mm_adds_epi8( *pOutTop,out );
-			*pOutBottom = _mm_adds_epi8( *pOutBottom,out );
+			*pOutTop = _mm_adds_epu8( *pOutTop,out );
+			*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
 		};
 
 		// hold values from last iteration
