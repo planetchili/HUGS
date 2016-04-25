@@ -136,14 +136,6 @@ public:
 	
 	void DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,const RectI& clip,Color c );
 	void DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
-	void Set86()
-	{
-		processor.SetUpsizeX86();
-	}
-	void SetSSE()
-	{
-		processor.SetUpsizeSSE();
-	}
 private:
 	void DrawFlatTopTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
 	void DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );

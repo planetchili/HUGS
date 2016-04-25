@@ -52,15 +52,6 @@ void Game::UpdateModel( float dt )
 {
 	//input.di.GetPad().Update();
 
-	if( input.kbd.KeyIsPressed( VK_HOME ) )
-	{
-		gfx.Set86();
-	}
-	else if( input.kbd.KeyIsPressed( VK_END ) )
-	{
-		gfx.SetSSE();
-	}
-
 	try
 	{
 		pScreen->HandleInput();
@@ -74,25 +65,7 @@ void Game::UpdateModel( float dt )
 
 void Game::ComposeFrame()
 {
-	auto p = Vec2( 256.0f,256.0f );
 	pScreen->DrawPreBloom( gfx );
-	//const auto r = gfx.GetViewRegion();
-	//gfx.PutPixel( p.x + 32,p.y + 32,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 33,p.y + 32,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 34,p.y + 32,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 35,p.y + 32,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 32,p.y + 33,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 33,p.y + 33,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 34,p.y + 33,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 35,p.y + 33,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 32,p.y + 34,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 33,p.y + 34,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 34,p.y + 34,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 35,p.y + 34,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 32,p.y + 35,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 33,p.y + 35,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 34,p.y + 35,{ WHITE,255 } );
-	//gfx.PutPixel( p.x + 35,p.y + 35,{ WHITE,255 } );
 	gfx.ProcessBloom();
 	pScreen->DrawPostBloom( gfx );
 }
