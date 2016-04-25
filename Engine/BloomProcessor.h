@@ -100,8 +100,10 @@ public:
 		HorizontalPass();
 		//vBuffer.Save( L"shot_2h.bmp" );
 		VerticalPass();
-		//hBuffer.Save( L"shot_3v.bmp" );
+		hBuffer.Save( L"shot_in.bmp" );
 		UpsizeBlendPass();
+		input.Save( L"shot_out.bmp" );
+
 		//if( timer.StopFrame() )
 		//{
 		//	log << timer.GetAvg() << std::endl;
@@ -474,7 +476,7 @@ private:
 				sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
 				// divide by 64 (16 x 32 = 512 in total / 4x overdrive factor)
-				sum16 = _mm_srli_epi16( sum16,5 );
+				sum16 = _mm_srli_epi16( sum16,6 );
 
 				// pack result and output to buffer
 				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
@@ -914,25 +916,12 @@ private:
 	}
 	void _UpsizeBlendPassSSSE3()
 	{
-#ifdef NDEBUG
-	#pragma warning( push )
-	#pragma warning( disable : 4700 )
-		const auto _mm_set128_epi16 = []()
+		const auto _mm_set128_epi16 = []( __m128i dummy )
 		{
-			__m128i x = _mm_cmpeq_epi16( x,x );
+			__m128i x = _mm_cmpeq_epi16( dummy,dummy );
 			x = _mm_srli_epi16( x,15 );
 			return _mm_slli_epi16( x,7 );
 		};
-	#pragma warning( pop )
-#else
-		const auto _mm_set128_epi16 = []()
-		{
-			__m128i x = _mm_setzero_si128();
-			x = _mm_cmpeq_epi16( x,x );
-			x = _mm_srli_epi16( x,15 );
-			return _mm_slli_epi16( x,7 );
-		};
-#endif
 
 		const __m128i zero = _mm_setzero_si128();
 		__m128i grad_coef = _mm_set_epi16( 160u,160u,160u,160u,224u,224u,224u,224u );
@@ -948,7 +937,7 @@ private:
 			// multiply input by decreasing coeffients (lower pixels)
 			const __m128i prod_a_lo = _mm_mullo_epi16( in_a,grad_coef );
 			// transform decreasing coef to lower range (for high pixels)
-			grad_coef = _mm_sub_epi16( grad_coef,_mm_set128_epi16() );
+			grad_coef = _mm_sub_epi16( grad_coef,_mm_set128_epi16( grad_coef ) );
 			// multiply input by decreasing coeffients (higher pixels)
 			const __m128i prod_a_hi = _mm_mullo_epi16( in_a,grad_coef );
 
@@ -959,7 +948,7 @@ private:
 			// multiply input by increasing coeffients (lower pixels)
 			const __m128i prod_b_lo = _mm_mullo_epi16( in_b,grad_coef );
 			// transform increasing coef to higher range (for high pixels)
-			grad_coef = _mm_add_epi16( grad_coef,_mm_set128_epi16() );
+			grad_coef = _mm_add_epi16( grad_coef,_mm_set128_epi16( grad_coef ) );
 			// multiply input by increasing coeffients (higher pixels)
 			const __m128i prod_b_hi = _mm_mullo_epi16( in_b,grad_coef );
 
@@ -1098,17 +1087,34 @@ private:
 
 			// left side prime pump
 			{
+				// left edge clamps to left most pixel
 				const __m128i top = _mm_shuffle_epi32( in0,_MM_SHUFFLE( 0,0,0,0 ) );
 				const __m128i bottom = _mm_shuffle_epi32( in1,_MM_SHUFFLE( 0,0,0,0 ) );
-				
-				const __m128i middle = _mm_avg_epu8( top,bottom );
-				const __m128i eighth = _mm_avg_epu8( top,_mm_avg_epu8( top,middle ) );
-				const __m128i distEighth = _mm_subs_epu8( eighth,top );
 
-				old0 = eighth;
-				old1 = _mm_subs_epu8( middle,distEighth );
-				old2 = _mm_adds_epu8( middle,distEighth );
-				old3 = _mm_subs_epu8( bottom,distEighth );
+				// generate points between top and bottom pixel arrays
+				const __m128i half = _mm_avg_epu8( top,bottom );
+
+				{
+					// first quarter needed for top half
+					const __m128i firstQuarter = _mm_avg_epu8( top,half );
+
+					// generate 1/8 pt from top to bottom
+					old0 = _mm_avg_epu8( top,firstQuarter );
+
+					// generate 3/8 pt from top to bottom
+					old1 = _mm_avg_epu8( firstQuarter,half );
+				}
+
+				{
+					// third quarter needed for bottom half
+					const __m128i thirdQuarter = _mm_avg_epu8( half,bottom );
+
+					// generate 5/8 pt from top to bottom
+					old2 = _mm_avg_epu8( half,thirdQuarter );
+
+					// generate 7/8 pt from top to bottom
+					old3 = _mm_avg_epu8( thirdQuarter,bottom );
+				}
 			}
 
 			// main loop
@@ -1177,12 +1183,15 @@ private:
 		// constants for line loop pointer arithmetic
 		const size_t inWidthScalar = hBuffer.GetWidth();
 		const size_t outWidthScalar = input.GetWidth();
+		const size_t inFringe = diameter / 2u;
 
+		// need to process only the pertainent region of input and output
+		//    (more complicated pointer arithmetic)
 		// setup pointers for resizing line loop
 		const __m128i* pIn0 = reinterpret_cast<const __m128i*>( 
-			hBuffer.GetBufferConst() );
+			hBuffer.GetBufferConst() + inFringe );
 		const __m128i* pIn1 = reinterpret_cast<const __m128i*>(
-			&hBuffer.GetBufferConst()[inWidthScalar] );
+			&hBuffer.GetBufferConst()[inWidthScalar + inFringe] );
 		const __m128i* pEnd = reinterpret_cast<const __m128i*>(
 			&hBuffer.GetBufferConst()[inWidthScalar * ( hBuffer.GetHeight() - 2u )] );
 		__m128i* pOut0 = reinterpret_cast<__m128i*>( &input.GetBuffer()[outWidthScalar * 2u] );
@@ -1193,6 +1202,10 @@ private:
 		const size_t inStep = pIn1 - pIn0;
 		// no overlap in output
 		const size_t outStep = (pOut1 - pOut0) * 4u;
+
+		// debug line pointer
+		const size_t debugLine = 118u;
+		const __m128i* const pDebug = pIn0 + ( inStep * debugLine );
 
 		// do middle lines
 		for( ; pIn0 < pEnd; pIn0 += inStep,pIn1 += inStep,
