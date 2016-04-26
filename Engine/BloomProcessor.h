@@ -76,6 +76,27 @@ public:
 	{
 		UpsizeBlendPassFunc( this );
 	}
+	void SetSSE2Mode()
+	{
+		DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSE2 );
+		HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSE2 );
+		VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSE2 );
+		UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSE2 );
+	}
+	void SetSSSE3Mode()
+	{
+		DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSSE3 );
+		HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSSE3 );
+		VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSSE3 );
+		UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSSE3 );
+	}
+	void SetX86Mode()
+	{
+		DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassX86 );
+		HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassX86 );
+		VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassX86 );
+		UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassX86 );
+	}
 	void Go()
 	{
 		timer.StartFrame();
@@ -101,6 +122,12 @@ private:
 		const __m128i top = _mm_slli_si128( hi,16 - shift );
 		const __m128i bot = _mm_srli_si128( lo,shift );
 		return _mm_or_si128( top,bot );
+	}
+	static __m128i _mm_set128_epi16( const __m128i dummy )
+	{
+		__m128i x = _mm_cmpeq_epi16( dummy,dummy );
+		x = _mm_srli_epi16( x,15 );
+		return _mm_slli_epi16( x,7 );
 	}
 	static unsigned int GetKernelCenter()
 	{
@@ -313,6 +340,7 @@ private:
 	{
 		// useful constants
 		const __m128i zero = _mm_setzero_si128();
+		
 
 		// routines
 		auto Process8Pixels = [zero]( const __m128i srclo,const __m128i srchi,const __m128i coef )
@@ -433,8 +461,8 @@ private:
 					// add low and high accumulators
 					sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
-					// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
-					sum16 = _mm_srli_epi16( sum16,6 );
+					// divide by 32 (16 x 32 = 512 in total / 4x overdrive factor)
+					sum16 = _mm_srli_epi16( sum16,5 );
 
 					// pack result and output to buffer
 					*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
@@ -456,8 +484,8 @@ private:
 				// add low and high accumulators
 				sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
-				// divide by 64 (16 x 32 = 512 in total / 4x overdrive factor)
-				sum16 = _mm_srli_epi16( sum16,6 );
+				// divide by 32 (16 x 32 = 512 in total / 4x overdrive factor)
+				sum16 = _mm_srli_epi16( sum16,5 );
 
 				// pack result and output to buffer
 				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
@@ -469,9 +497,6 @@ private:
 	{
 		// useful constants
 		const __m128i zero = _mm_setzero_si128();
-		// masks for shifting through convolution window
-		const __m128i maskHi = _mm_set_epi32( 0xFFFFFFFF,0x00000000,0x00000000,0x00000000 );
-		const __m128i maskLo = _mm_set_epi32( 0x00000000,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF );
 
 		// routines
 		auto Process8Pixels = [=]( const __m128i srclo,const __m128i srchi,const __m128i coef )
@@ -500,7 +525,7 @@ private:
 				// unpack two pixel byte->word components into src from lo end of srclo
 				const __m128i src = _mm_unpackhi_epi8( srclo,zero );
 
-				// broadcast coefficients 1,0 to top and bottom 4 words
+				// broadcast coefficients 3,2 to top and bottom 4 words
 				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
 				const __m128i co = _mm_shuffle_epi32( _mm_shufflelo_epi16(
 					coef,_MM_SHUFFLE( 3,3,2,2 ) ),_MM_SHUFFLE( 1,1,0,0 ) );
@@ -517,7 +542,7 @@ private:
 				// unpack two pixel byte->word components into src from lo end of srchi
 				const __m128i src = _mm_unpacklo_epi8( srchi,zero );
 
-				// broadcast coefficients 1,0 to top and bottom 4 words
+				// broadcast coefficients 5,4 to top and bottom 4 words
 				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
 				const __m128i co = _mm_shuffle_epi32( _mm_shufflehi_epi16(
 					coef,_MM_SHUFFLE( 1,1,0,0 ) ),_MM_SHUFFLE( 3,3,2,2 ) );
@@ -534,7 +559,7 @@ private:
 				// unpack two pixel byte->word components into src from lo end of srchi
 				const __m128i src = _mm_unpackhi_epi8( srchi,zero );
 
-				// broadcast coefficients 1,0 to top and bottom 4 words
+				// broadcast coefficients 7,6 to top and bottom 4 words
 				// (first duplicate WORD coeffients in low DWORDS, then shuffle by DWORDS)
 				const __m128i co = _mm_shuffle_epi32( _mm_shufflehi_epi16(
 					coef,_MM_SHUFFLE( 3,3,2,2 ) ),_MM_SHUFFLE( 3,3,2,2 ) );
@@ -548,15 +573,15 @@ private:
 			}
 			return sum;
 		};
-		// the lo must be pre-rotated 32-bit (to allow chaining)
+		// the lo must be pre-shifted 32-bit (to allow chaining)
 		auto Shift256 = [=]( __m128i& lo,__m128i& hi )
 		{
-			// rotate second lowest pixel in hi to lowest position (lowest goes to top)
-			hi = _mm_shuffle_epi32( hi,_MM_SHUFFLE( 0,3,2,1 ) );
-			// clear high pixel of convolution window lo
-			lo = _mm_and_si128( lo,maskLo );
+			// move carry out dword to high position for masking into lo
+			const __m128i carry = _mm_slli_si128( hi,12 );
+			// shift hi down by a dword
+			hi = _mm_srli_si128( hi,4 );
 			// copy high pixel from hi to high pixel location in lo
-			lo = _mm_or_si128( lo,_mm_and_si128( hi,maskHi ) );
+			lo = _mm_or_si128( lo,carry );
 		};
 
 		// indexing constants
@@ -602,15 +627,15 @@ private:
 					// add low and high accumulators
 					sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
-					// divide by 64 (16 x 32 = 512 in total / 4x overdrive factor)
-					sum16 = _mm_srli_epi16( sum16,6 );
+					// divide by 32 (16 x 32 = 512 in total / 4x overdrive factor)
+					sum16 = _mm_srli_epi16( sum16,5 );
 
 					// pack result and output to buffer
 					*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
 
 					// shift pixels from deck through convolution window
-					// pre-rotate src0 to begin chaining
-					src0 = _mm_shuffle_epi32( src0,_MM_SHUFFLE( 0,3,2,1 ) );
+					// pre-shift src0 to begin chaining
+					src0 = _mm_srli_si128( src0,4 );
 					// 640-bit chained shift
 					Shift256( src0,src1 );
 					Shift256( src1,src2 );
@@ -627,8 +652,8 @@ private:
 				// add low and high accumulators
 				sum16 = _mm_add_epi16( sum16,_mm_srli_si128( sum16,8 ) );
 
-				// divide by 64 (16 x 64 = 1024 in total / 2x overdrive factor)
-				sum16 = _mm_srli_epi16( sum16,6 );
+				// divide by 32 (16 x 32 = 512 in total / 4x overdrive factor)
+				sum16 = _mm_srli_epi16( sum16,5 );
 
 				// pack result and output to buffer
 				*pOut = _mm_cvtsi128_si32( _mm_packus_epi16( sum16,sum16 ) );
@@ -897,13 +922,6 @@ private:
 	}
 	void _UpsizeBlendPassSSSE3()
 	{
-		const auto _mm_set128_epi16 = []( const __m128i dummy )
-		{
-			__m128i x = _mm_cmpeq_epi16( dummy,dummy );
-			x = _mm_srli_epi16( x,15 );
-			return _mm_slli_epi16( x,7 );
-		};
-
 		const __m128i zero = _mm_setzero_si128();
 		__m128i grad_coef = _mm_set_epi16( 160u,160u,160u,160u,224u,224u,224u,224u );
 
@@ -1227,13 +1245,6 @@ private:
 	}
 	void _UpsizeBlendPassSSE2()
 	{
-		const auto _mm_set128_epi16 = []( const __m128i dummy )
-		{
-			__m128i x = _mm_cmpeq_epi16( dummy,dummy );
-			x = _mm_srli_epi16( x,15 );
-			return _mm_slli_epi16( x,7 );
-		};
-
 		const __m128i zero = _mm_setzero_si128();
 		__m128i grad_coef = _mm_set_epi16( 160u,160u,160u,160u,224u,224u,224u,224u );
 

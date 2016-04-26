@@ -142,7 +142,7 @@ public:
 	}
 
 private:
-	Color wallColor = { 192,165,70,220 };
+	Color wallColor = { 102,136,52,220 };
 	TrackRegionManager tMan;
 	const float wallWidth = 40.0f;
 	Vec2 startPosition;

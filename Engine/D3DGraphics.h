@@ -81,6 +81,18 @@ public:
 	{
 		processor.Go();
 	}
+	inline void SetBloomModeX86()
+	{
+		processor.SetX86Mode();
+	}
+	inline void SetBloomModeSSE2()
+	{
+		processor.SetSSE2Mode();
+	}
+	inline void SetBloomModeSSSE3()
+	{
+		processor.SetSSSE3Mode();
+	}
 	
 	template< typename T >
 	inline void DrawRectangleAlpha( const _Rect<T>& rect,Color c )

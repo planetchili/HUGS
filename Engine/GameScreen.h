@@ -97,7 +97,7 @@ public:
 		}
 		else
 		{
-			//padCtrl.Process();
+			padCtrl.Process();
 			kbdCtrl.Process();
 		}
 	}

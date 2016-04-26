@@ -226,7 +226,7 @@ private:
 
 	// structural
 	TexturedQuad shipQuad;
-	const Color shieldColor = { GREEN,160u };
+	const Color shieldColor = { GREEN,196u };
 
 	// linear
 	float thrustForce = 1200.0f;
