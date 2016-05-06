@@ -357,6 +357,17 @@ public:
 	{
 		return *pPad;
 	}
+	bool PadExists() const
+	{
+		return bool( pPad );
+	}
+	void UpdatePads()
+	{
+		if( pPad )
+		{
+			pPad->Update();
+		}
+	}
 private:
 	static BOOL CALLBACK
 		DeviceEnumCallback( const DIDEVICEINSTANCE* instance,VOID* context )

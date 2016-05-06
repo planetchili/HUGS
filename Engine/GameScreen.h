@@ -47,10 +47,13 @@ public:
 		arialFont( L"Arial",20 ),
 		lapDisplay( ship,{ 860.0f,15.0f } ),
 		input( input ),
-		gfx( gfx ),
-		kbdCtrl( ship,input.kbd ),
-		padCtrl( ship,input.di.GetPad() )
+		gfx( gfx )
 	{
+		controllers.push_back( std::make_unique<ShipControllerKeyboard>( ship,input.kbd ) );
+		if( input.di.PadExists() )
+		{
+			controllers.push_back( std::make_unique<ShipControllerGamepad>( ship,input.di.GetPad() ) );
+		}
 		ship.AddObserver( deathListener );
 		ship.FocusOn( cam );
 		starscape.LockToCam();
@@ -104,8 +107,10 @@ public:
 		}
 		else
 		{
-			padCtrl.Process();
-			kbdCtrl.Process();
+			for( const auto& c : controllers )
+			{
+				c->Process();
+			}
 		}
 	}
 private:
@@ -120,6 +125,5 @@ private:
 	Font timesFont;
 	Font arialFont;
 	LapDisplay lapDisplay;
-	ShipControllerKeyboard kbdCtrl;
-	ShipControllerGamepad padCtrl;
+	std::vector<std::unique_ptr<ShipController>> controllers;
 };

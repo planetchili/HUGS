@@ -50,7 +50,7 @@ void Game::Go()
 
 void Game::UpdateModel( float dt )
 {
-	input.di.GetPad().Update();
+	input.di.UpdatePads();
 
 	try
 	{
