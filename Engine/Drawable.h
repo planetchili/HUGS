@@ -20,6 +20,7 @@ public:
 		clip.ClipTo( rect );
 	}
 	virtual void Rasterize( class D3DGraphics& gfx ) const = 0;
+	virtual ~Drawable() {}
 protected:
 	Mat3 trans;
 	RectF clip;

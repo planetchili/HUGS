@@ -20,6 +20,10 @@ public:
 	{
 		pos = newPos - toCenter;
 	}
+	Vec2 GetPos() const
+	{
+		return pos;
+	}
 
 private:
 	DrawTarget& next;

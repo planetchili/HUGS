@@ -211,6 +211,7 @@
     <ClInclude Include="ShipControllerKeyboard.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="SoundEffect.h" />
+    <ClInclude Include="Starfield.h" />
     <ClInclude Include="Surface.h" />
     <ClInclude Include="TexturedQuad.h" />
     <ClInclude Include="Timer.h" />

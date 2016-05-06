@@ -13,6 +13,7 @@
 #include "ShipControllerKeyboard.h"
 #include "ShipControllerGamepad.h"
 #include "InputSystem.h"
+#include "Starfield.h"
 
 class GameScreen : public Screen
 {
@@ -40,6 +41,7 @@ public:
 		port( gfx,{ 0.0f,float( gfx.GetHeight() - 1u ),0.0f,float( gfx.GetWidth() - 1u ) },
 			gfx.GetViewRegion() ),
 		cam( port,port.GetWidth(),port.GetHeight() ),
+		starscape( cam,port ),
 		meter( { 20,45,20,int( port.GetWidth() / 4.0f ) },ship ),
 		timesFont( L"Times New Roman",60 ),
 		arialFont( L"Arial",20 ),
@@ -50,6 +52,8 @@ public:
 		padCtrl( ship,input.di.GetPad() )
 	{
 		ship.AddObserver( deathListener );
+		ship.FocusOn( cam );
+		starscape.LockToCam();
 	}
 	virtual void Update( float dt ) override
 	{
@@ -59,9 +63,12 @@ public:
 			map.TestCollision( ship );
 		}
 		map.Update( dt );
+		starscape.Update();
 	}
 	virtual void DrawPreBloom( D3DGraphics& gfx ) override
 	{
+		port.Draw( starscape.GetDrawable() );
+
 		if( !deathListener.IsDead() )
 		{
 			ship.FocusOn( cam );
@@ -109,6 +116,7 @@ private:
 	Map map;
 	Ship ship;
 	ShieldMeter meter;
+	Starscape starscape;
 	Font timesFont;
 	Font arialFont;
 	LapDisplay lapDisplay;

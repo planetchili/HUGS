@@ -25,6 +25,14 @@ public:
 	{
 		return view.GetHeight();
 	}
+	float GetClipWidth() const
+	{
+		return clip.GetWidth();
+	}
+	float GetClipHeight() const
+	{
+		return clip.GetHeight();
+	}
 
 private:
 	DrawTarget& next;
