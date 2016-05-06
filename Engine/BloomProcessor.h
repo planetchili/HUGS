@@ -16,8 +16,7 @@ public:
 		:
 		input( input ),
 		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
-		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
-		log( L"bloomlog.txt" )
+		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 )
 	{
 		float kernelFloat[diameter];
 		for( int x = 0; x < diameter; x++ )
@@ -38,26 +37,16 @@ public:
 		{
 			if( InstructionSet::SSSE3() )
 			{
-				// std::mem_fn only needed as a workaround for MSVC bug :/
-				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSSE3 );
-				HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSSE3 );
-				VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSSE3 );
-				UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSSE3 );
+				SetSSSE3Mode();
 			}
 			else
 			{
-				DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSE2 );
-				HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSE2 );
-				VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSE2 );
-				UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSE2 );
+				SetSSE2Mode();
 			}
 		}
 		else
 		{
-			DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassX86 );
-			HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassX86 );
-			VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassX86 );
-			UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassX86 );
+			SetX86Mode();
 		}
 	}
 	void DownsizePass()
@@ -99,17 +88,10 @@ public:
 	}
 	void Go()
 	{
-		timer.StartFrame();
-
 		DownsizePass();
 		HorizontalPass();
 		VerticalPass();
 		UpsizeBlendPass();
-
-		if( timer.StopFrame() )
-		{
-			log << timer.GetAvg() << std::endl;
-		}
 	}
 	static unsigned int GetFringeSize()
 	{
@@ -1965,7 +1947,4 @@ private:
 	std::function<void( BloomProcessor* )> HorizontalPassFunc;
 	std::function<void( BloomProcessor* )> VerticalPassFunc;
 	std::function<void( BloomProcessor* )> UpsizeBlendPassFunc;
-	// benchmarking
-	FrameTimer timer;
-	std::wofstream log;
 };
