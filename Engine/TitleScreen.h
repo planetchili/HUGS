@@ -124,8 +124,8 @@ private:
 	public:
 		StartMenu( TitleScreen& parent )
 			:
-			Menu( { 512,560 },400,15,40,{ 210,18,18,30 },
-			L"Arial",BLACK,{ 80u,128,128,255 },{ 70u,52,52,72 },2 ),
+			Menu( { 512,560 },400,15,40,{ 210u,10,10,18 },
+			L"Arial",BLACK,{ 24u,128,128,255 },{ 16u,52,52,72 },2 ),
 			parent( parent )
 		{
 			AddItem( std::make_unique<StartButton>( *this ) );
