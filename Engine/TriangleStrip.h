@@ -38,7 +38,7 @@ public:
 		:
 		vertices( vList )
 	{}
-	TriangleStrip( std::vector< const Vec2 >&& movable )
+	TriangleStrip( std::vector< Vec2 >&& movable )
 		:
 		vertices( movable )
 	{}
@@ -47,5 +47,5 @@ public:
 		return Drawable( *this,c );
 	}
 private:
-	std::vector< const Vec2 > vertices;
+	std::vector< Vec2 > vertices;
 };

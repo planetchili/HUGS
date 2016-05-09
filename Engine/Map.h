@@ -73,7 +73,7 @@ private:
 	private:
 		bool addingPolyline = false;
 		Map& parent;
-		std::vector< const Vec2 > vertices;
+		std::vector< Vec2 > vertices;
 	};
 	class Drawable : public ::Drawable
 	{

@@ -4,7 +4,7 @@
 class PolyClosedRebounding : public PolyClosed
 {
 public:
-	PolyClosedRebounding( std::vector< const Vec2 >&& vList,float facingCoefficient )
+	PolyClosedRebounding( std::vector< Vec2 >&& vList,float facingCoefficient )
 		:
 		PolyClosed( std::move( vList ),facingCoefficient )
 	{}

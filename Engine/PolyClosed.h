@@ -27,12 +27,12 @@ private:
 		{
 			vertices.push_back( { (float)data.x,-(float)data.y } );
 		}
-		operator std::vector< const Vec2 >&&() 
+		operator std::vector< Vec2 >&&() 
 		{
 			return std::move( vertices );
 		}
 	private:
-		std::vector< const Vec2 > vertices;
+		std::vector< Vec2 > vertices;
 	};
 public:
 	class Drawable : public ::Drawable
@@ -74,7 +74,7 @@ public:
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	PolyClosed( std::vector< const Vec2 >&& vList,float facingCoefficient )
+	PolyClosed( std::vector< Vec2 >&& vList,float facingCoefficient )
 		:
 		vertices( std::move( vList ) ),
 		facingCoefficient( facingCoefficient )
@@ -143,9 +143,9 @@ public:
 	{
 		return Drawable( *this,color );
 	}
-	std::vector< const Vec2 > ExtractStripVertices( const float width ) const
+	std::vector< Vec2 > ExtractStripVertices( const float width ) const
 	{
-		std::vector< const Vec2 > strip;
+		std::vector< Vec2 > strip;
 
 		for( auto i = vertices.begin(),end = vertices.end() - 2;
 			i != end; i++ )
@@ -242,5 +242,5 @@ private:
 	const float fuseThreshold = 0.01f;
 	// +1.0 = inward -1.0 = outward
 	const float facingCoefficient;
-	std::vector< const Vec2 > vertices;
+	std::vector< Vec2 > vertices;
 };

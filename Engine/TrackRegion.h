@@ -8,7 +8,7 @@ public:
 	{
 		return uid < rhs.uid;
 	}
-	TrackRegion( std::vector< const Vec2 >&& vList,unsigned int uid )
+	TrackRegion( std::vector< Vec2 >&& vList,unsigned int uid )
 		:
 		PolyClosed( std::move( vList ),PolyClosed::MakeOutwardCoefficient() ),
 		uid( uid )

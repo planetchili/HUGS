@@ -5,7 +5,7 @@
 class TrackRegionManager
 {
 public:
-	void AddRegion( std::vector< const Vec2 >&& vList,unsigned int uid )
+	void AddRegion( std::vector< Vec2 >&& vList,unsigned int uid )
 	{
 		regions.emplace( std::move( vList ),uid );
 	}
@@ -25,5 +25,5 @@ public:
 		}
 	}
 private:
-	std::set< const TrackRegion > regions;
+	std::set< TrackRegion > regions;
 };
