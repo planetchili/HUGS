@@ -139,7 +139,7 @@ public:
 		:
 		PhysicalCircle( 50.0f,1.0f,0.001f,pos ),
 		seq( tMan ),
-		shipQuad( filename,0.27f,{ 0.0f,6.0f } ),
+		shipQuad( filename,1.33f,{ 0.0f,-3.0f } ),
 		timer( seq ),
 		collisionSound( { L"clsn1.wav",L"clsn2.wav",L"clsn3.wav" },0.037f,std::random_device()( ) )
 	{}

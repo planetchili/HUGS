@@ -250,7 +250,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="bhole.png" />
-    <Image Include="USS Turgidity.png" />
+    <Image Include="spaceship.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shiptry.dxf" />

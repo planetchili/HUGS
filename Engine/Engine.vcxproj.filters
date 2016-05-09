@@ -294,10 +294,10 @@
     </Resource>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="USS Turgidity.png">
+    <Image Include="bhole.png">
       <Filter>Media</Filter>
     </Image>
-    <Image Include="bhole.png">
+    <Image Include="spaceship.png">
       <Filter>Media</Filter>
     </Image>
   </ItemGroup>

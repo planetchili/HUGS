@@ -37,7 +37,7 @@ public:
 		:
 		Screen( ctr ),
 		map( "tracktest.dxf" ),
-		ship( L"USS Turgidity.png",map.GetTrackRegionManager(),map.GetStartPosition() ),
+		ship( L"spaceship.png",map.GetTrackRegionManager(),map.GetStartPosition() ),
 		port( gfx,{ 0.0f,float( gfx.GetHeight() - 1u ),0.0f,float( gfx.GetWidth() - 1u ) },
 			gfx.GetViewRegion() ),
 		cam( port,port.GetWidth(),port.GetHeight() ),
