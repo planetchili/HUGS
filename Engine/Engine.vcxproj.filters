@@ -165,9 +165,6 @@
     <ClInclude Include="LapDisplay.h">
       <Filter>Header Files\UI</Filter>
     </ClInclude>
-    <ClInclude Include="PolyClosed.h">
-      <Filter>Header Files\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="PolyClosedRebounding.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
@@ -242,6 +239,12 @@
     </ClInclude>
     <ClInclude Include="Starfield.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PolyClosedPhysical.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="PolyClosed.h">
+      <Filter>Header Files\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

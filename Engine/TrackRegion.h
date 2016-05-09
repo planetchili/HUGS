@@ -1,7 +1,7 @@
 #pragma once
-#include "PolyClosed.h"
+#include "PolyClosedPhysical.h"
 
-class TrackRegion : public PolyClosed
+class TrackRegion : public PolyClosedPhysical
 {
 public:
 	bool operator<( const TrackRegion& rhs ) const
@@ -10,7 +10,7 @@ public:
 	}
 	TrackRegion( std::vector< Vec2 >&& vList,unsigned int uid )
 		:
-		PolyClosed( std::move( vList ),PolyClosed::MakeOutwardCoefficient() ),
+		PolyClosedPhysical( std::move( vList ),PolyClosed::MakeOutwardCoefficient() ),
 		uid( uid )
 	{}
 	unsigned int GetID() const

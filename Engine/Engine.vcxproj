@@ -200,6 +200,7 @@
     <ClInclude Include="PauseControllerKeyboard.h" />
     <ClInclude Include="PhysicalCircle.h" />
     <ClInclude Include="PolyClosed.h" />
+    <ClInclude Include="PolyClosedPhysical.h" />
     <ClInclude Include="PolyClosedRebounding.h" />
     <ClInclude Include="Rect.h" />
     <ClInclude Include="Resource.h" />
