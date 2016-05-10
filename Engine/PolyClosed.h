@@ -6,6 +6,7 @@
 #include "dxflib\dl_dxf.h"
 #include "Mat3.h"
 #include "Drawable.h"
+#include "TriangleStrip.h"
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -56,7 +57,7 @@ public:
 		const PolyClosed& parent;
 	};
 public:
-	PolyClosed( std::initializer_list< Vec2 > vList,float facingCoefficient )
+	PolyClosed( std::initializer_list< Vec2 > vList,float facingCoefficient = -1.0f )
 		:
 		vertices( vList ),
 		facingCoefficient( facingCoefficient )
@@ -64,7 +65,7 @@ public:
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	PolyClosed( std::string filename,float facingCoefficient )
+	PolyClosed( std::string filename,float facingCoefficient = -1.0f )
 		:
 		vertices( Loader( filename ) ),
 		facingCoefficient( facingCoefficient )
@@ -72,7 +73,7 @@ public:
 		RemoveDuplicates();
 		MakeClockwise();
 	}
-	PolyClosed( std::vector< Vec2 >&& vList,float facingCoefficient )
+	PolyClosed( std::vector< Vec2 >&& vList,float facingCoefficient = -1.0f )
 		:
 		vertices( std::move( vList ) ),
 		facingCoefficient( facingCoefficient )
@@ -84,14 +85,14 @@ public:
 	{
 		return Drawable( *this,color );
 	}
-	std::vector< Vec2 > ExtractStripVertices( const float width ) const
+	TriangleStrip GenerateWallStrip( const float width ) const
 	{
-		std::vector< Vec2 > strip;
+		std::vector< Vec2 > stripVertices;
 
 		for( auto i = vertices.begin(),end = vertices.end() - 2;
 			i != end; i++ )
 		{
-			strip.push_back( *( i + 1 ) );
+			stripVertices.push_back( *( i + 1 ) );
 			const Vec2 n0 = ( *( i + 1 ) - *( i + 0 ) ).CCW90().Normalize()
 				* facingCoefficient;
 			const Vec2 n1 = ( *( i + 2 ) - *( i + 1 ) ).CCW90().Normalize()
@@ -99,10 +100,10 @@ public:
 			const Vec2 b = ( n0 + n1 ).Normalize();
 			const float k = width / ( b * n0 );
 			const Vec2 q = *( i + 1 ) + ( b * k );
-			strip.push_back( q );
+			stripVertices.push_back( q );
 		}
 		{
-			strip.push_back( vertices.back() );
+			stripVertices.push_back( vertices.back() );
 			const Vec2 n0 = ( vertices.back() - *( vertices.end() - 2 ) ).CCW90().Normalize()
 				* facingCoefficient;
 			const Vec2 n1 = ( vertices.front() - vertices.back() ).CCW90().Normalize()
@@ -110,10 +111,10 @@ public:
 			const Vec2 b = ( n0 + n1 ).Normalize();
 			const float k = width / ( b * n0 );
 			const Vec2 q = vertices.back() + ( b * k );
-			strip.push_back( q );
+			stripVertices.push_back( q );
 		}
 		{
-			strip.push_back( vertices.front() );
+			stripVertices.push_back( vertices.front() );
 			const Vec2 n0 = ( vertices.front() - vertices.back() ).CCW90().Normalize()
 				* facingCoefficient;
 			const Vec2 n1 = ( *( vertices.begin() + 1 ) - vertices.front() ).CCW90().Normalize()
@@ -121,12 +122,12 @@ public:
 			const Vec2 b = ( n0 + n1 ).Normalize();
 			const float k = width / ( b * n0 );
 			const Vec2 q = vertices.front() + ( b * k );
-			strip.push_back( q );
+			stripVertices.push_back( q );
 		}
-		strip.push_back( strip[0] );
-		strip.push_back( strip[1] );
+		stripVertices.push_back( stripVertices[0] );
+		stripVertices.push_back( stripVertices[1] );
 
-		return strip;
+		return TriangleStrip( std::move( stripVertices ) );
 	}
 	static float MakeInwardCoefficient()
 	{
@@ -135,6 +136,147 @@ public:
 	static float MakeOutwardCoefficient()
 	{
 		return -1.0f;
+	}
+	std::vector< TriangleStrip > ExtractSolidStrips()
+	{
+		// make the list of input vertices
+		std::list< Vec2 > inputVerts( vertices.begin(),vertices.end() );
+		inputVerts.reverse();
+
+		// make the vector of output triangle strips
+		std::vector< TriangleStrip > strips;
+
+		// lambda to consume vertices of polyclosed and generate a triangle strip
+		const auto ConsumeVertices = [&inputVerts]()
+		{
+			// need at least 1 triangle in the set
+			assert( inputVerts.size() > 2 );
+
+			// make the output vertice vector
+			std::vector< Vec2 > vertices;
+
+			// lambda function to check if vertex is prunable
+			auto IsPrunable = [&inputVerts]( std::list< Vec2 >::const_iterator b ) -> bool
+			{
+				// initialize iterators to the three vertices of the triangle
+				auto a = std::prev( b );
+				auto c = std::next( b );
+				// return false if not convex to the polygon
+				if( !CornerIsConvex( *a,*b,*c ) )
+				{
+					return false;
+				}
+				// return false if there is a vertex before the triangle inside
+				for( auto iPre = inputVerts.cbegin(); iPre != a; iPre++ )
+				{
+					if( TriangleContainsPoint( *a,*b,*c,*iPre ) )
+					{
+						return false;
+					}
+				}
+				// return false if there is a vertex after the triangle inside
+				for( auto iPost = std::next( c ),end = inputVerts.cend(); iPost != end; iPost++ )
+				{
+					if( TriangleContainsPoint( *a,*b,*c,*iPost ) )
+					{
+						return false;
+					}
+				}
+				// if we get this far, vertex pointed to by iterator b is prunable
+				return true;
+			};
+
+			for( auto end = std::prev( inputVerts.end() ),
+				i = std::next( inputVerts.begin() ); i != end; i++ )
+			{
+				if( IsPrunable( i ) )
+				{
+					// i is prunable, start the triangle strip
+					// add the first triangle
+					vertices.push_back( *i );
+					vertices.push_back( *std::prev( i ) );
+					vertices.push_back( *std::next( i ) );
+					// remove vertice i from the list and iterate ccw
+					inputVerts.erase( std::next( --i ) );
+					// keep adding to strip while there are still triangles left
+					while( true )
+					{
+						// ccw iteration
+						// if size is less than 3 (number of vertices needed for triangle)
+						size_t size = inputVerts.size();
+						if( size < 3 )
+						{
+							// quit the while loop
+							break;
+						}
+						// if ccw vertice is at extent
+						auto begin = inputVerts.begin();
+						if( i == begin )
+						{
+							// rotate list so that begin is at the middle
+							inputVerts.splice( begin,inputVerts,
+								std::next( begin,size / 2 + size % 2 ),inputVerts.end() );
+						}
+						// if ccw vertice is not prunable
+						if( !IsPrunable( i ) )
+						{
+							// quit the while loop
+							break;
+						}
+						else
+						{
+							// add new vertice (triangle)
+							vertices.push_back( *std::prev( i ) );
+							// remove vertice i from the list and iterate ccw
+							inputVerts.erase( std::prev( ++i ) );
+						}
+
+						// cw iteration
+						// if size is less than 3 (number of vertices needed for triangle)
+						size = inputVerts.size();
+						if( size < 3 )
+						{
+							// quit the while loop
+							break;
+						}
+						// if cw vertice is at extent
+						auto last = std::prev( inputVerts.end() );
+						if( i == last )
+						{
+							// rotate list so that last is at the middle
+							begin = inputVerts.begin();
+							inputVerts.splice( last,inputVerts,begin,std::next( begin,size / 2 + size % 2 ) );
+						}
+						// if cw vertice is not prunable
+						if( !IsPrunable( i ) )
+						{
+							// quit the while loop
+							break;
+						}
+						else
+						{
+							// add new vertice (triangle)
+							vertices.push_back( *std::next( i ) );
+							// remove vertice i from the list and iterate ccw
+							inputVerts.erase( std::next( --i ) );
+						}
+					}
+					// quit the for loop
+					break;
+				}
+			}
+			// return the triangle strip
+			return TriangleStrip( std::move( vertices ) );
+		};
+
+		// keep extracting strips from the vertice list until no more triangles remain
+		while( inputVerts.size() > 2 )
+		{
+			strips.push_back( std::move( ConsumeVertices() ) );
+		}
+
+		// return the vector of strips
+		return std::move( strips );
 	}
 private:
 	bool IsClockwiseWinding() const

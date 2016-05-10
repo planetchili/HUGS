@@ -50,14 +50,14 @@ private:
 					parent.pInnerBoundary = std::make_unique< PolyClosedRebounding >(
 						std::move( vertices ),PolyClosed::MakeOutwardCoefficient() );
 					parent.pInnerModel = std::make_unique< TriangleStrip >(
-						parent.pInnerBoundary->ExtractStripVertices( parent.wallWidth ) );
+						parent.pInnerBoundary->GenerateWallStrip( parent.wallWidth ) );
 				}
 				else if( attributes.getLayer() == "outerboundary" )
 				{
 					parent.pOuterBoundary = std::make_unique< PolyClosedRebounding >(
 						std::move( vertices ),PolyClosed::MakeInwardCoefficient() );
 					parent.pOuterModel = std::make_unique< TriangleStrip >(
-						parent.pOuterBoundary->ExtractStripVertices( parent.wallWidth ) );
+						parent.pOuterBoundary->GenerateWallStrip( parent.wallWidth ) );
 				}
 				else if( attributes.getLayer().substr( 0,2 ) == "tr" )
 				{

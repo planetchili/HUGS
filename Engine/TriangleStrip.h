@@ -7,6 +7,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <list>
 
 
 class TriangleStrip
@@ -40,12 +41,17 @@ public:
 	{}
 	TriangleStrip( std::vector< Vec2 >&& movable )
 		:
-		vertices( movable )
+		vertices( std::move( movable ) )
+	{}
+	TriangleStrip( TriangleStrip&& donor )
+		:
+		vertices( std::move( donor.vertices ) )
 	{}
 	Drawable GetDrawable( Color c = WHITE ) const
 	{
 		return Drawable( *this,c );
 	}
+
 private:
 	std::vector< Vec2 > vertices;
 };

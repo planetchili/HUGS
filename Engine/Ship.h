@@ -142,6 +142,7 @@ public:
 		shipQuad( filename,1.33f,{ 0.0f,-3.0f } ),
 		timer( seq ),
 		collisionSound( { L"clsn1.wav",L"clsn2.wav",L"clsn3.wav" },0.037f,std::random_device()( ) )
+		//thrust( PolyClosed( "thrust.dxf",PolyClosed::MakeOutwardCoefficient ). )
 	{}
 	Drawable GetDrawable() const
 	{
@@ -227,6 +228,7 @@ private:
 	// structural
 	TexturedQuad shipQuad;
 	const Color shieldColor = { GREEN,196u };
+	//TriangleStrip thrust;
 
 	// linear
 	float thrustForce = 1200.0f;
