@@ -255,6 +255,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="shiptry.dxf" />
+    <None Include="thrust.dxf" />
     <None Include="tracktest.dxf" />
   </ItemGroup>
   <ItemGroup>

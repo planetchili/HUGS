@@ -25,6 +25,19 @@ public:
 		}
 		virtual void Rasterize( D3DGraphics& gfx ) const override
 		{
+			if( parent.thrusting )
+			{
+				const auto thrustTrans = trans * Mat3::Translation( parent.thrustOffset ) *
+					Mat3::Scaling( parent.thrustScale );
+				for( auto& s : parent.thrustStrips )
+				{
+					auto d = s.GetDrawable( parent.thrustColor );
+					d.Transform( thrustTrans );
+					d.Clip( clip );
+					d.Rasterize( gfx );
+				}
+			}
+
 			auto shipQuad = parent.shipQuad.GetDrawable();
 			shipQuad.Transform( trans );
 			shipQuad.Clip( clip );
@@ -141,8 +154,8 @@ public:
 		seq( tMan ),
 		shipQuad( filename,1.33f,{ 0.0f,-3.0f } ),
 		timer( seq ),
-		collisionSound( { L"clsn1.wav",L"clsn2.wav",L"clsn3.wav" },0.037f,std::random_device()( ) )
-		//thrust( PolyClosed( "thrust.dxf",PolyClosed::MakeOutwardCoefficient ). )
+		collisionSound( { L"clsn1.wav",L"clsn2.wav",L"clsn3.wav" },0.037f,std::random_device()( ) ),
+		thrustStrips( PolyClosed( "thrust.dxf" ).ExtractSolidStrips() )
 	{}
 	Drawable GetDrawable() const
 	{
@@ -227,8 +240,11 @@ private:
 
 	// structural
 	TexturedQuad shipQuad;
-	const Color shieldColor = { GREEN,196u };
-	//TriangleStrip thrust;
+	const Color shieldColor = { GREEN,144u };
+	std::vector<TriangleStrip> thrustStrips;
+	Vec2 thrustOffset = { 0.0f,35.0f };
+	float thrustScale = 1.63f;
+	Color thrustColor = { 196u,64u,96u,160u };
 
 	// linear
 	float thrustForce = 1200.0f;
