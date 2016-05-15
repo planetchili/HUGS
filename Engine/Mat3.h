@@ -77,6 +77,11 @@ public:
 		_Mat3 s = { factor,(T)0.0,(T)0.0,(T)0.0,factor,(T)0.0,(T)0.0,(T)0.0,(T)1.0 };
 		return s;
 	}
+	static _Mat3 Stretching( T xFactor,T yFactor )
+	{
+		_Mat3 s = { xFactor,( T )0.0,( T )0.0,( T )0.0,yFactor,( T )0.0,( T )0.0,( T )0.0,( T )1.0 };
+		return s;
+	}
 	static _Mat3 Translation( const _Vec2<T> offset )
 	{
 		_Mat3 t = { (T)1.0,(T)0.0,offset.x,(T)0.0,(T)1.0,offset.y,(T)0.0,(T)0.0,(T)1.0 };

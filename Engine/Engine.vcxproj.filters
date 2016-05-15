@@ -314,6 +314,9 @@
     <None Include="thrust.dxf">
       <Filter>Media</Filter>
     </None>
+    <None Include="thrust2.dxf">
+      <Filter>Media</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Media Include="clsn1.wav">

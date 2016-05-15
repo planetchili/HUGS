@@ -28,10 +28,22 @@ public:
 			if( parent.thrusting )
 			{
 				const auto thrustTrans = trans * Mat3::Translation( parent.thrustOffset ) *
-					Mat3::Scaling( parent.thrustScale );
+					Mat3::Stretching( parent.thrustScale * ( 1.0f + parent.thrustIntensityMod * 0.33f ),
+					parent.thrustScale * ( 1.0f + parent.thrustIntensityMod ) );
+				auto tc = parent.thrustColor;
+				tc.x = unsigned char( float( tc.x ) * ( 1.0f + parent.thrustIntensityMod * 0.1f ) );
+				auto t2c = parent.thrust2Color;
+				t2c.x = unsigned char( float( t2c.x ) * ( 1.0f + parent.thrustIntensityMod * 0.04f ) );
 				for( auto& s : parent.thrustStrips )
 				{
-					auto d = s.GetDrawable( parent.thrustColor );
+					auto d = s.GetDrawable( tc );
+					d.Transform( thrustTrans );
+					d.Clip( clip );
+					d.Rasterize( gfx );
+				}
+				for( auto& s : parent.thrust2Strips )
+				{
+					auto d = s.GetDrawable( t2c );
 					d.Transform( thrustTrans );
 					d.Clip( clip );
 					d.Rasterize( gfx );
@@ -155,7 +167,10 @@ public:
 		shipQuad( filename,1.33f,{ 0.0f,-3.0f } ),
 		timer( seq ),
 		collisionSound( { L"clsn1.wav",L"clsn2.wav",L"clsn3.wav" },0.037f,std::random_device()( ) ),
-		thrustStrips( PolyClosed( "thrust.dxf" ).ExtractSolidStrips() )
+		thrustStrips( PolyClosed( "thrust.dxf" ).ExtractSolidStrips() ),
+		thrust2Strips( PolyClosed( "thrust2.dxf" ).ExtractSolidStrips() ),
+		thrustRng( std::random_device()() ),
+		thrustIntensityDist( 0.0f,0.2f )
 	{}
 	Drawable GetDrawable() const
 	{
@@ -171,6 +186,8 @@ public:
 
 		timer.Update( dt );
 		PhysicalCircle::Update( dt );
+
+		thrustIntensityMod = thrustIntensityDist( thrustRng );
 	}
 	void FocusOn( Camera& cam ) const
 	{
@@ -241,10 +258,17 @@ private:
 	// structural
 	TexturedQuad shipQuad;
 	const Color shieldColor = { GREEN,144u };
+
+	// thruster
 	std::vector<TriangleStrip> thrustStrips;
+	std::vector<TriangleStrip> thrust2Strips;
 	Vec2 thrustOffset = { 0.0f,35.0f };
 	float thrustScale = 1.63f;
-	Color thrustColor = { 196u,64u,96u,160u };
+	float thrustIntensityMod;
+	Color thrustColor = { 120u,50u,65u,160u };
+	Color thrust2Color = { 255u,92u,128u,196u };
+	std::mt19937 thrustRng;
+	std::normal_distribution<float> thrustIntensityDist;
 
 	// linear
 	float thrustForce = 1200.0f;
