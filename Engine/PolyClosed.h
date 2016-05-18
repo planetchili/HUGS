@@ -151,6 +151,7 @@ public:
 		{
 			// need at least 1 triangle in the set
 			assert( inputVerts.size() > 2 );
+			auto sizo = inputVerts.size();
 
 			// make the output vertice vector
 			std::vector< Vec2 > vertices;
@@ -245,7 +246,8 @@ public:
 						{
 							// rotate list so that last is at the middle
 							begin = inputVerts.begin();
-							inputVerts.splice( last,inputVerts,begin,std::next( begin,size / 2 + size % 2 ) );
+							inputVerts.splice( begin,std::move( inputVerts ),
+								std::next( begin,size / 2 ),inputVerts.end() );
 						}
 						// if cw vertice is not prunable
 						if( !IsPrunable( i ) )
