@@ -41,6 +41,16 @@ void SoundSystem::Channel::PlaySoundBuffer( Sound& s,float freqMod,float vol )
 	pSound = &s;
 	xaBuffer.pAudioData = s.pData.get();
 	xaBuffer.AudioBytes = s.nBytes;
+	if( s.loopStart != 0xFFFFFFFFu )
+	{
+		xaBuffer.LoopBegin = s.loopStart;
+		xaBuffer.LoopLength = s.loopEnd - s.loopStart;
+		xaBuffer.LoopCount = XAUDIO2_LOOP_INFINITE;
+	}
+	else
+	{
+		xaBuffer.LoopCount = 0u;
+	}
 	pSource->SubmitSourceBuffer( &xaBuffer,nullptr );
 	pSource->SetFrequencyRatio( freqMod );
 	pSource->SetVolume( vol );

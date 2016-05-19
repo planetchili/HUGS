@@ -10,6 +10,7 @@
 #include <vector>
 #include <mutex>
 #include <atomic>
+#include <thread>
 #include "ComManager.h"
 #include <wrl\client.h>
 
@@ -130,7 +131,7 @@ class Sound
 {
 	friend SoundSystem::Channel;
 public:
-	Sound( const std::wstring& fileName )
+	Sound( const std::wstring& fileName,bool looping = false )
 	{
 		unsigned int fileSize = 0;
 		std::unique_ptr<BYTE[]> pFileIn;
@@ -170,7 +171,7 @@ public:
 				file.read( reinterpret_cast<char*>( pFileIn.get() ),fileSize );
 			}
 
-			if( *reinterpret_cast<const int*>( &pFileIn[8] ) != 'EVAW' )
+			if( *reinterpret_cast<const unsigned int*>( &pFileIn[8] ) != 'EVAW' )
 			{
 				throw SoundSystem::FileError( "format not WAVE" );
 			}
@@ -180,14 +181,14 @@ public:
 			bool bFilledFormat = false;
 			for( unsigned int i = 12; i < fileSize; )
 			{
-				if( *reinterpret_cast<const int*>( &pFileIn[i] ) == ' tmf' )
+				if( *reinterpret_cast<const unsigned int*>( &pFileIn[i] ) == ' tmf' )
 				{
 					memcpy( &format,&pFileIn[i + 8],sizeof( format ) );
 					bFilledFormat = true;
 					break;
 				}
 				// chunk size + size entry size + chunk id entry size + word padding
-				i += ( *reinterpret_cast<const int*>( &pFileIn[i + 4] ) + 9 ) & 0xFFFFFFFE;
+				i += ( *reinterpret_cast<const unsigned int*>( &pFileIn[i + 4] ) + 9 ) & 0xFFFFFFFE;
 			}
 			if( !bFilledFormat )
 			{
@@ -228,8 +229,8 @@ public:
 			bool bFilledData = false;
 			for( unsigned int i = 12; i < fileSize; )
 			{
-				const int chunkSize = *reinterpret_cast<const int*>( &pFileIn[i + 4] );
-				if( *reinterpret_cast<const int*>( &pFileIn[i] ) == 'atad' )
+				const int chunkSize = *reinterpret_cast<const unsigned int*>( &pFileIn[i + 4] );
+				if( *reinterpret_cast<const unsigned int*>( &pFileIn[i] ) == 'atad' )
 				{
 					pData = std::make_unique<BYTE[]>( chunkSize );
 					nBytes = chunkSize;
@@ -244,6 +245,48 @@ public:
 			if( !bFilledData )
 			{
 				throw SoundSystem::FileError( "data chunk not found" );
+			}
+
+			if( looping )
+			{
+				//look for 'cue' chunk id
+				bool bFilledCue = false;
+				for( unsigned int i = 12; i < fileSize; )
+				{
+					const int chunkSize = *reinterpret_cast<const unsigned int*>( &pFileIn[i + 4] );
+					if( *reinterpret_cast<const int*>( &pFileIn[i] ) == ' euc' )
+					{
+						struct CuePoint
+						{
+							unsigned int cuePtId;
+							unsigned int pop;
+							unsigned int dataChunkId;
+							unsigned int chunkStart;
+							unsigned int blockStart;
+							unsigned int frameOffset;
+						};
+
+						const unsigned int nCuePts = 
+							*reinterpret_cast<const unsigned int*>( &pFileIn[i + 8] );
+						if( nCuePts != 2 )
+						{
+							continue;
+						}
+
+						const CuePoint* const pCuePts =
+							reinterpret_cast<const CuePoint* const>( &pFileIn[i + 12] );
+						loopStart = pCuePts[0].frameOffset;
+						loopEnd = pCuePts[1].frameOffset;
+						bFilledCue = true;
+						break;
+					}
+					// chunk size + size entry size + chunk id entry size + word padding
+					i += ( chunkSize + 9 ) & 0xFFFFFFFE;
+				}
+				if( !bFilledCue )
+				{
+					throw SoundSystem::FileError( "loop cue chunk not found" );
+				}
 			}
 		}
 		catch( SoundSystem::Error e )
@@ -266,19 +309,30 @@ public:
 	{
 		SoundSystem::Get().PlaySoundBuffer( *this,freqMod,vol );
 	}
+	void StopOne()
+	{
+		std::lock_guard<std::mutex> lock( mutex );
+		if( activeChannelPtrs.size() > 0u )
+		{
+			activeChannelPtrs.front()->Stop();
+		}
+	}
+	void StopAll()
+	{
+		std::lock_guard<std::mutex> lock( mutex );
+		for( auto pChannel : activeChannelPtrs )
+		{
+			pChannel->Stop();
+		}
+	}
 	~Sound()
 	{
-		{
-			std::lock_guard<std::mutex> lock( mutex );
-			for( auto pChannel : activeChannelPtrs )
-			{
-				pChannel->Stop();
-			}
-		}
-
+		StopAll();
+		// wait for all active channels to actually stop playing this sound
 		bool allChannelsDeactivated = false;
 		do
 		{
+			std::this_thread::yield();
 			std::lock_guard<std::mutex> lock( mutex );
 			allChannelsDeactivated = activeChannelPtrs.size() == 0;
 		}
@@ -298,6 +352,8 @@ private:
 	}
 private:
 	UINT32 nBytes = 0;
+	unsigned int loopStart = 0xFFFFFFFFu;
+	unsigned int loopEnd = 0xFFFFFFFFu;
 	std::unique_ptr<BYTE[]> pData;
 	std::mutex mutex;
 	std::vector<SoundSystem::Channel*> activeChannelPtrs;

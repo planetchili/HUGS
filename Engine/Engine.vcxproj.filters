@@ -328,5 +328,8 @@
     <Media Include="clsn3.wav">
       <Filter>Media</Filter>
     </Media>
+    <Media Include="thrust_loop.wav">
+      <Filter>Media</Filter>
+    </Media>
   </ItemGroup>
 </Project>

@@ -263,6 +263,7 @@
     <Media Include="clsn1.wav" />
     <Media Include="clsn2.wav" />
     <Media Include="clsn3.wav" />
+    <Media Include="thrust_loop.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

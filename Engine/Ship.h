@@ -167,6 +167,7 @@ public:
 		shipQuad( filename,1.33f,{ 0.0f,-3.0f } ),
 		timer( seq ),
 		collisionSound( { L"clsn1.wav",L"clsn2.wav",L"clsn3.wav" },0.037f,std::random_device()( ) ),
+		thrusterSound( L"thrust_loop.wav",true ),
 		thrustStrips( PolyClosed( "thrust.dxf" ).ExtractSolidStrips() ),
 		thrust2Strips( PolyClosed( "thrust2.dxf" ).ExtractSolidStrips() ),
 		thrustRng( std::random_device()() ),
@@ -203,11 +204,19 @@ public:
 	}
 	void Thrust()
 	{
-		thrusting = true;
+		if( !thrusting )
+		{
+			thrusting = true;
+			thrusterSound.Play( 1.0f,0.15f );
+		}
 	}
 	void StopThrusting()
 	{
-		thrusting = false;
+		if( thrusting )
+		{
+			thrusting = false;
+			thrusterSound.StopOne();
+		}
 	}
 	void Spin( Vec2 n )
 	{
@@ -220,7 +229,7 @@ public:
 
 		const float velIncident = ( -vel * normal );
 		const float volume = min( 1.0f,
-			( 1.0f - volMin ) * ( velIncident / velVolumeMax ) + volMin );
+			( 1.0f - volMin ) * ( velIncident / velVolumeMax ) + volMin ) * 0.4f;
 
 		collisionSound.Play( volume );
 
@@ -230,6 +239,7 @@ public:
 		}
 		else
 		{
+			StopThrusting();
 			Notify();
 		}
 		PhysicalCircle::Rebound( normal );
@@ -246,6 +256,7 @@ public:
 private:
 	// sfx
 	SoundEffect collisionSound;
+	Sound thrusterSound;
 
 	// rules stuff
 	TrackSequencer seq;
