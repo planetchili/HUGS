@@ -6,6 +6,7 @@
 class ScreenContainer
 {
 	friend class Screen;
+	friend class Game;
 protected:
 	std::unique_ptr< class Screen > pScreen;
 };

@@ -25,7 +25,7 @@
 #include "Timer.h"
 #include "Screen.h"
 
-class Game : public ScreenContainer
+class Game
 {
 public:
 	Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer );
@@ -38,4 +38,5 @@ private:
 	D3DGraphics gfx;
 	InputSystem input;
 	Timer timer;
+	ScreenContainer screenContainer;
 };

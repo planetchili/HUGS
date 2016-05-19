@@ -26,7 +26,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer )
 {
-	pScreen = std::make_unique<TitleScreen>( gfx,input,this );
+	screenContainer.pScreen = std::make_unique<TitleScreen>( gfx,input,&screenContainer );
 }
 
 Game::~Game()
@@ -54,8 +54,8 @@ void Game::UpdateModel( float dt )
 
 	try
 	{
-		pScreen->HandleInput();
-		pScreen->Update( dt );
+		screenContainer.pScreen->HandleInput();
+		screenContainer.pScreen->Update( dt );
 	}
 	catch( Screen::Change )
 	{
@@ -65,7 +65,7 @@ void Game::UpdateModel( float dt )
 
 void Game::ComposeFrame()
 {
-	pScreen->DrawPreBloom( gfx );
+	screenContainer.pScreen->DrawPreBloom( gfx );
 	gfx.ProcessBloom();
-	pScreen->DrawPostBloom( gfx );
+	screenContainer.pScreen->DrawPostBloom( gfx );
 }
