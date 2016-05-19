@@ -30,7 +30,7 @@ public:
 		height( source.height ),
 		pitch( source.pitch )
 	{
-		const_cast<Color*>( source.buffer ) = nullptr;
+		source.buffer = nullptr;
 	}
 	Surface( Surface& ) = delete;
 	Surface& operator=( Surface&& donor )
@@ -38,8 +38,8 @@ public:
 		width = donor.width;
 		height = donor.height;
 		pitch = donor.pitch;
-		const_cast<Color*>( buffer ) = donor.buffer;
-		const_cast<Color*>( donor.buffer ) = nullptr;
+		buffer = donor.buffer;
+		donor.buffer = nullptr;
 		return *this;
 	}
 	Surface& operator=( const Surface& ) = delete;
@@ -48,7 +48,7 @@ public:
 		if( buffer != nullptr )
 		{
 			_aligned_free( buffer );
-			const_cast<Color*>( buffer ) = nullptr;
+			buffer = nullptr;
 		}
 	}
 	inline void Clear( Color fillValue  )
@@ -118,7 +118,7 @@ public:
 	{
 		return pitch;
 	}
-	inline Color* const GetBuffer()
+	inline Color* GetBuffer()
 	{
 		return buffer;
 	}
@@ -137,7 +137,8 @@ public:
 			Gdiplus::Bitmap bitmap( name.c_str() );
 			pitch = width = bitmap.GetWidth();
 			height = bitmap.GetHeight();
-			buffer = new Color[pitch * height];
+			buffer = reinterpret_cast<Color*>( _aligned_malloc( 
+				sizeof( Color ) * pitch * height,16u ) );
 
 			for( unsigned int y = 0; y < height; y++ )
 			{
@@ -215,7 +216,7 @@ private:
 		const unsigned int pixelAlignment = byteAlignment / sizeof( Color );
 		return width + ( pixelAlignment - width % pixelAlignment ) % pixelAlignment;
 	}
-	Surface( unsigned int width,unsigned int height,unsigned int pitch,Color* const buffer )
+	Surface( unsigned int width,unsigned int height,unsigned int pitch,Color* buffer )
 		:
 		width( width ),
 		height( height ),
@@ -223,7 +224,7 @@ private:
 		pitch( pitch )
 	{}
 protected:
-	Color* const buffer;
+	Color* buffer;
 	unsigned int width;
 	unsigned int height;
 	// this pitch value is the pitch in PIXELS (I know, kinda dumb but...)
@@ -237,7 +238,7 @@ public:
 		:
 		Surface( width,height ),
 		bitmap( width,height,pitch * sizeof( Color ),
-		PixelFormat32bppRGB,(byte*)buffer ),
+			PixelFormat32bppRGB,(byte*)buffer ),
 		g( &bitmap )
 	{
 		g.SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
