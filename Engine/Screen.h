@@ -24,6 +24,7 @@ public:
 	virtual void Update( float dt ) = 0;
 	virtual void DrawPreBloom( D3DGraphics& gfx ) = 0;
 	virtual void DrawPostBloom( D3DGraphics& gfx ) = 0;
+	virtual ~Screen() {}
 protected:
 	void SetOtherParent( Screen& other,ScreenContainer* newParent ) const
 	{
