@@ -254,7 +254,7 @@ public:
 				for( unsigned int i = 12; i < fileSize; )
 				{
 					const int chunkSize = *reinterpret_cast<const unsigned int*>( &pFileIn[i + 4] );
-					if( *reinterpret_cast<const int*>( &pFileIn[i] ) == ' euc' )
+					if( *reinterpret_cast<const unsigned int*>( &pFileIn[i] ) == ' euc' )
 					{
 						struct CuePoint
 						{
