@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <vector>
 #include <mutex>
-#include <atomic>
+#include <condition_variable>
 #include <thread>
 #include "ComManager.h"
 #include <wrl\client.h>
@@ -327,16 +327,23 @@ public:
 	}
 	~Sound()
 	{
-		StopAll();
-		// wait for all active channels to actually stop playing this sound
-		bool allChannelsDeactivated = false;
-		do
+		// make sure nobody messes with our shit (also needed for cv.wait())
+		std::unique_lock<std::mutex> lock( mutex );
+
+		// check if there are even any active channels playing our jam
+		if( activeChannelPtrs.size() == 0u )
 		{
-			std::this_thread::yield();
-			std::lock_guard<std::mutex> lock( mutex );
-			allChannelsDeactivated = activeChannelPtrs.size() == 0;
+			return;
 		}
-		while( !allChannelsDeactivated );
+
+		// stop all channels currently playing our jam
+		for( auto pChannel : activeChannelPtrs )
+		{
+			pChannel->Stop();
+		}
+
+		// wait for those channels to actually stop playing our jam
+		cvDeath.wait( lock,[this]{ return activeChannelPtrs.size() == 0u; } );
 	}
 private:
 	void RemoveChannel( SoundSystem::Channel& channel )
@@ -344,6 +351,8 @@ private:
 		std::lock_guard<std::mutex> lock( mutex );
 		activeChannelPtrs.erase( std::find( 
 			activeChannelPtrs.begin(),activeChannelPtrs.end(),&channel ) );
+		// notify any thread that might be waiting for activeChannels to become zero (i.e. thread calling destructor)
+		cvDeath.notify_all();
 	}
 	void AddChannel( SoundSystem::Channel& channel )
 	{
@@ -356,5 +365,6 @@ private:
 	unsigned int loopEnd = 0xFFFFFFFFu;
 	std::unique_ptr<BYTE[]> pData;
 	std::mutex mutex;
+	std::condition_variable cvDeath;
 	std::vector<SoundSystem::Channel*> activeChannelPtrs;
 };
