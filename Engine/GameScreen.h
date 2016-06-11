@@ -114,15 +114,6 @@ public:
 		}
 		else
 		{
-			if( input.kbd.KeyIsPressed( VK_DELETE ) )
-			{
-				blazMid.Stop();
-			}
-			else if( input.kbd.KeyIsPressed( VK_INSERT ) )
-			{
-				blazMid.Play();
-			}
-
 			for( const auto& c : controllers )
 			{
 				c->Process();

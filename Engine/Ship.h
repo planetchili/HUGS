@@ -207,7 +207,7 @@ public:
 		if( !thrusting )
 		{
 			thrusting = true;
-			thrusterSound.Play( 1.0f,0.15f );
+			thrusterSound.Play( 1.0f,1.2f );
 		}
 	}
 	void StopThrusting()
@@ -225,11 +225,11 @@ public:
 	virtual void Rebound( Vec2 normal ) override
 	{
 		const float velVolumeMax = 800.0f;
-		const float volMin = 0.1f;
+		const float volMin = 0.03f;
 
 		const float velIncident = ( -vel * normal );
 		const float volume = min( 1.0f,
-			( 1.0f - volMin ) * ( velIncident / velVolumeMax ) + volMin ) * 0.4f;
+			( 1.0f - volMin ) * ( velIncident / velVolumeMax ) + volMin ) * 1.7f;
 
 		collisionSound.Play( volume );
 
