@@ -193,6 +193,7 @@
     <ClInclude Include="Map.h" />
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="Midi.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Observer.h" />
     <ClInclude Include="PauseController.h" />
@@ -220,6 +221,7 @@
     <ClInclude Include="TrackRegion.h" />
     <ClInclude Include="TrackRegionManager.h" />
     <ClInclude Include="TriangleStrip.h" />
+    <ClInclude Include="UIDManager.h" />
     <ClInclude Include="Vec2.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Vertex.h" />
@@ -239,6 +241,7 @@
     </ClCompile>
     <ClCompile Include="GdiPlusManager.cpp" />
     <ClCompile Include="Keyboard.cpp" />
+    <ClCompile Include="Midi.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="Timer.cpp" />
@@ -254,6 +257,7 @@
     <Image Include="spaceship.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="bla4s.mid" />
     <None Include="shiptry.dxf" />
     <None Include="thrust.dxf" />
     <None Include="thrust2.dxf" />

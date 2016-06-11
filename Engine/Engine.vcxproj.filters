@@ -246,6 +246,12 @@
     <ClInclude Include="PolyClosed.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Midi.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="UIDManager.h">
+      <Filter>Header Files\Framework</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -290,6 +296,9 @@
     <ClCompile Include="Cpuid.cpp">
       <Filter>Source Files\Framework</Filter>
     </ClCompile>
+    <ClCompile Include="Midi.cpp">
+      <Filter>Source Files\Framework</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="ChiliDirectXFramework.res">
@@ -315,6 +324,9 @@
       <Filter>Media</Filter>
     </None>
     <None Include="thrust2.dxf">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="bla4s.mid">
       <Filter>Media</Filter>
     </None>
   </ItemGroup>

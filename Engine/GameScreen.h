@@ -14,6 +14,7 @@
 #include "ShipControllerGamepad.h"
 #include "InputSystem.h"
 #include "Starfield.h"
+#include "Midi.h"
 
 class GameScreen : public Screen
 {
@@ -39,7 +40,7 @@ public:
 		map( "tracktest.dxf" ),
 		ship( L"spaceship.png",map.GetTrackRegionManager(),map.GetStartPosition() ),
 		port( gfx,{ 0.0f,float( gfx.GetHeight() - 1u ),0.0f,float( gfx.GetWidth() - 1u ) },
-			gfx.GetViewRegion() ),
+		gfx.GetViewRegion() ),
 		cam( port,port.GetWidth(),port.GetHeight() ),
 		starscape( cam,port ),
 		meter( { 20,45,20,int( port.GetWidth() / 4.0f ) },ship ),
@@ -47,7 +48,8 @@ public:
 		arialFont( L"Arial",20 ),
 		lapDisplay( ship,{ 860.0f,15.0f } ),
 		input( input ),
-		gfx( gfx )
+		gfx( gfx ),
+		blazMid( L"bla4s.mid",7.30f,85.50f )
 	{
 		controllers.push_back( std::make_unique<ShipControllerKeyboard>( ship,input.kbd ) );
 		if( input.di.PadExists() )
@@ -57,6 +59,7 @@ public:
 		ship.AddObserver( deathListener );
 		ship.FocusOn( cam );
 		starscape.LockToCam();
+		blazMid.Play();
 	}
 	virtual void Update( float dt ) override
 	{
@@ -64,6 +67,10 @@ public:
 		{
 			ship.Update( dt );
 			map.TestCollision( ship );
+		}
+		else
+		{
+			blazMid.Stop();
 		}
 		map.Update( dt );
 		starscape.Update();
@@ -107,6 +114,15 @@ public:
 		}
 		else
 		{
+			if( input.kbd.KeyIsPressed( VK_DELETE ) )
+			{
+				blazMid.Stop();
+			}
+			else if( input.kbd.KeyIsPressed( VK_INSERT ) )
+			{
+				blazMid.Play();
+			}
+
 			for( const auto& c : controllers )
 			{
 				c->Process();
@@ -125,5 +141,6 @@ private:
 	Font timesFont;
 	Font arialFont;
 	LapDisplay lapDisplay;
+	MidiSong blazMid;
 	std::vector<std::unique_ptr<ShipController>> controllers;
 };
