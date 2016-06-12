@@ -59,7 +59,6 @@ public:
 		ship.AddObserver( deathListener );
 		ship.FocusOn( cam );
 		starscape.LockToCam();
-		blazMid.Play();
 	}
 	virtual void Update( float dt ) override
 	{
@@ -67,6 +66,7 @@ public:
 		{
 			ship.Update( dt );
 			map.TestCollision( ship );
+			blazMid.Play();
 		}
 		else
 		{
