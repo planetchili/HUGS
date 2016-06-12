@@ -8,15 +8,6 @@
 
 UniqueIDManager<unsigned int> MidiSong::idMan;
 
-// danger in calling play right after ctor (no cv wait) init sets isPlaying = false!!
-// what if move the thread lock lower?
-// after notify? could reorder notify and flag assign
-// between? probably safe b/c fence
-// before notify? safe because we have the mutex so won't wake until wait
-// move ctor-lock after thread spawn?
-// bad? thread lock first, won't get notification, but predicate will prevent sleep
-// no lock on stop or play? reorder!
-// or notification happens while not waiting on cv
 MidiSong::MidiSong( const std::wstring path,float start,float end )
 	:
 	id( idMan.Issue() ),
