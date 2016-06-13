@@ -6,8 +6,13 @@
 #include <fstream>
 #include <functional>
 #include "Cpuid.h"
+#include <memory>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #define BLOOM_PROCESSOR_USE_SSE true
+#define BLOOM_PROCESSOR_USE_MT true
 
 class BloomProcessor
 {
@@ -16,7 +21,8 @@ public:
 		:
 		input( input ),
 		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
-		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 )
+		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
+		benchLog( L"mtbench.txt" )
 	{
 		float kernelFloat[diameter];
 		for( int x = 0; x < diameter; x++ )
@@ -48,6 +54,9 @@ public:
 		{
 			SetX86Mode();
 		}
+
+		// initialize upsize workers with their job parameters
+		InitUpsizeWorkers();
 	}
 	void DownsizePass()
 	{
@@ -77,7 +86,14 @@ public:
 		DownsizePassFunc = std::mem_fn( &BloomProcessor::_DownsizePassSSSE3 );
 		HorizontalPassFunc = std::mem_fn( &BloomProcessor::_HorizontalPassSSSE3 );
 		VerticalPassFunc = std::mem_fn( &BloomProcessor::_VerticalPassSSSE3 );
-		UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSSE3 );
+		if( BLOOM_PROCESSOR_USE_MT )
+		{
+			UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSSE3MT );
+		}
+		else
+		{
+			UpsizeBlendPassFunc = std::mem_fn( &BloomProcessor::_UpsizeBlendPassSSSE3 );
+		}
 	}
 	void SetX86Mode()
 	{
@@ -91,13 +107,520 @@ public:
 		DownsizePass();
 		HorizontalPass();
 		VerticalPass();
+		benchTimer.StartFrame();
 		UpsizeBlendPass();
+		if( benchTimer.StopFrame() )
+		{
+			benchLog << benchTimer.GetAvg() << std::endl;
+		}
 	}
 	static unsigned int GetFringeSize()
 	{
 		return ( diameter / 2u ) * 4u;
 	}
 private:
+	class UpsizeWorker
+	{
+	public:
+		enum Type
+		{
+			Top,
+			Bottom,
+			Middle
+		};
+	public:
+		UpsizeWorker( const __m128i* pInJ,size_t inPitchJ,size_t inWidthJ,size_t nMiddleLines,
+			__m128i* pOutJ,size_t outPitchJ,Type type,BloomProcessor& boss )
+		{
+			std::unique_lock<std::mutex> ctorLock( mutexWorker );
+
+			// @@NOTE@@ one does not *simply* capture all with = or &
+			threadWorker = std::thread(
+				[this,pInJ,inPitchJ,inWidthJ,nMiddleLines,pOutJ,outPitchJ,type,&boss]()
+			{
+				std::unique_lock<std::mutex> lockWorker( mutexWorker );
+
+				const __m128i zero = _mm_setzero_si128();
+				__m128i grad_coef = _mm_set_epi16( 160u,160u,160u,160u,224u,224u,224u,224u );
+
+				// interpolate horizontally between low 2 pixels of input
+				const auto GenerateGradient = [&]( __m128i in )
+				{
+					// unpack inputs (low 2 pixels) to 16-bit channel size
+					const __m128i in16 = _mm_unpacklo_epi8( in,zero );
+
+					// copy low pixel to high and low 64 bits
+					const __m128i in_a = _mm_shuffle_epi32( in16,_MM_SHUFFLE( 1,0,1,0 ) );
+					// multiply input by decreasing coeffients (lower pixels)
+					const __m128i prod_a_lo = _mm_mullo_epi16( in_a,grad_coef );
+					// transform decreasing coef to lower range (for high pixels)
+					grad_coef = _mm_sub_epi16( grad_coef,_mm_set128_epi16( grad_coef ) );
+					// multiply input by decreasing coeffients (higher pixels)
+					const __m128i prod_a_hi = _mm_mullo_epi16( in_a,grad_coef );
+
+					// copy high pixel to high and low 64 bits
+					const __m128i in_b = _mm_shuffle_epi32( in16,_MM_SHUFFLE( 3,2,3,2 ) );
+					// transform decreasing coef to increasing coefficients (for low pixels)
+					grad_coef = _mm_shuffle_epi32( grad_coef,_MM_SHUFFLE( 0,1,3,2 ) );
+					// multiply input by increasing coeffients (lower pixels)
+					const __m128i prod_b_lo = _mm_mullo_epi16( in_b,grad_coef );
+					// transform increasing coef to higher range (for high pixels)
+					grad_coef = _mm_add_epi16( grad_coef,_mm_set128_epi16( grad_coef ) );
+					// multiply input by increasing coeffients (higher pixels)
+					const __m128i prod_b_hi = _mm_mullo_epi16( in_b,grad_coef );
+
+					// return coefficients to original state
+					grad_coef = _mm_shuffle_epi32( grad_coef,_MM_SHUFFLE( 0,1,3,2 ) );
+
+					// add low products and divide
+					const __m128i ab_lo = _mm_srli_epi16( _mm_adds_epu16( prod_a_lo,prod_b_lo ),8 );
+					// add high products and divide
+					const __m128i ab_hi = _mm_srli_epi16( _mm_adds_epu16( prod_a_hi,prod_b_hi ),8 );
+
+					// pack and return result
+					return _mm_packus_epi16( ab_lo,ab_hi );
+				};
+
+				// upsize for top and bottom edge cases
+				const auto UpsizeEdge = [&]( const __m128i* pIn,const __m128i* pInEnd,__m128i* pOutTop,
+					__m128i* pOutBottom )
+				{
+					__m128i in = _mm_load_si128( pIn++ );
+					// left corner setup (prime the alignment pump)
+					__m128i oldPix = _mm_shuffle_epi32( in,_MM_SHUFFLE( 0,0,0,0 ) );
+
+					// main loop
+					while( true )
+					{
+						// gradient 0-1
+						__m128i newPix = GenerateGradient( in );
+						__m128i out = _mm_alignr_epi8( newPix,oldPix,8 );
+						*pOutTop = _mm_adds_epu8( *pOutTop,out );
+						*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+						pOutTop++;
+						pOutBottom++;
+						oldPix = newPix;
+
+						// gradient 1-2
+						newPix = GenerateGradient( _mm_srli_si128( in,4 ) );
+						out = _mm_alignr_epi8( newPix,oldPix,8 );
+						*pOutTop = _mm_adds_epu8( *pOutTop,out );
+						*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+						pOutTop++;
+						pOutBottom++;
+						oldPix = newPix;
+
+						// gradient 2-3
+						newPix = GenerateGradient( _mm_srli_si128( in,8 ) );
+						out = _mm_alignr_epi8( newPix,oldPix,8 );
+						*pOutTop = _mm_adds_epu8( *pOutTop,out );
+						*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+						pOutTop++;
+						pOutBottom++;
+						oldPix = newPix;
+
+						// end condition
+						if( pIn >= pInEnd )
+						{
+							break;
+						}
+
+						// gradient 3-0'
+						const __m128i newIn = _mm_load_si128( pIn++ );
+						newPix = GenerateGradient( _mm_alignr_epi8( newIn,in,12 ) );
+						out = _mm_alignr_epi8( newPix,oldPix,8 );
+						*pOutTop = _mm_adds_epu8( *pOutTop,out );
+						*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+						pOutTop++;
+						pOutBottom++;
+						oldPix = newPix;
+						in = newIn;
+					}
+
+					// right corner
+					const __m128i out = _mm_alignr_epi8( _mm_shuffle_epi32( in,_MM_SHUFFLE( 3,3,3,3 ) ),oldPix,8 );
+					*pOutTop = _mm_adds_epu8( *pOutTop,out );
+					*pOutBottom = _mm_adds_epu8( *pOutBottom,out );
+				};
+
+				// hold values from last iteration
+				__m128i old0;
+				__m128i old1;
+				__m128i old2;
+				__m128i old3;
+
+				// interpolate horizontally between first 2 pixels of inputs and then vertically
+				const auto VerticalGradientOutput = [&]( __m128i in0,__m128i in1,
+					__m128i* pOut0,__m128i* pOut1,__m128i* pOut2,__m128i* pOut3 )
+				{
+					const __m128i topGrad = GenerateGradient( in0 );
+					const __m128i bottomGrad = GenerateGradient( in1 );
+
+					// generate points between top and bottom pixel arrays
+					const __m128i half = _mm_avg_epu8( topGrad,bottomGrad );
+
+					{
+						// first quarter needed for top half
+						const __m128i firstQuarter = _mm_avg_epu8( topGrad,half );
+
+						// generate 1/8 pt from top to bottom
+						const __m128i firstEighth = _mm_avg_epu8( topGrad,firstQuarter );
+						// combine old 1/8 pt and new and add to original image with saturation
+						*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8( firstEighth,old0,8 ) );
+						old0 = firstEighth;
+
+						// generate 3/8 pt from top to bottom
+						const __m128i thirdEighth = _mm_avg_epu8( firstQuarter,half );
+						// combine old 3/8 pt and new and add to original image with saturation
+						*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8( thirdEighth,old1,8 ) );
+						old1 = thirdEighth;
+					}
+
+						{
+							// third quarter needed for bottom half
+							const __m128i thirdQuarter = _mm_avg_epu8( half,bottomGrad );
+
+							// generate 5/8 pt from top to bottom
+							const __m128i fifthEighth = _mm_avg_epu8( half,thirdQuarter );
+							// combine old 5/8 pt and new and add to original image with saturation
+							*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8( fifthEighth,old2,8 ) );
+							old2 = fifthEighth;
+
+							// generate 7/8 pt from top to bottom
+							const __m128i seventhEighth = _mm_avg_epu8( thirdQuarter,bottomGrad );
+							// combine old 7/8 pt and new and add to original image with saturation
+							*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8( seventhEighth,old3,8 ) );
+							old3 = seventhEighth;
+						}
+				};
+
+				// upsize for middle cases
+				const auto DoLine = [&]( const __m128i* pIn0,const __m128i* pIn1,const __m128i* const pEnd,
+					__m128i* pOut0,__m128i* pOut1,__m128i* pOut2,__m128i* pOut3 )
+				{
+					__m128i in0 = _mm_load_si128( pIn0++ );
+					__m128i in1 = _mm_load_si128( pIn1++ );
+
+					// left side prime pump
+					{
+						// left edge clamps to left most pixel
+						const __m128i top = _mm_shuffle_epi32( in0,_MM_SHUFFLE( 0,0,0,0 ) );
+						const __m128i bottom = _mm_shuffle_epi32( in1,_MM_SHUFFLE( 0,0,0,0 ) );
+
+						// generate points between top and bottom pixel arrays
+						const __m128i half = _mm_avg_epu8( top,bottom );
+
+						{
+							// first quarter needed for top half
+							const __m128i firstQuarter = _mm_avg_epu8( top,half );
+
+							// generate 1/8 pt from top to bottom
+							old0 = _mm_avg_epu8( top,firstQuarter );
+
+							// generate 3/8 pt from top to bottom
+							old1 = _mm_avg_epu8( firstQuarter,half );
+						}
+
+							{
+								// third quarter needed for bottom half
+								const __m128i thirdQuarter = _mm_avg_epu8( half,bottom );
+
+								// generate 5/8 pt from top to bottom
+								old2 = _mm_avg_epu8( half,thirdQuarter );
+
+								// generate 7/8 pt from top to bottom
+								old3 = _mm_avg_epu8( thirdQuarter,bottom );
+							}
+					}
+
+					// main loop
+					while( true )
+					{
+						// gradient 0-1
+						VerticalGradientOutput( in0,in1,pOut0++,pOut1++,pOut2++,pOut3++ );
+
+						// gradient 1-2
+						VerticalGradientOutput(
+							_mm_srli_si128( in0,4 ),
+							_mm_srli_si128( in1,4 ),
+							pOut0++,pOut1++,pOut2++,pOut3++ );
+
+						// gradient 2-3
+						VerticalGradientOutput(
+							_mm_srli_si128( in0,8 ),
+							_mm_srli_si128( in1,8 ),
+							pOut0++,pOut1++,pOut2++,pOut3++ );
+
+						// end condition
+						if( pIn0 >= pEnd )
+						{
+							break;
+						}
+
+						// gradient 3-0'
+						const __m128i newIn0 = _mm_load_si128( pIn0++ );
+						const __m128i newIn1 = _mm_load_si128( pIn1++ );
+						VerticalGradientOutput(
+							_mm_alignr_epi8( newIn0,in0,12 ),
+							_mm_alignr_epi8( newIn1,in1,12 ),
+							pOut0++,pOut1++,pOut2++,pOut3++ );
+						in0 = newIn0;
+						in1 = newIn1;
+					}
+
+					// right side finish pump
+						{
+							// right edge clamps to right most pixel
+							const __m128i top = _mm_shuffle_epi32( in0,_MM_SHUFFLE( 3,3,3,3 ) );
+							const __m128i bottom = _mm_shuffle_epi32( in1,_MM_SHUFFLE( 3,3,3,3 ) );
+
+							// generate points between top and bottom pixel arrays
+							const __m128i half = _mm_avg_epu8( top,bottom );
+
+							{
+								// first quarter needed for top half
+								const __m128i firstQuarter = _mm_avg_epu8( top,half );
+
+								// generate 1/8 pt from top to bottom
+								*pOut0 = _mm_adds_epu8( *pOut0,_mm_alignr_epi8(
+									_mm_avg_epu8( top,firstQuarter ),old0,8 ) );
+
+								// generate 3/8 pt from top to bottom
+								*pOut1 = _mm_adds_epu8( *pOut1,_mm_alignr_epi8(
+									_mm_avg_epu8( firstQuarter,half ),old1,8 ) );
+							}
+							{
+								// third quarter needed for bottom half
+								const __m128i thirdQuarter = _mm_avg_epu8( half,bottom );
+
+								// generate 5/8 pt from top to bottom
+								*pOut2 = _mm_adds_epu8( *pOut2,_mm_alignr_epi8(
+									_mm_avg_epu8( half,thirdQuarter ),old2,8 ) );
+
+								// generate 7/8 pt from top to bottom
+								*pOut3 = _mm_adds_epu8( *pOut3,_mm_alignr_epi8(
+									_mm_avg_epu8( thirdQuarter,bottom ),old3,8 ) );
+							}
+						}
+				};
+
+				// parameters for processing lambdas
+				// edge params
+				const __m128i* pInEdge;
+				const __m128i* pInEndEdge;
+				__m128i* pOutTopEdge;
+				__m128i* pOutBottomEdge;
+				// middle line params
+				const __m128i* pIn0Start;
+				const __m128i* pIn1Start;
+				const __m128i* pEndStart;
+				const __m128i* pMiddleEndLine;
+				__m128i* pOut0Start;
+				__m128i* pOut1Start;
+				__m128i* pOut2Start;
+				__m128i* pOut3Start;
+				size_t outLineIterate = outPitchJ * 4u;
+
+				// initialize parameters for processing lambdas
+				switch( type )
+				{
+				case Top:
+					// edge params
+					pInEdge = pInJ;
+					pInEndEdge = pInJ + inWidthJ;
+					pOutTopEdge = pOutJ;
+					pOutBottomEdge = pOutJ + outPitchJ;
+					// middle params
+					pIn0Start = pInJ;
+					pIn1Start = pInJ + inPitchJ;
+					pEndStart = pInJ + inWidthJ;
+					pMiddleEndLine = pInJ + inPitchJ * nMiddleLines;
+					pOut0Start = pOutJ + outPitchJ * 2u;
+					pOut1Start = pOutJ + outPitchJ * 3u;
+					pOut2Start = pOutJ + outPitchJ * 4u;
+					pOut3Start = pOutJ + outPitchJ * 5u;
+					break;
+				case Bottom:
+					// middle params
+					pIn0Start = pInJ;
+					pIn1Start = pInJ + inPitchJ;
+					pEndStart = pInJ + inWidthJ;
+					pMiddleEndLine = pInJ + inPitchJ * nMiddleLines;
+					pOut0Start = pOutJ;
+					pOut1Start = pOutJ + outPitchJ;
+					pOut2Start = pOutJ + outPitchJ * 2u;
+					pOut3Start = pOutJ + outPitchJ * 3u;
+					// edge params
+					pInEdge = pInJ + inPitchJ * nMiddleLines;
+					pInEndEdge = pInJ + inPitchJ * nMiddleLines + inWidthJ;
+					pOutTopEdge = pOutJ + outPitchJ * nMiddleLines * 4u;
+					pOutBottomEdge = pOutJ + outPitchJ * ( nMiddleLines * 4u + 1u );
+					break;
+				case Middle:
+					// middle params only
+					pIn0Start = pInJ;
+					pIn1Start = pInJ + inPitchJ;
+					pEndStart = pInJ + inWidthJ;
+					pMiddleEndLine = pInJ + inPitchJ * nMiddleLines;
+					pOut0Start = pOutJ;
+					pOut1Start = pOutJ + outPitchJ;
+					pOut2Start = pOutJ + outPitchJ * 2u;
+					pOut3Start = pOutJ + outPitchJ * 3u;
+					break;
+				}
+
+				// notify ctor-calling thread so that it gets ready to wake
+				// (can't wake right away because worker thread still holds mutex
+				cvWorker.notify_all();
+
+				// thread work loop
+				while( true )
+				{
+					// initialize the line pointers from precalculated starting positions
+					const __m128i* pIn0 = pIn0Start;
+					const __m128i* pIn1 = pIn1Start;
+					const __m128i* pEnd = pEndStart;
+					__m128i* pOut0 = pOut0Start;
+					__m128i* pOut1 = pOut1Start;
+					__m128i* pOut2 = pOut2Start;
+					__m128i* pOut3 = pOut3Start;
+
+					// reset started flag (also signals init finished during initialization)
+					started = false;
+
+					// wait for command (also frees main thread during init)
+					cvWorker.wait( lockWorker,[this](){ return started || dying; } );
+
+					// end thread if dying flag set
+					if( dying )
+					{
+						break;
+					}
+
+					// we must be started then...
+					// process the bloom filter stage
+					if( type == Top )
+					{
+						UpsizeEdge( pInEdge,pInEndEdge,pOutTopEdge,pOutBottomEdge );
+					}
+					while( pIn0 < pMiddleEndLine )
+					{
+						// process line
+						DoLine( pIn0,pIn1,pEnd,pOut0,pOut1,pOut2,pOut3 );
+						// increment pointers to next line
+						pIn0 += inPitchJ;
+						pIn1 += inPitchJ;
+						pEnd += inPitchJ;
+						pOut0 += outLineIterate;
+						pOut1 += outLineIterate;
+						pOut2 += outLineIterate;
+						pOut3 += outLineIterate;
+					}
+					if( type == Bottom )
+					{
+						UpsizeEdge( pInEdge,pInEndEdge,pOutTopEdge,pOutBottomEdge );
+					}
+
+					// notify boss of being finished
+					{
+						std::lock_guard<std::mutex> lock( boss.mutexBoss );
+						boss.nActiveThreads--;
+					}
+					boss.cvBoss.notify_all();
+				}
+			} );
+
+			// during worker initialization, started==true means not done initializing
+			cvWorker.wait( ctorLock,[this](){ return !started; } );
+		}
+		UpsizeWorker( const UpsizeWorker& ) = delete;
+		UpsizeWorker( UpsizeWorker&& ) = delete;
+		UpsizeWorker& operator=( const UpsizeWorker& ) = delete;
+		void Start()
+		{
+			{
+				std::lock_guard<std::mutex> lock( mutexWorker );
+				started = true;
+			}
+			cvWorker.notify_all();
+		}
+		~UpsizeWorker()
+		{
+			{
+				std::lock_guard<std::mutex> lock( mutexWorker );
+				dying = true;
+			}
+			cvWorker.notify_all();
+			threadWorker.join();
+		}
+	private:
+		std::thread threadWorker;
+		std::condition_variable cvWorker;
+		std::mutex mutexWorker;
+		// doubles as signal that initialization has finished (finished when false)
+		bool started = true;
+		bool dying = false;
+	};
+private:
+	void InitUpsizeWorkers()
+	{	
+		// constants for line loop pointer arithmetic
+		const size_t inWidthScalar = hBuffer.GetWidth();
+		const size_t outWidthScalar = input.GetWidth();
+		const size_t inFringe = diameter / 2u;
+		const size_t outFringe = GetFringeSize();
+
+		// calculate parameters and create workers
+		// 48 4-row lines per worker except for the last worker (it get 47)
+		// first and last workers handle the top and bottom two rows
+		workerPtrs.push_back( std::make_unique<UpsizeWorker>(
+			reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[inWidthScalar * inFringe + inFringe] ),
+			inWidthScalar / 4u,
+			inWidthScalar / 4u - inFringe / 2u,
+			48u,
+			reinterpret_cast<__m128i*>(
+				&input.GetBuffer()[outWidthScalar * outFringe + outFringe] ),
+			outWidthScalar / 4u,
+			UpsizeWorker::Top,
+			*this ) );
+
+		workerPtrs.push_back( std::make_unique<UpsizeWorker>(
+			reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[inWidthScalar * ( inFringe + 48u ) + inFringe] ),
+			inWidthScalar / 4u,
+			inWidthScalar / 4u - inFringe / 2u,
+			48u,
+			reinterpret_cast<__m128i*>(
+				&input.GetBuffer()[outWidthScalar * ( outFringe + 48u * 4u + 2u ) + outFringe] ),
+			outWidthScalar / 4u,
+			UpsizeWorker::Middle,
+			*this ) );
+
+		workerPtrs.push_back( std::make_unique<UpsizeWorker>(
+			reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[inWidthScalar * ( inFringe + 96u ) + inFringe] ),
+			inWidthScalar / 4u,
+			inWidthScalar / 4u - inFringe / 2u,
+			48u,
+			reinterpret_cast<__m128i*>(
+				&input.GetBuffer()[outWidthScalar * ( outFringe + 96u * 4u + 2u ) + outFringe] ),
+			outWidthScalar / 4u,
+			UpsizeWorker::Middle,
+			*this ) );
+
+		workerPtrs.push_back( std::make_unique<UpsizeWorker>(
+			reinterpret_cast<const __m128i*>(
+				&hBuffer.GetBufferConst()[inWidthScalar * ( inFringe + 144u ) + inFringe] ),
+			inWidthScalar / 4u,
+			inWidthScalar / 4u - inFringe / 2u,
+			47u,
+			reinterpret_cast<__m128i*>(
+				&input.GetBuffer()[outWidthScalar * ( outFringe + 144u * 4u + 2u ) + outFringe] ),
+			outWidthScalar / 4u,
+			UpsizeWorker::Bottom,
+			*this ) );
+	}
 	template<int shift>
 	static __m128i AlignRightSSE2( __m128i hi,__m128i lo )
 	{
@@ -901,6 +1424,23 @@ private:
 				};
 			}
 		}
+	}
+	void _UpsizeBlendPassSSSE3MT()
+	{
+		// prevent workers from reporting done while in the middle of setup
+		std::unique_lock<std::mutex> lock( mutexBoss );
+
+		// reset active thread count
+		nActiveThreads = workerPtrs.size();
+
+		// activate worker threads
+		for( auto& pw : workerPtrs )
+		{
+			pw->Start();
+		}
+
+		// wait for workers to notify of finish, releasing boss mutex
+		cvBoss.wait( lock,[this](){ return nActiveThreads == 0u; } );
 	}
 	void _UpsizeBlendPassSSSE3()
 	{
@@ -1947,4 +2487,15 @@ private:
 	std::function<void( BloomProcessor* )> HorizontalPassFunc;
 	std::function<void( BloomProcessor* )> VerticalPassFunc;
 	std::function<void( BloomProcessor* )> UpsizeBlendPassFunc;
+
+	// MT members
+	// we use unique_ptr because UpsizeWorker is neither movable nor copyable
+	std::vector<std::unique_ptr<UpsizeWorker>> workerPtrs;
+	std::condition_variable cvBoss;
+	std::mutex mutexBoss;
+	size_t nActiveThreads = 0u;
+
+	// benching
+	std::wofstream benchLog;
+	FrameTimer benchTimer;
 };
