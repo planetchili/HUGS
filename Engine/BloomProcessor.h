@@ -21,8 +21,7 @@ public:
 		:
 		input( input ),
 		hBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
-		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 ),
-		benchLog( L"mtbench.txt" )
+		vBuffer( input.GetWidth() / 4,input.GetHeight() / 4 )
 	{
 		float kernelFloat[diameter];
 		for( int x = 0; x < diameter; x++ )
@@ -107,12 +106,7 @@ public:
 		DownsizePass();
 		HorizontalPass();
 		VerticalPass();
-		benchTimer.StartFrame();
 		UpsizeBlendPass();
-		if( benchTimer.StopFrame() )
-		{
-			benchLog << benchTimer.GetAvg() << std::endl;
-		}
 	}
 	static unsigned int GetFringeSize()
 	{
@@ -2494,8 +2488,4 @@ private:
 	std::condition_variable cvBoss;
 	std::mutex mutexBoss;
 	size_t nActiveThreads = 0u;
-
-	// benching
-	std::wofstream benchLog;
-	FrameTimer benchTimer;
 };
