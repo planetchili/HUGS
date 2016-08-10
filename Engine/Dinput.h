@@ -62,6 +62,21 @@ public:
 			index( -1 ),
 			pressed( false )
 		{}
+		Event( const Event& e )
+			:
+			type( e.type ),
+			index( e.index ),
+			pos( e. pos )
+		{
+
+		}
+		Event& operator=( const Event& rhs )
+		{
+			type = rhs.type;
+			index = rhs.index;
+			pos = rhs.pos;
+			return *this;
+		}
 		float GetAxisVal() const
 		{
 			assert( type == Axis );
