@@ -73,7 +73,12 @@ public:
 	{
 		return sysBuffer.GetPixel( x,y );
 	}
-	inline void CopySurface( const Surface& src )
+	inline void CopySurfaceViewRegion( const Surface& src )
+	{
+		const unsigned int fringe = BloomProcessor::GetFringeSize();
+		sysBuffer.CopyToPosition( src,fringe,fringe );
+	}
+	inline void CopySurfaceWithFringe( const Surface& src )
 	{
 		sysBuffer.Copy( src );
 	}

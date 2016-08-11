@@ -73,6 +73,20 @@ public:
 				&buffer[pitch * y + region.left],rowWidthBytes );
 		}
 	}
+	inline void CopyToPosition( const Surface& src,size_t x_dest,size_t y_dest )
+	{
+		const size_t srcPitchBytes = sizeof( Color ) * src.GetPitch();
+		const size_t dstPitchBytes = sizeof( Color ) * GetPitch();
+		const size_t copyWidth = sizeof( Color ) * src.GetWidth();
+		const size_t x_offset = x_dest * sizeof( Color );
+		BYTE* const pDst = reinterpret_cast<BYTE*>(GetBuffer());
+		const BYTE* const pSrc = reinterpret_cast<const BYTE*>(src.GetBufferConst());
+		for( unsigned int y = 0u; y < src.GetHeight(); y++ )
+		{
+			memcpy( &pDst[dstPitchBytes * (y + y_dest) + x_offset],
+				&pSrc[srcPitchBytes * y],copyWidth );
+		}
+	}
 	inline void PutPixel( unsigned int x,unsigned int y,Color c )
 	{
 		assert( x >= 0 );
