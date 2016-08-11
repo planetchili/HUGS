@@ -20,13 +20,14 @@
  ******************************************************************************************/
 #include "Game.h"
 #include "TitleScreen.h"
+#include "IntroScreen.h"
 
 Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	:
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer )
 {
-	screenContainer.pScreen = std::make_unique<TitleScreen>( gfx,input,&screenContainer );
+	screenContainer.pScreen = std::make_unique<IntroScreen>( gfx,input,&screenContainer );
 }
 
 Game::~Game()

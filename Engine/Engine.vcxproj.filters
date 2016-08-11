@@ -252,6 +252,9 @@
     <ClInclude Include="UIDManager.h">
       <Filter>Header Files\Framework</Filter>
     </ClInclude>
+    <ClInclude Include="IntroScreen.h">
+      <Filter>Header Files\Screens</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">

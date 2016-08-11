@@ -173,7 +173,7 @@ public:
 	}
 	virtual void DrawPreBloom( D3DGraphics& gfx ) override
 	{
-		gfx.CopySurface( funk );
+		gfx.CopySurfaceWithFringe( funk );
 		if( pMenu )
 		{
 			pMenu->Draw( gfx );
