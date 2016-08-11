@@ -14,9 +14,6 @@ MidiSong::MidiSong( const std::wstring path,float start,float end )
 	startMilliSeconds( unsigned int( start * 1000.0f ) ),
 	endMilliSeconds( unsigned int( end * 1000.0f ) )
 {
-	// lock the mutex to prevent thread from running until we can wait on condition
-	std::unique_lock<std::mutex> ctorLock( mutex );
-
 	// create thread to execute lambda function
 	std::thread( [this,path,end]()
 	{
@@ -85,9 +82,6 @@ MidiSong::MidiSong( const std::wstring path,float start,float end )
 		cv.notify_all();
 	} ).detach();	// detach created thread from std::thread object 
 					// before destructor is called (so that apocolyse doesn't happen)
-
-	// wait for the thread to finish initializing before we continue
-	cv.wait( ctorLock,[this](){ return !isPlaying;} );
 }
 
 void MidiSong::Play()
