@@ -93,6 +93,10 @@ public:
 	{
 		processor.SetSSSE3Mode();
 	}
+	inline void Fade( unsigned char a )
+	{
+		sysBuffer.Fade( a );
+	}
 	
 	template< typename T >
 	inline void DrawRectangleAlpha( const _Rect<T>& rect,Color c )

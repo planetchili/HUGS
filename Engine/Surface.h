@@ -5,8 +5,8 @@
 #include <gdiplus.h>
 #include <string>
 #include <assert.h>
+#include <immintrin.h>
 #pragma comment( lib,"gdiplus.lib" )
-
 
 class Surface
 {
@@ -207,6 +207,25 @@ public:
 			{
 				memcpy( &buffer[pitch * y],&( src.buffer )[pitch * y],sizeof( Color )* width );
 			}
+		}
+	}
+	// fast raster ops
+	void Fade( unsigned char a )
+	{
+		const __m128i alpha = _mm_set1_epi16( a );
+		const __m128i zero = _mm_setzero_si128();
+		for( __m128i* i = reinterpret_cast<__m128i*>(buffer),
+			*end = reinterpret_cast<__m128i*>(&buffer[pitch * height]);
+			i < end; i++ )
+		{
+			const __m128i srcPixels = _mm_load_si128( i );
+			const __m128i srcLo16 = _mm_unpacklo_epi8( srcPixels,zero );
+			const __m128i srcHi16 = _mm_unpackhi_epi8( srcPixels,zero );
+			__m128i rsltLo16 = _mm_mullo_epi16( srcLo16,alpha );
+			__m128i rsltHi16 = _mm_mullo_epi16( srcHi16,alpha );
+			rsltLo16 = _mm_srli_epi16( rsltLo16,8 );
+			rsltHi16 = _mm_srli_epi16( rsltHi16,8 );
+			_mm_store_si128( i,_mm_packus_epi16( rsltLo16,rsltHi16 ) );
 		}
 	}
 private:
