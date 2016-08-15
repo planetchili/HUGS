@@ -95,22 +95,32 @@ public:
 		assert( y < height );
 		buffer[y * pitch + x] = c;
 	}
-	inline void PutPixelAlpha( unsigned int x,unsigned int y,Color c )
+	inline void PutPixelAlpha( unsigned int x,unsigned int y,Color s )
 	{
 		assert( x >= 0 );
 		assert( y >= 0 );
 		assert( x < width );
 		assert( y < height );
-		// load source pixel
+
+		// low byte isolation mask
+		const unsigned int mask = 0xFF;
+
+		// load destination pixel
 		const Color d = GetPixel( x,y );
 
-		// blend channels
-		const unsigned char rsltRed = ( c.r * c.x + d.r * ( 255 - c.x ) ) / 255;
-		const unsigned char rsltGreen = ( c.g * c.x + d.g * ( 255 - c.x ) ) / 255;
-		const unsigned char rsltBlue = ( c.b * c.x + d.b * ( 255 - c.x ) ) / 255;
+		// unpack source components
+		const unsigned int a = s >> 24;
+		const unsigned int r = (s >> 16) & mask;
+		const unsigned int g = (s >> 8)  & mask;
+		const unsigned int b = s         & mask;
+
+		// unpack source components and blend channels
+		const unsigned int rsltRed = (((d >> 16) & mask) *  (255 - a) + r * a) >> 8;
+		const unsigned int rsltGreen = (((d >> 8) & mask) *  (255 - a) + g * a) >> 8;
+		const unsigned int rsltBlue = ((d         & mask) *  (255 - a) + b * a) >> 8;
 
 		// pack channels back into pixel and fire pixel onto surface
-		PutPixel( x,y,{ rsltRed,rsltGreen,rsltBlue } );
+		PutPixel( x,y,(rsltRed << 16) | (rsltGreen << 8) | rsltBlue );
 	}
 	inline Color GetPixel( unsigned int x,unsigned int y ) const
 	{
