@@ -255,13 +255,18 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="bhole.png" />
+    <Image Include="ChiliLogoScreen.png" />
+    <Image Include="hitawe.png" />
+    <Image Include="hitler.png" />
+    <Image Include="moonsurf.png" />
+    <Image Include="shades.png" />
     <Image Include="spaceship.png" />
+    <Image Include="uranus.png" />
+    <Image Include="uranus2.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bla4s.mid" />
-    <None Include="shiptry.dxf" />
-    <None Include="thrust.dxf" />
-    <None Include="thrust2.dxf" />
+    <None Include="blt.mid" />
     <None Include="tracktest.dxf" />
   </ItemGroup>
   <ItemGroup>

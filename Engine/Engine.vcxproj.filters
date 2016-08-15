@@ -315,21 +315,36 @@
     <Image Include="spaceship.png">
       <Filter>Media</Filter>
     </Image>
+    <Image Include="shades.png">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="ChiliLogoScreen.png">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="hitawe.png">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="hitler.png">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="moonsurf.png">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="uranus.png">
+      <Filter>Media</Filter>
+    </Image>
+    <Image Include="uranus2.png">
+      <Filter>Media</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shiptry.dxf">
-      <Filter>Media</Filter>
-    </None>
     <None Include="tracktest.dxf">
       <Filter>Media</Filter>
     </None>
-    <None Include="thrust.dxf">
-      <Filter>Media</Filter>
-    </None>
-    <None Include="thrust2.dxf">
-      <Filter>Media</Filter>
-    </None>
     <None Include="bla4s.mid">
+      <Filter>Media</Filter>
+    </None>
+    <None Include="blt.mid">
       <Filter>Media</Filter>
     </None>
   </ItemGroup>
