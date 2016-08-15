@@ -59,6 +59,10 @@ public:
 	{
 		return Drawable( *this );
 	}
+	const Surface& GetTexture() const
+	{
+		return texture;
+	}
 private:
 	Surface texture;
 	std::array<Vertex,4> quad;
