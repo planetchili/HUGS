@@ -23,9 +23,9 @@ public:
 		angle( donor.angle ),
 		holeQuad( std::move( donor.holeQuad ) )
 	{}
-	TexturedQuad::Drawable GetDrawable() const
+	auto GetDrawable() const
 	{
-		TexturedQuad::Drawable drawable = holeQuad.GetDrawable();
+		auto drawable = holeQuad.GetDrawable();
 		drawable.Transform( Mat3::Translation( pos ) * Mat3::Rotation( angle ) );
 		return drawable;
 	}
@@ -48,7 +48,7 @@ protected:
 private:
 	const float kGravity = 100000000.0f;
 	const float bias;
-	TexturedQuad holeQuad;
+	TexturedQuad<TranslucentRasterizer> holeQuad;
 	const float angVel = -PI / 2.0f;
 	float angle = 0.0f;
 };

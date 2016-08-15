@@ -156,10 +156,137 @@ public:
 	}
 	
 	void DrawTriangle( Vec2 v0,Vec2 v1,Vec2 v2,const RectI& clip,Color c );
-	void DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
+	template<class R>
+	void DrawTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex )
+	{
+		if( v1.v.y < v0.v.y ) v0.Swap( v1 );
+		if( v2.v.y < v1.v.y ) v1.Swap( v2 );
+		if( v1.v.y < v0.v.y ) v0.Swap( v1 );
+
+		if( v0.v.y == v1.v.y )
+		{
+			if( v1.v.x < v0.v.x ) v0.Swap( v1 );
+			DrawFlatTopTriangleTex<R>( v0,v1,v2,clip,tex );
+		}
+		else if( v1.v.y == v2.v.y )
+		{
+			if( v2.v.x < v1.v.x ) v1.Swap( v2 );
+			DrawFlatBottomTriangleTex<R>( v0,v1,v2,clip,tex );
+		}
+		else
+		{
+			// Calculate intermediate vertex point on major segment
+			const Vec2 v = { ((v2.v.x - v0.v.x) / (v2.v.y - v0.v.y)) *
+				(v1.v.y - v0.v.y) + v0.v.x, v1.v.y };
+
+			// Calculate uv coordinates for intermediate vertex point
+			const Vec2 t = v0.t + (v2.t - v0.t) * ((v.y - v0.v.y) / (v2.v.y - v0.v.y));
+
+			// Compose intermediate vertex
+			const Vertex vi = { v, t };
+
+			// If major right
+			if( v1.v.x < vi.v.x )
+			{
+				DrawFlatBottomTriangleTex<R>( v0,v1,vi,clip,tex );
+				DrawFlatTopTriangleTex<R>( v1,vi,v2,clip,tex );
+			}
+			else
+			{
+				DrawFlatBottomTriangleTex<R>( v0,vi,v1,clip,tex );
+				DrawFlatTopTriangleTex<R>( vi,v1,v2,clip,tex );
+			}
+		}
+	}
 private:
-	void DrawFlatTopTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
-	void DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex );
+	template<class R>
+	void DrawFlatTopTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex )
+	{
+		// To do: Replace v2 - v0 with precalculated height
+		// calulcate slopes in screen space
+		float m0 = (v2.v.x - v0.v.x) / (v2.v.y - v0.v.y);
+		float m1 = (v2.v.x - v1.v.x) / (v2.v.y - v1.v.y);
+
+		// calculate start and end scanlines
+		const int yStart = max( (int)ceilf( v0.v.y ),clip.top );
+		const int yEnd = min( (int)ceilf( v2.v.y ) - 1,clip.bottom );
+
+		// calculate uv edge unit steps
+		const Vec2 tEdgeStepL = (v2.t - v0.t) / (v2.v.y - v0.v.y);
+		const Vec2 tEdgeStepR = (v2.t - v1.t) / (v2.v.y - v0.v.y);
+
+		// calculate uv edge prestep
+		Vec2 tEdgeL = v0.t + tEdgeStepL * (float( yStart ) - v1.v.y);
+		Vec2 tEdgeR = v1.t + tEdgeStepR * (float( yStart ) - v1.v.y);
+
+		for( int y = yStart; y <= yEnd; y++,tEdgeL += tEdgeStepL,tEdgeR += tEdgeStepR )
+		{
+			// caluclate start and end points
+			const float px0 = m0 * (float( y ) - v0.v.y) + v0.v.x;
+			const float px1 = m1 * (float( y ) - v1.v.y) + v1.v.x;
+
+			// calculate start and end pixels
+			const int xStart = max( (int)ceilf( px0 ),clip.left );
+			const int xEnd = min( (int)ceilf( px1 ) - 1,clip.right );
+
+			// calculate uv scanline step
+			const Vec2 tScanStep = (tEdgeR - tEdgeL) / (px1 - px0);
+
+			// calculate uv point prestep
+			Vec2 t = tEdgeL + tScanStep * (float( xStart ) - px0);
+
+			for( int x = xStart; x <= xEnd; x++,t += tScanStep )
+			{
+				Color texel = tex.GetPixel(
+					(unsigned int)(t.x + 0.5f),(unsigned int)(t.y + 0.5f) );
+				R::Rasterize( x,y,texel,*this );
+			}
+		}
+	}
+	template<class R>
+	void DrawFlatBottomTriangleTex( Vertex v0,Vertex v1,Vertex v2,const RectI& clip,const Surface &tex )
+	{
+		// To do: Replace v2 - v0 with precalculated height
+		// calulcate slopes in screen space
+		float m0 = (v1.v.x - v0.v.x) / (v1.v.y - v0.v.y);
+		float m1 = (v2.v.x - v0.v.x) / (v2.v.y - v0.v.y);
+
+		// calculate start and end scanlines
+		const int yStart = max( (int)ceilf( v0.v.y ),clip.top );
+		const int yEnd = min( (int)ceilf( v2.v.y ) - 1,clip.bottom );
+
+		// calculate uv edge unit steps
+		const Vec2 tEdgeStepL = (v1.t - v0.t) / (v1.v.y - v0.v.y);
+		const Vec2 tEdgeStepR = (v2.t - v0.t) / (v1.v.y - v0.v.y);
+
+		// calculate uv edge prestep
+		Vec2 tEdgeL = v0.t + tEdgeStepL * (float( yStart ) - v0.v.y);
+		Vec2 tEdgeR = v0.t + tEdgeStepR * (float( yStart ) - v0.v.y);
+
+		for( int y = yStart; y <= yEnd; y++,tEdgeL += tEdgeStepL,tEdgeR += tEdgeStepR )
+		{
+			// caluclate start and end points
+			const float px0 = m0 * (float( y ) - v0.v.y) + v0.v.x;
+			const float px1 = m1 * (float( y ) - v0.v.y) + v0.v.x;
+
+			// calculate start and end pixels
+			const int xStart = max( (int)ceilf( px0 ),clip.left );
+			const int xEnd = min( (int)ceilf( px1 ) - 1,clip.right );
+
+			// calculate uv scanline step
+			const Vec2 tScanStep = (tEdgeR - tEdgeL) / (px1 - px0);
+
+			// calculate uv point prestep
+			Vec2 t = tEdgeL + tScanStep * (float( xStart ) - px0);
+
+			for( int x = xStart; x <= xEnd; x++,t += tScanStep )
+			{
+				Color texel = tex.GetPixel(
+					(unsigned int)(t.x + 0.5f),(unsigned int)(t.y + 0.5f) );
+				R::Rasterize( x,y,texel,*this );
+			}
+		}
+	}
 	void DrawFlatTriangle( float yStart,float yEnd,float m0,float b0,float m1,float b1,const RectI& clip,Color c );
 private:
 	GdiPlusManager		gdiManager;
@@ -169,4 +296,35 @@ private:
 	IDirect3DSurface9*	pBackBuffer;
 	TextSurface			sysBuffer;
 	__declspec(align(16)) BloomProcessor processor;
+};
+
+class TransparentRasterizer
+{
+public:
+	static void Rasterize( int x,int y,Color texel,D3DGraphics& gfx )
+	{
+		if( texel.x == 255u )
+		{
+			texel.x = 0u;
+			gfx.PutPixel( x,y,texel );
+		}
+	}
+};
+
+class TranslucentRasterizer
+{
+public:
+	static void Rasterize( int x,int y,Color texel,D3DGraphics& gfx )
+	{
+		gfx.PutPixelAlpha( x,y,texel );
+	}
+};
+
+class SolidRasterizer
+{
+public:
+	static void Rasterize( int x,int y,Color texel,D3DGraphics& gfx )
+	{
+		gfx.PutPixel( x,y,texel );
+	}
 };

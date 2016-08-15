@@ -3,6 +3,7 @@
 #include "TriangleStrip.h"
 #include <array>
 
+template <class R>
 class TexturedQuad
 {
 public:
@@ -22,9 +23,9 @@ public:
 				quadTrans[i].v = trans * parent.quad[i].v;
 			}
 
-			gfx.DrawTriangleTex( quadTrans[0],quadTrans[1],quadTrans[3],clip,
+			gfx.DrawTriangleTex<R>( quadTrans[0],quadTrans[1],quadTrans[3],clip,
 				parent.texture );
-			gfx.DrawTriangleTex( quadTrans[1],quadTrans[2],quadTrans[3],clip,
+			gfx.DrawTriangleTex<R>( quadTrans[1],quadTrans[2],quadTrans[3],clip,
 				parent.texture );
 		}
 	private:

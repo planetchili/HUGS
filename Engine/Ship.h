@@ -267,7 +267,7 @@ private:
 	const float kDamage = 0.0003f;
 
 	// structural
-	TexturedQuad shipQuad;
+	TexturedQuad<TransparentRasterizer> shipQuad;
 	const Color shieldColor = { GREEN,144u };
 
 	// thruster
