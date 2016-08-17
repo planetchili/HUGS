@@ -103,33 +103,32 @@ public:
 		sysBuffer.Fade( a );
 	}
 	
-	template< typename T >
-	inline void DrawRectangleAlpha( const _Rect<T>& rect,Color c )
-	{
-		DrawRectangle( (int)rect.left,(int)rect.right,(int)rect.top,(int)rect.bottom,c,
-			&D3DGraphics::PutPixelAlpha );
-	}
-	template< typename T >
-	inline void DrawRectangleAlpha( _Vec2< T > topLeft,_Vec2< T > bottomRight,Color c )
-	{
-		DrawRectangle( (int)topLeft.x,(int)bottomRight.x,(int)topLeft.y,(int)bottomRight.y,c,
-			&D3DGraphics::PutPixelAlpha );
-	}
-	inline void DrawRectangleAlpha( int left,int right,int top,int bottom,Color c )
-	{
-		DrawRectangle( left,right,top,bottom,c,&D3DGraphics::PutPixelAlpha );
-	}
-	template< typename T >
+	template<class R,typename T>
 	inline void DrawRectangle( const _Rect<T>& rect,Color c )
 	{
-		DrawRectangle( (int)rect.left,(int)rect.right,(int)rect.top,(int)rect.bottom,c );
+		DrawRectangle<R>( (int)rect.left,(int)rect.right,(int)rect.top,(int)rect.bottom,c );
 	}
-	template< typename T >
+	template<class R,typename T>
 	inline void DrawRectangle( _Vec2< T > topLeft,_Vec2< T > bottomRight,Color c )
 	{
-		DrawRectangle( (int)topLeft.x,(int)bottomRight.x,(int)topLeft.y,(int)bottomRight.y,c );
+		DrawRectangle<R>( (int)topLeft.x,(int)bottomRight.x,(int)topLeft.y,(int)bottomRight.y,c );
 	}
-	void DrawRectangle( int left,int right,int top,int bottom,Color c,void( D3DGraphics::* )( int,int,Color ) = &D3DGraphics::PutPixel );
+	template<class R,typename T>
+	inline void DrawRectangle( T left,T right,T top,T bottom,Color c )
+	{
+		DrawRectangle<R>( (int)left,(int)right,(int)top,(int)bottom,c );
+	}
+	template<class R>
+	void DrawRectangle( int left,int right,int top,int bottom,Color c )
+	{
+		for( int x = left; x < right; x++ )
+		{
+			for( int y = top; y < bottom; y++ )
+			{
+				R::Rasterize( x,y,c,*this );
+			}
+		}
+	}
 	
 	template< typename T >
 	inline void DrawLine( _Vec2< T > pt1,_Vec2< T > pt2,Color c )

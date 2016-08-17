@@ -96,18 +96,6 @@ void D3DGraphics::EndFrame()
 	assert( !FAILED( result ) );
 }
 
-void D3DGraphics::DrawRectangle( int left,int right,int top,int bottom,Color c,
-	void( D3DGraphics::*pPixelFcn )( int,int,Color ) )
-{
-	for( int x = left; x < right; x++ )
-	{
-		for( int y = top; y < bottom; y++ )
-		{
-			(this->*pPixelFcn)( x,y,c );
-		}
-	}
-}
-
 // Cohen–Sutherland clipping algorithm clips a line from
 // P0 = (x0, y0) to P1 = (x1, y1) against a rectangle with 
 // diagonal from (xmin, ymin) to (xmax, ymax).

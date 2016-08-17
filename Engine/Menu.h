@@ -46,11 +46,11 @@ protected:
 		{
 			if( IsSelected() )
 			{
-				gfx.DrawRectangle( borders,colorSelected );
+				gfx.DrawRectangle<SolidRasterizer>( borders,colorSelected );
 			}
 			else
 			{
-				gfx.DrawRectangle( borders,colorDeselected );
+				gfx.DrawRectangle<SolidRasterizer>( borders,colorDeselected );
 			}
 			gfx.DrawString( text,borders,font,textColor );
 		}
@@ -110,7 +110,7 @@ public:
 	void Draw( D3DGraphics& gfx ) const
 	{
 		assert( finalized );
-		gfx.DrawRectangleAlpha( borders,backColor );
+		gfx.DrawRectangle<TranslucentRasterizer>( borders,backColor );
 		for( const auto& pItem : items )
 		{
 			pItem->Draw( gfx );
