@@ -64,6 +64,16 @@ public:
 	{
 		return { (T2)top,(T2)bottom,(T2)left,(T2)right };
 	}
+	template < typename T2 >
+	inline	_Rect<T> operator/( T2 rhs ) const
+	{
+		return { T( top / rhs ),T( bottom / rhs ) ,T( left / rhs ) ,T( right / rhs ) };
+	}
+	template < typename T2 >
+	inline	_Rect<T> operator*( T2 rhs ) const
+	{
+		return{ T( top * rhs ),T( bottom * rhs ) ,T( left * rhs ) ,T( right * rhs ) };
+	}
 	inline	void ClipTo( const _Rect& rect )
 	{
 		top = max( top,rect.top );
