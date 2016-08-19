@@ -24,6 +24,7 @@
 #include "InputSystem.h"
 #include "Timer.h"
 #include "Screen.h"
+#include "MidiJukebox.h"
 
 class Game
 {
@@ -39,4 +40,5 @@ private:
 	InputSystem input;
 	Timer timer;
 	ScreenContainer screenContainer;
+	MidiJukebox jukebox;
 };

@@ -1,10 +1,11 @@
 #pragma once
 #include "Screen.h"
 #include "InputSystem.h"
-#include "TitleScreen.h"
+#include "TitleScreen2.h"
 #include "TexturedQuad.h"
 #include "Viewport.h"
 #include "Midi.h"
+#include "MidiJukebox.h"
 #include <queue>
 #include <memory>
 
@@ -31,7 +32,7 @@ private:
 	public:
 		virtual float Update( float dt ) override
 		{
-			parent.introMore.Play();
+			parent.jukebox.GetSong( L"blt.mid" ).Play();
 			return dt;
 		}
 		virtual void Draw() const override
@@ -197,13 +198,12 @@ private:
 		}
 	};
 public:
-	IntroScreen( D3DGraphics& gfx,InputSystem& input,ScreenContainer* ctr )
+	IntroScreen( D3DGraphics& gfx,InputSystem& input,MidiJukebox& jukebox,ScreenContainer* ctr )
 		:
 		Screen( ctr ),
 		input( input ),
 		gfx( gfx ),
 		uranus( Surface::FromFile( L"uranus.png" ) ),
-		introMore( L"blt.mid",0.0f,30.0f ),
 		hitler( L"hitler.png" ),
 		awesome( L"hitawe.png" ),
 		logo( Surface::FromFile( L"ChiliLogoScreen.png" ) ),
@@ -214,7 +214,8 @@ public:
 			float( gfx.GetViewRegion().GetHeight() - hitler.GetTexture().GetHeight() / 2 ) } ),
 		moon( Surface::FromFile( L"moonsurf.png" ) ),
 		uranus2( L"uranus2.png" ),
-		shades( L"shades.png" )
+		shades( L"shades.png" ),
+		jukebox( jukebox )
 	{
 		phases.emplace( new BlackWait( 1.0f,*this ) );
 		phases.emplace( new ImageFadeIn( logo,0.6f,*this ) );
@@ -237,7 +238,7 @@ public:
 		{
 			if( phases.size() == 0u )
 			{
-				ChangeScreen( std::make_unique<TitleScreen>( gfx,input,parent ) );
+				ChangeScreen( std::make_unique<TitleScreen2>( gfx,input,jukebox,parent ) );
 			}
 			else if( (dt = phases.front()->Update( dt )) >= 0.0f )
 			{
@@ -262,9 +263,9 @@ public:
 private:
 	D3DGraphics& gfx;
 	InputSystem& input;
+	MidiJukebox& jukebox;
 	std::queue<std::unique_ptr<Phase>> phases;
 	Viewport port;
-	MidiSong introMore;
 	Surface uranus;
 	Surface logo;
 	Surface moon;

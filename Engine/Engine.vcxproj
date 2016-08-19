@@ -195,6 +195,7 @@
     <ClInclude Include="Mat3.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="Midi.h" />
+    <ClInclude Include="MidiJukebox.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="Observer.h" />
     <ClInclude Include="PauseController.h" />
@@ -218,7 +219,7 @@
     <ClInclude Include="Surface.h" />
     <ClInclude Include="TexturedQuad.h" />
     <ClInclude Include="Timer.h" />
-    <ClInclude Include="TitleScreen.h" />
+    <ClInclude Include="TitleScreen2.h" />
     <ClInclude Include="TrackRegion.h" />
     <ClInclude Include="TrackRegionManager.h" />
     <ClInclude Include="TriangleStrip.h" />
@@ -246,7 +247,6 @@
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Sound.cpp" />
     <ClCompile Include="Timer.cpp" />
-    <ClCompile Include="TitleScreen.cpp" />
     <ClCompile Include="TrackRegion.cpp" />
     <ClCompile Include="Windows.cpp" />
   </ItemGroup>

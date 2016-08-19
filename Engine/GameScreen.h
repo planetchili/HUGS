@@ -15,6 +15,7 @@
 #include "InputSystem.h"
 #include "Starfield.h"
 #include "Midi.h"
+#include "MidiJukebox.h"
 
 class GameScreen : public Screen
 {
@@ -34,7 +35,7 @@ private:
 		bool isDead = false;
 	} deathListener;
 public:
-	GameScreen( D3DGraphics& gfx,InputSystem& input,ScreenContainer* ctr )
+	GameScreen( D3DGraphics& gfx,InputSystem& input,MidiJukebox& jukebox,ScreenContainer* ctr )
 		:
 		Screen( ctr ),
 		map( "tracktest.dxf" ),
@@ -49,7 +50,7 @@ public:
 		lapDisplay( ship,{ 860.0f,15.0f } ),
 		input( input ),
 		gfx( gfx ),
-		blazMid( L"bla4s.mid",7.30f,85.50f )
+		jukebox( jukebox )
 	{
 		controllers.push_back( std::make_unique<ShipControllerKeyboard>( ship,input.kbd ) );
 		if( input.di.PadExists() )
@@ -66,11 +67,11 @@ public:
 		{
 			ship.Update( dt );
 			map.TestCollision( ship );
-			blazMid.Play();
+			jukebox.GetSong( L"bla4s.mid" ).Play();
 		}
 		else
 		{
-			blazMid.Stop();
+			jukebox.GetSong( L"bla4s.mid" ).Stop();
 		}
 		map.Update( dt );
 		starscape.Update();
@@ -108,7 +109,7 @@ public:
 				if( key.GetCode() == VK_RETURN && key.IsPress() )
 				{
 					ChangeScreen( std::make_unique< CountScreen >(
-						std::make_unique< GameScreen >( gfx,input,nullptr ),parent ) );
+						std::make_unique< GameScreen >( gfx,input,jukebox,nullptr ),parent ) );
 				}
 			}
 		}
@@ -132,6 +133,6 @@ private:
 	Font timesFont;
 	Font arialFont;
 	LapDisplay lapDisplay;
-	MidiSong blazMid;
+	MidiJukebox& jukebox;
 	std::vector<std::unique_ptr<ShipController>> controllers;
 };

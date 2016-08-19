@@ -19,15 +19,17 @@
  *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
  ******************************************************************************************/
 #include "Game.h"
-#include "TitleScreen.h"
 #include "IntroScreen.h"
+#include "TitleScreen2.h"
 
 Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	:
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer )
 {
-	screenContainer.pScreen = std::make_unique<IntroScreen>( gfx,input,&screenContainer );
+	jukebox.AddSong( L"blt.mid",0.0f,30.0f );
+	jukebox.AddSong( L"bla4s.mid",7.30f,85.50f );
+	screenContainer.pScreen = std::make_unique<IntroScreen>( gfx,input,jukebox,&screenContainer );
 }
 
 Game::~Game()

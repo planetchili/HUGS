@@ -1,3 +1,4 @@
+#pragma once
 #include "D3DGraphics.h"
 #include "Keyboard.h"
 #include <vector>
