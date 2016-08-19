@@ -174,6 +174,8 @@ public:
 		{
 			AddRect();
 		}
+
+		fadeInTimeCounter += dt;
 	}
 	virtual void DrawPreBloom( D3DGraphics& gfx ) override
 	{
@@ -192,6 +194,11 @@ public:
 		if( !pMenu )
 		{
 			gfx.DrawString( L"PRESS ENTER",{ 380.0f,500.0f },arialFont,BLACK );
+		}
+
+		if( fadeInTimeCounter < fadeInTime )
+		{
+			gfx.Fade( unsigned char( 255.0f * fadeInTimeCounter / fadeInTime ) );
 		}
 	}
 	virtual void HandleInput() override
@@ -244,6 +251,8 @@ private:
 	static constexpr float devHeight = 200.0f;
 	static constexpr float devX = 4000.0f;
 	static constexpr float devY = 3000.0f;
+	static constexpr float fadeInTime = 4.0f;
+	float fadeInTimeCounter = 0.0f;
 	std::mt19937 rng;
 	std::normal_distribution<float> dist_width = std::normal_distribution<float>( meanWidth,devWidth );
 	std::normal_distribution<float> dist_height = std::normal_distribution<float>( meanHeight,devHeight );
