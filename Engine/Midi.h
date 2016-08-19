@@ -7,7 +7,7 @@
 class MidiSong
 {
 public:
-	MidiSong( const std::wstring path,float start_sec,float end_sec );
+	MidiSong( const std::wstring path,float start_sec,float end_sec,bool looping = true );
 	void Play();
 	void Stop();
 	~MidiSong();
@@ -22,6 +22,7 @@ private:
 	bool isPlaying = true;
 	// this doubles as signal to dtor-caller that dying is done (false=dying done)
 	bool isDying = false;
+	bool looping;
 	unsigned int startMilliSeconds;
 	unsigned int endMilliSeconds;
 };

@@ -7,9 +7,9 @@
 class MidiJukebox
 {
 public:
-	void AddSong( const std::wstring& name,float start,float end )
+	void AddSong( const std::wstring& name,float start,float end,bool looping = true )
 	{
-		songPtrs.emplace( name,std::make_unique<MidiSong>( name,start,end ) );
+		songPtrs.emplace( name,std::make_unique<MidiSong>( name,start,end,looping ) );
 	}
 	MidiSong& GetSong( const std::wstring& name )
 	{

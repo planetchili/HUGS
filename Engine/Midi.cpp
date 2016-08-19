@@ -8,11 +8,12 @@
 
 UniqueIDManager<unsigned int> MidiSong::idMan;
 
-MidiSong::MidiSong( const std::wstring path,float start,float end )
+MidiSong::MidiSong( const std::wstring path,float start,float end,bool looping )
 	:
 	id( idMan.Issue() ),
 	startMilliSeconds( unsigned int( start * 1000.0f ) ),
-	endMilliSeconds( unsigned int( end * 1000.0f ) )
+	endMilliSeconds( unsigned int( end * 1000.0f ) ),
+	looping( looping )
 {
 	// create thread to execute lambda function
 	std::thread( [this,path,end]()
@@ -68,6 +69,8 @@ MidiSong::MidiSong( const std::wstring path,float start,float end )
 				mciSendString( seekLoopCmd.c_str(),nullptr,0u,nullptr );
 				// set loop duration for playing from start of loop region to end of loop region
 				duration = endMilliSeconds - startMilliSeconds;
+				// don't loop if we're not a looper
+				isPlaying = isPlaying && this->looping;
 			}
 			// stop command issued so stop the song from playing
 			mciSendString( stopCmd.c_str(),nullptr,0u,nullptr );

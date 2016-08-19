@@ -230,7 +230,7 @@ public:
 		phases.emplace( new HitlerFadeIn( 3.05f,*this ) );
 		phases.emplace( new HitlerAwesome( 2.0f,*this ) );
 		phases.emplace( new HitlerSpaz( 1.5f,*this ) );
-		phases.emplace( new BlackWait( 1.0f,*this ) );
+		phases.emplace( new BlackWait( 0.25f,*this ) );
 	}
 	virtual void Update( float dt ) override
 	{

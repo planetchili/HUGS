@@ -27,7 +27,7 @@ Game::Game( HWND hWnd,KeyboardServer& kServer,MouseServer& mServer )
 	gfx( hWnd ),
 	input( hWnd,mServer,kServer )
 {
-	jukebox.AddSong( L"blt.mid",0.0f,30.0f );
+	jukebox.AddSong( L"blt.mid",0.0f,3000.0f,false );
 	jukebox.AddSong( L"bla4s.mid",7.30f,85.50f );
 	screenContainer.pScreen = std::make_unique<IntroScreen>( gfx,input,jukebox,&screenContainer );
 }

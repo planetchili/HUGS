@@ -198,7 +198,7 @@ public:
 
 		if( fadeInTimeCounter < fadeInTime )
 		{
-			gfx.Fade( unsigned char( 255.0f * fadeInTimeCounter / fadeInTime ) );
+			gfx.Fade( unsigned char( 255.0f * sq( fadeInTimeCounter / fadeInTime ) ) );
 		}
 	}
 	virtual void HandleInput() override
