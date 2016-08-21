@@ -336,6 +336,9 @@
     <Image Include="uranus2.png">
       <Filter>Media</Filter>
     </Image>
+    <Image Include="hugs.png">
+      <Filter>Media</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="tracktest.dxf">

@@ -147,7 +147,8 @@ public:
 		input( input ),
 		gfx( gfx ),
 		port( gfx,{ 0.0f,float( gfx.GetHeight() - 1u ),0.0f,float( gfx.GetWidth() - 1u ) },gfx.GetViewRegion()),
-		jukebox( jukebox )
+		jukebox( jukebox ),
+		hugs( L"hugs.png" )
 	{
 		const float dz = (startZ - minZ) / maxRects;
 		for( float z = startZ; z > minZ; z -= dz )
@@ -190,11 +191,9 @@ public:
 	}
 	virtual void DrawPostBloom( D3DGraphics& gfx ) override
 	{
-		gfx.DrawString( L"H.U.G.S.",{ 250.0f,300.0f },timesFont,BLACK );
-		if( !pMenu )
-		{
-			gfx.DrawString( L"PRESS ENTER",{ 380.0f,500.0f },arialFont,BLACK );
-		}
+		auto d = hugs.GetDrawable();
+		d.Transform( Mat3::Translation( { 512.0f,300.0f } ) );
+		port.Draw( d );
 
 		if( fadeInTimeCounter < fadeInTime )
 		{
@@ -241,6 +240,7 @@ private:
 	Font arialFont;
 	std::unique_ptr<StartMenu> pMenu;
 	std::list<Rectangle> rects;
+	TexturedQuad<TranslucentRasterizer> hugs;
 	static constexpr int maxRects = 65;
 	static constexpr float speedZ = 12.0f;
 	static constexpr float startZ = 40.0f;
